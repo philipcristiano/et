@@ -12,7 +12,7 @@ publish = false
 anyhow = "1.0.81"
 axum = { version = "0.7.5", features = ["macros"]}
 chrono = "0.4.37"
-clap = { version = "4.5.3", features = ["derive", "env"]}
+clap = { version = "4.5.4", features = ["derive", "env"]}
 maud = { version = "0.26.0", features = ["axum"] }
 futures = "0.3.30"
 tower-cookies = { version = "0.10.0", features = ["signed", "private"]}
