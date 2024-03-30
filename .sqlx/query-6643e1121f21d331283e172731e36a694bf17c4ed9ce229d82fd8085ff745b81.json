@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT name, balance\n        FROM simplefin_accounts sa\n            JOIN simplefin_account_balances sab\n            ON sa.id = sab.account_id\n        WHERE user_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "balance",
+        "type_info": "Money"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6643e1121f21d331283e172731e36a694bf17c4ed9ce229d82fd8085ff745b81"
+}
