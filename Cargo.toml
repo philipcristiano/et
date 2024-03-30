@@ -10,7 +10,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.81"
-axum = { version = "0.7.4", features = ["macros"]}
+axum = { version = "0.7.5", features = ["macros"]}
 chrono = "0.4.35"
 clap = { version = "4.5.3", features = ["derive", "env"]}
 maud = { version = "0.26.0", features = ["axum"] }
