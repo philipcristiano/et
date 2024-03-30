@@ -101,3 +101,54 @@ table "simplefin_account_balances" {
     on_update = NO_ACTION
   }
 }
+
+table "simplefin_account_transactions" {
+  schema = schema.public
+
+  column "connection_id" {
+    type = uuid
+  }
+  column "account_id" {
+    type = varchar
+  }
+  column "id" {
+    type = varchar
+  }
+  column "posted" {
+    type = timestamp
+  }
+  column "amount" {
+    type = money
+  }
+  column "transacted_at" {
+    type = timestamp
+    null = true
+  }
+  column "pending" {
+    type = bool
+    null = true
+  }
+  column "description" {
+    type = varchar
+  }
+  primary_key {
+    columns = [
+      column.account_id,
+      column.connection_id,
+      column.id,
+    ]
+  }
+
+  foreign_key "simplefin_account" {
+    columns = [
+        column.connection_id,
+        column.account_id
+    ]
+    ref_columns = [
+        table.simplefin_accounts.column.connection_id,
+        table.simplefin_accounts.column.id
+    ]
+    on_delete = CASCADE
+    on_update = NO_ACTION
+  }
+}

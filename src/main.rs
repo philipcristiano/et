@@ -196,6 +196,54 @@ impl SFAccountBalance {
     }
 }
 
+#[derive(Debug)]
+pub struct SFAccountTransaction {
+    account_id: String,
+    connection_id: uuid::Uuid,
+    id: String,
+    posted: chrono::DateTime<chrono::Utc>,
+    transacted_at: Option<chrono::DateTime<chrono::Utc>>,
+    amount: rust_decimal::Decimal,
+    pending: Option<bool>,
+    description: String,
+}
+impl SFAccountTransaction {
+    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+    INSERT INTO simplefin_account_transactions ( connection_id, account_id, id, posted, amount, transacted_at, pending, description )
+    VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
+    ON CONFLICT (account_id, connection_id, id) DO NOTHING
+            "#,
+            self.connection_id,
+            self.account_id,
+            self.id,
+            self.posted.naive_utc(),
+            sqlx::postgres::types::PgMoney::from_decimal(self.amount, 2),
+            self.transacted_at.map(|ta| ta.naive_utc()),
+            self.pending,
+            self.description
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
+    fn from_transaction(act: &SFAccount, tx: &simplefin_api::Transaction) -> Self {
+        SFAccountTransaction {
+            account_id: act.id.clone(),
+            connection_id: act.connection_id,
+            id: tx.id.clone(),
+            posted: tx.posted,
+            transacted_at: tx.transacted_at,
+            amount: tx.amount,
+            pending: tx.pending,
+            description: tx.description.clone(),
+        }
+    }
+}
+
 pub struct ETUser {
     pub id: String,
     pub name: String,
@@ -411,12 +459,16 @@ async fn sync_simplefin_connection(
             };
             sfa.ensure_in_db(&app_state.db).await?;
             let sfab = SFAccountBalance {
-                account_id: sfa.id,
+                account_id: sfa.id.clone(),
                 connection_id: sfc.id,
                 timestamp: account.balance_date,
                 balance: account.balance,
             };
             sfab.ensure_in_db(&app_state.db).await?;
+            for tx in account.transactions {
+                let sftx = SFAccountTransaction::from_transaction(&sfa, &tx);
+                sftx.ensure_in_db(&app_state.db).await?;
+            }
         }
     }
     Ok(Redirect::to("/").into_response())
