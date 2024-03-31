@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/philipcristiano/et/compare/v0.3.3...v0.3.4) (2024-03-31)
+
+
+### Bug Fixes
+
+* otel: Maybe better resource tags ([04c3937](https://github.com/philipcristiano/et/commit/04c39372bb2feab926f00f0b591338e96abbea4b))
+
 ## [0.3.3](https://github.com/philipcristiano/et/compare/v0.3.2...v0.3.3) (2024-03-31)
 
 
