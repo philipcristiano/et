@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/philipcristiano/et/compare/v0.2.0...v0.3.0) (2024-03-31)
+
+
+### Features
+
+* Display transactions ([f3c3097](https://github.com/philipcristiano/et/commit/f3c3097c5b9ff9de9ab2b0cbd5617f6989d22c90))
+
+
+### Bug Fixes
+
+* **deps:** update rust crate toml to 0.8.12 ([1bdecfd](https://github.com/philipcristiano/et/commit/1bdecfd949cd8d5ccbcc5db09929c660f4b9a5c0))
+* Simplify static file hosting ([b7f0ff5](https://github.com/philipcristiano/et/commit/b7f0ff5303b1f68fe2742232b6d14722390fddc0))
+
 ## [0.2.0](https://github.com/philipcristiano/et/compare/v0.1.0...v0.2.0) (2024-03-31)
 
 
