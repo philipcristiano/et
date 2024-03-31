@@ -19,7 +19,7 @@ pub fn build_tailwind() {
         .arg("-i")
         .arg("./tailwind/input.css")
         .arg("-o")
-        .arg("./tailwind/tailwind.css")
+        .arg("./static/tailwind.css")
         .arg("--minify")
         .output()
         .expect("failed to execute process");
