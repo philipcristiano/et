@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/philipcristiano/et/compare/v0.3.2...v0.3.3) (2024-03-31)
+
+
+### Bug Fixes
+
+* tracing: Attempt again to get OTEL gRPC traces working ([fefd5b3](https://github.com/philipcristiano/et/commit/fefd5b39db063ee512f1503a04866fc3d34148d4))
+
 ## [0.3.2](https://github.com/philipcristiano/et/compare/v0.3.1...v0.3.2) (2024-03-31)
 
 
