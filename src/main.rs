@@ -324,7 +324,7 @@ async fn main() {
     let app_config = read_app_config(args.config_file);
 
     // Start by making a database connection.
-    tracing::info!("connecting to {}", app_config.database_url);
+    tracing::info!("connecting to database");
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&app_config.database_url)
