@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/philipcristiano/et/compare/v0.3.1...v0.3.2) (2024-03-31)
+
+
+### Bug Fixes
+
+* tracing: Include TLS ([ab58695](https://github.com/philipcristiano/et/commit/ab58695e45eec17803b2130b55c11b5c21bbee71))
+
 ## [0.3.1](https://github.com/philipcristiano/et/compare/v0.3.0...v0.3.1) (2024-03-31)
 
 
