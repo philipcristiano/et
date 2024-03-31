@@ -1,4 +1,5 @@
 use clap::Parser;
+use futures::try_join;
 use serde::Deserialize;
 use std::fs;
 use std::str;
@@ -164,6 +165,37 @@ impl SFAccountBalanceQueryResult {
             JOIN simplefin_account_balances sab
             ON sa.id = sab.account_id
         WHERE user_id = $1
+            "#,
+            user_id,
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res)
+    }
+}
+
+pub struct SFAccountTXQueryResult {
+    posted: chrono::NaiveDateTime,
+    description: String,
+    amount: sqlx::postgres::types::PgMoney,
+}
+impl SFAccountTXQueryResult {
+    async fn for_user_id(
+        user_id: &String,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
+        let res = sqlx::query_as!(
+            SFAccountTXQueryResult,
+            r#"
+        SELECT sat.posted, sat.amount, sat.description
+        FROM simplefin_accounts sa
+            JOIN simplefin_account_transactions sat
+            ON sa.id = sat.account_id
+            AND sa.connection_id = sat.connection_id
+        WHERE sa.user_id = $1
+        ORDER BY
+            sat.posted DESC
             "#,
             user_id,
         )
@@ -349,9 +381,12 @@ async fn root(
     user: Option<service_conventions::oidc::OIDCUser>,
 ) -> Result<Response, AppError> {
     if let Some(user) = user {
-        let user_connections =
-            SFConnection::connections_for_user_id(&user.id, &app_state.db).await?;
-        let balances = SFAccountBalanceQueryResult::for_user_id(&user.id, &app_state.db).await?;
+        let user_connections_f = SFConnection::connections_for_user_id(&user.id, &app_state.db);
+        let balances_f = SFAccountBalanceQueryResult::for_user_id(&user.id, &app_state.db);
+        let transactions_f = SFAccountTXQueryResult::for_user_id(&user.id, &app_state.db);
+
+        let (user_connections, balances, transactions) =
+            try_join!(user_connections_f, balances_f, transactions_f)?;
 
         Ok(html::maud_page(html! {
               p { "Welcome! " ( user.id)}
@@ -373,6 +408,12 @@ async fn root(
               div {
               @for balance in &balances {
                   p { "Account: " (balance.name) " Balance: " (balance.balance.to_decimal(2))}
+              }
+              }
+
+              div {
+              @for tx in &transactions {
+                  p { "TX: " (tx.posted) " from " (tx.description) " Amount: " (tx.amount.to_decimal(2))}
               }
               }
               @for sfconn in &user_connections {
