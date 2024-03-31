@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/philipcristiano/et/compare/v0.3.0...v0.3.1) (2024-03-31)
+
+
+### Bug Fixes
+
+* tracing: include deps for grpc over https ([c094be2](https://github.com/philipcristiano/et/commit/c094be20f2640c8bb62e5f4aaaf9c32e605fc0b1))
+
 ## [0.3.0](https://github.com/philipcristiano/et/compare/v0.2.0...v0.3.0) (2024-03-31)
 
 
