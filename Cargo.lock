@@ -2023,6 +2023,7 @@ dependencies = [
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk",
  "prost",
+ "reqwest 0.11.27",
  "thiserror",
  "tokio",
  "tonic",
@@ -2502,6 +2503,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rustls 0.21.10",
+ "rustls-native-certs",
  "rustls-pemfile",
  "serde",
  "serde_json",
@@ -2749,6 +2751,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustls-native-certs"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
+dependencies = [
+ "openssl-probe",
+ "rustls-pemfile",
+ "schannel",
+ "security-framework",
+]
+
+[[package]]
 name = "rustls-pemfile"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2992,9 +3006,9 @@ dependencies = [
 
 [[package]]
 name = "service_conventions"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d5241a9f6b6afcb6c3c04307580291badfee689452dffbf719866127e0aec86"
+checksum = "0f6d6b6aecbac18edde3894185f0a5ee479ea03dee07ee91af601a2378d5bab6"
 dependencies = [
  "anyhow",
  "async-trait",
