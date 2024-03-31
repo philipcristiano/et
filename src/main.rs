@@ -17,6 +17,11 @@ use tower_cookies::CookieManagerLayer;
 
 mod html;
 mod simplefin_api;
+use rust_embed::RustEmbed;
+
+#[derive(RustEmbed, Clone)]
+#[folder = "static/"]
+struct StaticAssets;
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -304,6 +309,7 @@ async fn main() {
 
     let app_state = AppState::from_config(app_config, pool);
     let oidc_router = service_conventions::oidc::router(app_state.auth.clone());
+    let serve_assets = axum_embed::ServeEmbed::<StaticAssets>::new();
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
@@ -313,8 +319,8 @@ async fn main() {
             "/simplefin-connection/:simplefin_connection_id/sync",
             post(sync_simplefin_connection),
         )
-        .route("/static/tailwind.css", get(http_get_tailwind_css))
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
+        .nest_service("/static", serve_assets)
         .with_state(app_state.clone())
         .layer(CookieManagerLayer::new())
         .layer(
@@ -396,13 +402,6 @@ async fn handle_logged_in(
     let et_user = ETUser::from(user);
     et_user.ensure_in_db(&app_state.db).await?;
     Ok(Redirect::to("/").into_response())
-}
-
-async fn http_get_tailwind_css() -> impl IntoResponse {
-    let t = include_bytes!("../tailwind/tailwind.css");
-    let mut headers = axum::http::HeaderMap::new();
-    headers.insert("Content-Type", "text/css".parse().unwrap());
-    (headers, t)
 }
 
 #[derive(Clone, Debug, Deserialize)]
