@@ -73,6 +73,7 @@ pub struct SFConnection {
 }
 
 impl SFConnection {
+    #[tracing::instrument(skip_all)]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -90,6 +91,7 @@ impl SFConnection {
         Ok(())
     }
 
+    #[tracing::instrument]
     async fn connections_for_user_id(
         user_id: &String,
         pool: &PgPool,
@@ -107,6 +109,7 @@ impl SFConnection {
 
         Ok(res)
     }
+    #[tracing::instrument]
     async fn by_id(id: &uuid::Uuid, db: &PgPool) -> anyhow::Result<Option<SFConnection>> {
         Ok(sqlx::query_as!(
             SFConnection,
@@ -128,6 +131,8 @@ pub struct SFAccount {
     user_id: String,
 }
 impl SFAccount {
+
+    #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -153,6 +158,8 @@ pub struct SFAccountBalanceQueryResult {
     balance: sqlx::postgres::types::PgMoney,
 }
 impl SFAccountBalanceQueryResult {
+
+    #[tracing::instrument]
     async fn for_user_id(
         user_id: &String,
         pool: &PgPool,
@@ -181,6 +188,7 @@ pub struct SFAccountTXQueryResult {
     amount: sqlx::postgres::types::PgMoney,
 }
 impl SFAccountTXQueryResult {
+    #[tracing::instrument]
     async fn for_user_id(
         user_id: &String,
         pool: &PgPool,
@@ -214,6 +222,7 @@ pub struct SFAccountBalance {
     balance: rust_decimal::Decimal,
 }
 impl SFAccountBalance {
+    #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -245,6 +254,7 @@ pub struct SFAccountTransaction {
     description: String,
 }
 impl SFAccountTransaction {
+    #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -281,12 +291,14 @@ impl SFAccountTransaction {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct ETUser {
     pub id: String,
     pub name: String,
 }
 
 impl ETUser {
+    #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
