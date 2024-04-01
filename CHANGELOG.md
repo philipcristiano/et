@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.5](https://github.com/philipcristiano/et/compare/v0.3.4...v0.3.5) (2024-04-01)
+
+
+### Bug Fixes
+
+* logging: Don't log db credentials ([3d57c6d](https://github.com/philipcristiano/et/commit/3d57c6d7a4b99dfb2f29e9529723acdae43c7519))
+* Start tracing some calls ([4da63c2](https://github.com/philipcristiano/et/commit/4da63c21a78b38ea0f7fc3c5435076d10e3529fe))
+
 ## [0.3.4](https://github.com/philipcristiano/et/compare/v0.3.3...v0.3.4) (2024-03-31)
 
 
