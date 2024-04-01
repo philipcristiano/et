@@ -62,6 +62,7 @@ pub struct Transaction {
     pub pending: Option<bool>,
 }
 
+#[tracing::instrument(skip_all)]
 pub async fn token_to_access_url(b64token: String) -> Result<String, SimpleFinAPIError> {
     let claim_url_bytes = BASE64_STANDARD.decode(b64token)?;
     let claim_url = String::from_utf8_lossy(&claim_url_bytes).into_owned();
@@ -70,6 +71,7 @@ pub async fn token_to_access_url(b64token: String) -> Result<String, SimpleFinAP
     Ok(access_url)
 }
 
+#[tracing::instrument(skip_all)]
 pub async fn accounts(access_url: &String) -> Result<AccountSet, SimpleFinAPIError> {
     let client = reqwest::Client::new();
     let url = format!("{access_url}/accounts");
