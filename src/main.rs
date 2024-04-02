@@ -11,7 +11,6 @@ use axum::{
     routing::{get, post},
     Form, Router,
 };
-use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use std::net::SocketAddr;
 
 use maud::html;
@@ -132,6 +131,7 @@ pub struct SFAccount {
     user_id: String,
 }
 impl SFAccount {
+
     #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
@@ -158,6 +158,7 @@ pub struct SFAccountBalanceQueryResult {
     balance: sqlx::postgres::types::PgMoney,
 }
 impl SFAccountBalanceQueryResult {
+
     #[tracing::instrument]
     async fn for_user_id(
         user_id: &String,
@@ -366,14 +367,11 @@ async fn main() {
         .nest_service("/static", serve_assets)
         .with_state(app_state.clone())
         .layer(CookieManagerLayer::new())
-        .layer(OtelInResponseLayer::default())
-        //start OpenTelemetry trace on incoming request
-        .layer(OtelAxumLayer::default());
-    //.layer(
-    //    TraceLayer::new_for_http()
-    //        .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-    //        .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
-    //);
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
+        );
 
     let addr: SocketAddr = args.bind_addr.parse().expect("Expected bind addr");
     tracing::info!("listening on {}", addr);

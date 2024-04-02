@@ -342,24 +342,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum-tracing-opentelemetry"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6672eee77fec7036fe83cf2111e25c4f9ef06b35b50d656d8d8127c2347e3b4a"
-dependencies = [
- "axum 0.7.5",
- "futures-core",
- "futures-util",
- "http 1.1.0",
- "opentelemetry",
- "pin-project-lite",
- "tower",
- "tracing",
- "tracing-opentelemetry",
- "tracing-opentelemetry-instrumentation-sdk",
-]
-
-[[package]]
 name = "backtrace"
 version = "0.3.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -930,7 +912,6 @@ dependencies = [
  "anyhow",
  "axum 0.7.5",
  "axum-embed",
- "axum-tracing-opentelemetry",
  "base64 0.22.0",
  "chrono",
  "clap",
@@ -3901,18 +3882,6 @@ dependencies = [
  "tracing-log",
  "tracing-subscriber",
  "web-time",
-]
-
-[[package]]
-name = "tracing-opentelemetry-instrumentation-sdk"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36785b61526c60c97c5aaa3e588d07099e1fb7b51dc96ff1508d4abe80389b36"
-dependencies = [
- "http 1.1.0",
- "opentelemetry",
- "tracing",
- "tracing-opentelemetry",
 ]
 
 [[package]]
