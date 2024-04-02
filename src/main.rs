@@ -416,18 +416,44 @@ async fn root(
                   input type="submit" class="border" {}
               }
               }
+              table class="table-auto"{
+                  thead {
+                    tr {
+                        th { "Account"}
+                        th { "Balance"}
+                    }
+                  }
+                  tbody {
+                  @for balance in &balances {
+                  tr{
+                    td { (balance.name)}
+                    td { (balance.balance.to_decimal(2))}
+                  }
+                  }
+                  }
 
-              div {
-              @for balance in &balances {
-                  p { "Account: " (balance.name) " Balance: " (balance.balance.to_decimal(2))}
-              }
               }
 
-              div {
-              @for tx in &transactions {
-                  p { "TX: " (tx.posted) " from " (tx.description) " Amount: " (tx.amount.to_decimal(2))}
+              table class="table-auto"{
+                  thead {
+                    tr {
+                        th { "Date"}
+                        th { "Description"}
+                        th { "Amount"}
+                    }
+                  }
+                  tbody {
+                  @for tx in &transactions {
+                  tr{
+                    td { (tx.posted)}
+                    td { (tx.description)}
+                    td { (tx.amount.to_decimal(2))}
+                  }
+                  }
+                  }
+
               }
-              }
+
               @for sfconn in &user_connections {
               div {
                   form method="post" action={"/simplefin-connection/" (sfconn.id) "/sync"} {
