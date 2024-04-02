@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.8](https://github.com/philipcristiano/et/compare/v0.3.7...v0.3.8) (2024-04-02)
+
+
+### Bug Fixes
+
+* Revert "fix: Try to handle otel headers" ([677042d](https://github.com/philipcristiano/et/commit/677042ddca3135251d9e744878526f5a4a5b2af9))
+
 ## [0.3.7](https://github.com/philipcristiano/et/compare/v0.3.6...v0.3.7) (2024-04-02)
 
 
