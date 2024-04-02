@@ -46,10 +46,12 @@ struct AppConfig {
 struct AppState {
     auth: service_conventions::oidc::AuthConfig,
     db: PgPool,
+    #[from_ref(skip)]
+    db_spike: PgPool,
 }
 
 impl AppState {
-    fn from_config(item: AppConfig, db: PgPool) -> Self {
+    fn from_config(item: AppConfig, db: PgPool, db_spike: PgPool) -> Self {
         let auth_config = service_conventions::oidc::AuthConfig {
             oidc_config: item.auth,
             post_auth_path: "/logged_in".to_string(),
@@ -58,6 +60,7 @@ impl AppState {
         AppState {
             auth: auth_config,
             db,
+            db_spike,
         }
     }
 }
@@ -336,6 +339,11 @@ async fn main() {
         .connect(&app_config.database_url)
         .await
         .expect("Cannot connect to DB");
+    let pool_spike = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&app_config.database_url)
+        .await
+        .expect("Cannot connect to DB");
 
     // tracing::info!("Syncing SimpleFin connections to Database");
     // for (sfconnect_id, _sfconnection_config) in app_config.simplefin.iter() {
@@ -345,7 +353,7 @@ async fn main() {
 
     // };
 
-    let app_state = AppState::from_config(app_config, pool);
+    let app_state = AppState::from_config(app_config, pool, pool_spike);
     let oidc_router = service_conventions::oidc::router(app_state.auth.clone());
     let serve_assets = axum_embed::ServeEmbed::<StaticAssets>::new();
     let app = Router::new()
@@ -543,7 +551,7 @@ async fn sync_simplefin_connection(
 
             let txs_f = account.transactions.iter().map(|src_tx| {
                     let tx = SFAccountTransaction::from_transaction(&sfa, &src_tx);
-                    SFAccountTransaction::ensure_in_db(tx, &app_state.db)
+                    SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
                 });
 
             futures::future::try_join_all(txs_f).await?;
