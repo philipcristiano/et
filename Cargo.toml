@@ -35,3 +35,4 @@ thiserror = "1.0.58"
 rust_decimal = { version = "1.35.0", features = ["db-postgres", "serde-float"] }
 rust-embed = { version = "8.3.0", features = ["axum", "mime-guess", "mime_guess"] }
 axum-embed = "0.1.0"
+axum-tracing-opentelemetry = "0.18.0"
