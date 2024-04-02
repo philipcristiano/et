@@ -236,7 +236,7 @@ impl SFAccountBalance {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
     account_id: String,
     connection_id: uuid::Uuid,
@@ -249,7 +249,7 @@ pub struct SFAccountTransaction {
 }
 impl SFAccountTransaction {
     #[tracing::instrument]
-    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
+    async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
     INSERT INTO simplefin_account_transactions ( connection_id, account_id, id, posted, amount, transacted_at, pending, description )
@@ -540,10 +540,15 @@ async fn sync_simplefin_connection(
                 balance: account.balance,
             };
             sfab.ensure_in_db(&app_state.db).await?;
-            for tx in account.transactions {
-                let sftx = SFAccountTransaction::from_transaction(&sfa, &tx);
-                sftx.ensure_in_db(&app_state.db).await?;
-            }
+
+            let txs_f = account.transactions.iter().map(|src_tx| {
+                    let tx = SFAccountTransaction::from_transaction(&sfa, &src_tx);
+                    SFAccountTransaction::ensure_in_db(tx, &app_state.db)
+                });
+
+            futures::future::try_join_all(txs_f).await?;
+            ()
+
         }
     }
     Ok(Redirect::to("/").into_response())
