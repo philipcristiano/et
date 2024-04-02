@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/philipcristiano/et/compare/v0.3.5...v0.3.6) (2024-04-02)
+
+
+### Bug Fixes
+
+* layout: Use tables for tabular data ([ce72632](https://github.com/philipcristiano/et/commit/ce726328d0faf4de63ec2e8ffbec669478a5ea82))
+
 ## [0.3.5](https://github.com/philipcristiano/et/compare/v0.3.4...v0.3.5) (2024-04-01)
 
 
