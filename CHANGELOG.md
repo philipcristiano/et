@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/philipcristiano/et/compare/v0.3.8...v0.4.0) (2024-04-03)
+
+
+### Features
+
+* Untie accounts/connections from users ([bc92076](https://github.com/philipcristiano/et/commit/bc9207633cdac1a7312df6e64aecbe54c47947d6))
+
+
+### Bug Fixes
+
+* Run tx inserts concurrently ([a1528d6](https://github.com/philipcristiano/et/commit/a1528d6988897602222067bd9d28f96d68b571df))
+* sql: Use separate pool for spikey ops ([7aa7a89](https://github.com/philipcristiano/et/commit/7aa7a89d9058ee8c4b78d74652487af616761bfb))
+
 ## [0.3.8](https://github.com/philipcristiano/et/compare/v0.3.7...v0.3.8) (2024-04-02)
 
 
