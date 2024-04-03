@@ -93,9 +93,7 @@ impl SFConnection {
     }
 
     #[tracing::instrument]
-    async fn connections(
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFConnection>> {
+    async fn connections(pool: &PgPool) -> anyhow::Result<Vec<SFConnection>> {
         let res = sqlx::query_as!(
             SFConnection,
             r#"
@@ -127,7 +125,6 @@ pub struct SFAccount {
     name: String,
 }
 impl SFAccount {
-
     #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
@@ -153,11 +150,8 @@ pub struct SFAccountBalanceQueryResult {
     balance: sqlx::postgres::types::PgMoney,
 }
 impl SFAccountBalanceQueryResult {
-
     #[tracing::instrument]
-    async fn get_balances(
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
+    async fn get_balances(pool: &PgPool) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
         let res = sqlx::query_as!(
             SFAccountBalanceQueryResult,
             r#"
@@ -372,7 +366,8 @@ async fn main() {
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)))
+                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
+        )
         .route("/_health", get(health));
 
     let addr: SocketAddr = args.bind_addr.parse().expect("Expected bind addr");
@@ -510,10 +505,7 @@ async fn add_simplefin_connection(
     tracing::info!("access_url to {}", access_url);
 
     let id = uuid::Uuid::new_v4();
-    let sfc = SFConnection {
-        id,
-        access_url,
-    };
+    let sfc = SFConnection { id, access_url };
     tracing::info!("saving access_url");
     sfc.ensure_in_db(&app_state.db).await?;
 
@@ -554,13 +546,12 @@ async fn sync_simplefin_connection(
             sfab.ensure_in_db(&app_state.db).await?;
 
             let txs_f = account.transactions.iter().map(|src_tx| {
-                    let tx = SFAccountTransaction::from_transaction(&sfa, &src_tx);
-                    SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
-                });
+                let tx = SFAccountTransaction::from_transaction(&sfa, &src_tx);
+                SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
+            });
 
             futures::future::try_join_all(txs_f).await?;
             ()
-
         }
     }
     Ok(Redirect::to("/").into_response())
