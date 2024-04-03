@@ -12,6 +12,7 @@ use axum::{
     Form, Router,
 };
 use std::net::SocketAddr;
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 
 use maud::html;
 use tower_cookies::CookieManagerLayer;
@@ -369,11 +370,11 @@ async fn main() {
         .nest_service("/static", serve_assets)
         .with_state(app_state.clone())
         .layer(CookieManagerLayer::new())
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
-        );
+        // include trace context as header into the response
+        .layer(OtelInResponseLayer::default())
+        //start OpenTelemetry trace on incoming request
+        .layer(OtelAxumLayer::default())
+        ;
 
     let addr: SocketAddr = args.bind_addr.parse().expect("Expected bind addr");
     tracing::info!("listening on {}", addr);
