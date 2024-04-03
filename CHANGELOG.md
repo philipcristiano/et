@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/philipcristiano/et/compare/v0.4.0...v0.4.1) (2024-04-03)
+
+
+### Bug Fixes
+
+* Attemp axum tracing again ([eb5bf70](https://github.com/philipcristiano/et/commit/eb5bf70d523d77abcad3ac9f5bb839c403ff857e))
+
 ## [0.4.0](https://github.com/philipcristiano/et/compare/v0.3.8...v0.4.0) (2024-04-03)
 
 
