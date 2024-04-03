@@ -12,11 +12,6 @@
         "ordinal": 1,
         "name": "access_url",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 2,
-        "name": "user_id",
-        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -25,7 +20,6 @@
       ]
     },
     "nullable": [
-      false,
       false,
       false
     ]

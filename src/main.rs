@@ -69,7 +69,6 @@ use sqlx::postgres::PgPoolOptions;
 pub struct SFConnection {
     id: uuid::Uuid,
     access_url: String,
-    user_id: String,
 }
 
 impl SFConnection {
@@ -77,13 +76,12 @@ impl SFConnection {
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-    INSERT INTO simplefin_connections ( id, access_url, user_id )
-    VALUES ( $1, $2, $3 )
+    INSERT INTO simplefin_connections ( id, access_url )
+    VALUES ( $1, $2 )
     ON CONFLICT (id) DO NOTHING
             "#,
             self.id,
             self.access_url,
-            self.user_id,
         )
         .execute(pool)
         .await?;
@@ -92,17 +90,14 @@ impl SFConnection {
     }
 
     #[tracing::instrument]
-    async fn connections_for_user_id(
-        user_id: &String,
+    async fn connections(
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFConnection>> {
         let res = sqlx::query_as!(
             SFConnection,
             r#"
         SELECT * FROM simplefin_connections
-        WHERE user_id = $1
             "#,
-            user_id,
         )
         .fetch_all(pool)
         .await?;
@@ -127,8 +122,6 @@ pub struct SFAccount {
     connection_id: uuid::Uuid,
     currency: String,
     name: String,
-
-    user_id: String,
 }
 impl SFAccount {
 
@@ -136,15 +129,14 @@ impl SFAccount {
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-    INSERT INTO simplefin_accounts ( connection_id, id, name, currency, user_id )
-    VALUES ( $1, $2, $3, $4, $5 )
+    INSERT INTO simplefin_accounts ( connection_id, id, name, currency )
+    VALUES ( $1, $2, $3, $4 )
     ON CONFLICT (id, connection_id) DO NOTHING
             "#,
             self.connection_id,
             self.id,
             self.name,
             self.currency,
-            self.user_id,
         )
         .execute(pool)
         .await?;
@@ -160,20 +152,24 @@ pub struct SFAccountBalanceQueryResult {
 impl SFAccountBalanceQueryResult {
 
     #[tracing::instrument]
-    async fn for_user_id(
-        user_id: &String,
+    async fn get_balances(
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
         let res = sqlx::query_as!(
             SFAccountBalanceQueryResult,
             r#"
-        SELECT name, balance
+        SELECT name, sab.balance
         FROM simplefin_accounts sa
-            JOIN simplefin_account_balances sab
-            ON sa.id = sab.account_id
-        WHERE user_id = $1
+        JOIN (
+                SELECT account_id, max(ts) as ts
+                FROM simplefin_account_balances
+                GROUP BY (account_id)
+            ) as last_ts
+            ON sa.id = last_ts.account_id
+        LEFT JOIN simplefin_account_balances sab
+            ON last_ts.account_id = sab.account_id
+            AND last_ts.ts = sab.ts;
             "#,
-            user_id,
         )
         .fetch_all(pool)
         .await?;
@@ -201,11 +197,9 @@ impl SFAccountTXQueryResult {
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
             AND sa.connection_id = sat.connection_id
-        WHERE sa.user_id = $1
         ORDER BY
             sat.posted DESC
             "#,
-            user_id,
         )
         .fetch_all(pool)
         .await?;
@@ -393,8 +387,8 @@ async fn root(
     user: Option<service_conventions::oidc::OIDCUser>,
 ) -> Result<Response, AppError> {
     if let Some(user) = user {
-        let user_connections_f = SFConnection::connections_for_user_id(&user.id, &app_state.db);
-        let balances_f = SFAccountBalanceQueryResult::for_user_id(&user.id, &app_state.db);
+        let user_connections_f = SFConnection::connections(&app_state.db);
+        let balances_f = SFAccountBalanceQueryResult::get_balances(&app_state.db);
         let transactions_f = SFAccountTXQueryResult::for_user_id(&user.id, &app_state.db);
 
         let (user_connections, balances, transactions) =
@@ -409,13 +403,24 @@ async fn root(
                   p{ ( email ) }
               }
 
+              h2 { "Connections:" }
+              @for sfconn in &user_connections {
               div {
-                h2 { "Add a SimpleFin Connection"}
+                  form method="post" action={"/simplefin-connection/" (sfconn.id) "/sync"} {
+                    (sfconn.id)
+                    input type="submit" class="border" value="Sync connection" {}
+                  }
+              }}
+
+              div {
+                h3 { "Add a SimpleFin Connection"}
                 form method="post" action="/simplefin-connection/add" {
                   input id="simplefin_token" class="border min-w-full" name="simplefin_token" {}
                   input type="submit" class="border" {}
               }
               }
+
+              h2 { "Accounts:" }
               table class="table-auto"{
                   thead {
                     tr {
@@ -434,6 +439,7 @@ async fn root(
 
               }
 
+              h2 { "Transactions:" }
               table class="table-auto"{
                   thead {
                     tr {
@@ -454,13 +460,6 @@ async fn root(
 
               }
 
-              @for sfconn in &user_connections {
-              div {
-                  form method="post" action={"/simplefin-connection/" (sfconn.id) "/sync"} {
-                    p{ (sfconn.id) }
-                    input type="submit" class="border" value="Sync connection" {}
-                  }
-              }}
 
 
         })
@@ -491,7 +490,7 @@ struct PostSimplefinToken {
 use uuid;
 async fn add_simplefin_connection(
     State(app_state): State<AppState>,
-    user: service_conventions::oidc::OIDCUser,
+    _user: service_conventions::oidc::OIDCUser,
     Form(form): Form<PostSimplefinToken>,
 ) -> Result<Response, AppError> {
     let access_url = simplefin_api::token_to_access_url(form.simplefin_token).await?;
@@ -502,7 +501,6 @@ async fn add_simplefin_connection(
     let sfc = SFConnection {
         id,
         access_url,
-        user_id: user.id,
     };
     tracing::info!("saving access_url");
     sfc.ensure_in_db(&app_state.db).await?;
@@ -516,7 +514,7 @@ struct RequestSyncParams {
 }
 async fn sync_simplefin_connection(
     State(app_state): State<AppState>,
-    user: service_conventions::oidc::OIDCUser,
+    _user: service_conventions::oidc::OIDCUser,
     Path(RequestSyncParams {
         simplefin_connection_id,
     }): Path<RequestSyncParams>,
@@ -533,7 +531,6 @@ async fn sync_simplefin_connection(
                 connection_id: sfc.id,
                 name: account.name,
                 currency: account.currency,
-                user_id: user.id.clone(),
             };
             sfa.ensure_in_db(&app_state.db).await?;
             let sfab = SFAccountBalance {

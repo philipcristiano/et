@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO simplefin_connections ( id, access_url )\n    VALUES ( $1, $2 )\n    ON CONFLICT (id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fcb0249103d7a915aeafe4bfd47319a3cd4e21389162de4e0328f82f96dca36a"
+}
