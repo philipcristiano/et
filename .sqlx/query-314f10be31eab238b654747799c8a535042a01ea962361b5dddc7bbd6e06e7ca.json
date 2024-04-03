@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT * FROM simplefin_connections\n        WHERE user_id = $1\n            ",
+  "query": "\n        SELECT * FROM simplefin_connections\n            ",
   "describe": {
     "columns": [
       {
@@ -12,23 +12,15 @@
         "ordinal": 1,
         "name": "access_url",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 2,
-        "name": "user_id",
-        "type_info": "Varchar"
       }
     ],
     "parameters": {
-      "Left": [
-        "Text"
-      ]
+      "Left": []
     },
     "nullable": [
-      false,
       false,
       false
     ]
   },
-  "hash": "7df27918017565e05bd45e37e0074c82a3242a43d50ad169537951a60fe00e48"
+  "hash": "314f10be31eab238b654747799c8a535042a01ea962361b5dddc7bbd6e06e7ca"
 }

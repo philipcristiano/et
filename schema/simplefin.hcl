@@ -10,19 +10,10 @@ table "simplefin_connections" {
   column "access_url" {
     type = varchar
   }
-  column "user_id" {
-    type = varchar
-  }
   primary_key {
     columns = [
       column.id
     ]
-  }
-  foreign_key "simplefin_connection_user" {
-    columns = [column.user_id]
-    ref_columns = [table.et_user.column.id]
-    on_delete = CASCADE
-    on_update = NO_ACTION
   }
 }
 
@@ -41,9 +32,6 @@ table "simplefin_accounts" {
   column "currency" {
     type = varchar
   }
-  column "user_id" {
-    type = varchar
-  }
   primary_key {
     columns = [
       column.id,
@@ -54,12 +42,6 @@ table "simplefin_accounts" {
   foreign_key "simplefin_connection" {
     columns = [column.connection_id]
     ref_columns = [table.simplefin_connections.column.id]
-    on_delete = CASCADE
-    on_update = NO_ACTION
-  }
-  foreign_key "simplefin_account_user" {
-    columns = [column.user_id]
-    ref_columns = [table.et_user.column.id]
     on_delete = CASCADE
     on_update = NO_ACTION
   }
@@ -86,6 +68,16 @@ table "simplefin_account_balances" {
       column.connection_id,
       column.ts,
     ]
+  }
+
+  index "idx_account_ts" {
+      on {
+          column = column.account_id
+      }
+      on {
+          column = column.ts
+          desc = true
+      }
   }
 
   foreign_key "simplefin_account" {

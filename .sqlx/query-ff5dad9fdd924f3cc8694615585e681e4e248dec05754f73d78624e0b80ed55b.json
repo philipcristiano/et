@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO simplefin_accounts ( connection_id, id, name, currency )\n    VALUES ( $1, $2, $3, $4 )\n    ON CONFLICT (id, connection_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ff5dad9fdd924f3cc8694615585e681e4e248dec05754f73d78624e0b80ed55b"
+}
