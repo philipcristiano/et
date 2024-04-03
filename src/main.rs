@@ -46,10 +46,12 @@ struct AppConfig {
 struct AppState {
     auth: service_conventions::oidc::AuthConfig,
     db: PgPool,
+    #[from_ref(skip)]
+    db_spike: PgPool,
 }
 
 impl AppState {
-    fn from_config(item: AppConfig, db: PgPool) -> Self {
+    fn from_config(item: AppConfig, db: PgPool, db_spike: PgPool) -> Self {
         let auth_config = service_conventions::oidc::AuthConfig {
             oidc_config: item.auth,
             post_auth_path: "/logged_in".to_string(),
@@ -58,6 +60,7 @@ impl AppState {
         AppState {
             auth: auth_config,
             db,
+            db_spike,
         }
     }
 }
@@ -236,7 +239,7 @@ impl SFAccountBalance {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
     account_id: String,
     connection_id: uuid::Uuid,
@@ -249,7 +252,7 @@ pub struct SFAccountTransaction {
 }
 impl SFAccountTransaction {
     #[tracing::instrument]
-    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
+    async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
     INSERT INTO simplefin_account_transactions ( connection_id, account_id, id, posted, amount, transacted_at, pending, description )
@@ -336,6 +339,11 @@ async fn main() {
         .connect(&app_config.database_url)
         .await
         .expect("Cannot connect to DB");
+    let pool_spike = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&app_config.database_url)
+        .await
+        .expect("Cannot connect to DB");
 
     // tracing::info!("Syncing SimpleFin connections to Database");
     // for (sfconnect_id, _sfconnection_config) in app_config.simplefin.iter() {
@@ -345,7 +353,7 @@ async fn main() {
 
     // };
 
-    let app_state = AppState::from_config(app_config, pool);
+    let app_state = AppState::from_config(app_config, pool, pool_spike);
     let oidc_router = service_conventions::oidc::router(app_state.auth.clone());
     let serve_assets = axum_embed::ServeEmbed::<StaticAssets>::new();
     let app = Router::new()
@@ -540,10 +548,15 @@ async fn sync_simplefin_connection(
                 balance: account.balance,
             };
             sfab.ensure_in_db(&app_state.db).await?;
-            for tx in account.transactions {
-                let sftx = SFAccountTransaction::from_transaction(&sfa, &tx);
-                sftx.ensure_in_db(&app_state.db).await?;
-            }
+
+            let txs_f = account.transactions.iter().map(|src_tx| {
+                    let tx = SFAccountTransaction::from_transaction(&sfa, &src_tx);
+                    SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
+                });
+
+            futures::future::try_join_all(txs_f).await?;
+            ()
+
         }
     }
     Ok(Redirect::to("/").into_response())
