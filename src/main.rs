@@ -372,8 +372,8 @@ async fn main() {
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
-        );
+                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)))
+        .route("/_health", get(health));
 
     let addr: SocketAddr = args.bind_addr.parse().expect("Expected bind addr");
     tracing::info!("listening on {}", addr);
@@ -388,6 +388,10 @@ fn read_app_config(path: String) -> AppConfig {
         toml::from_str(&config_file_contents).expect("Problems parsing config file");
 
     app_config
+}
+
+async fn health() -> Response {
+    "OK".into_response()
 }
 
 async fn root(
