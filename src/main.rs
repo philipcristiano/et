@@ -17,7 +17,6 @@ use maud::html;
 use tower_cookies::CookieManagerLayer;
 
 mod html;
-mod prop_span;
 mod simplefin_api;
 use rust_embed::RustEmbed;
 
@@ -372,7 +371,7 @@ async fn main() {
         .layer(CookieManagerLayer::new())
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(prop_span::PropagatingSpan::new())
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
                 .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
         );
 
