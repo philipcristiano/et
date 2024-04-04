@@ -450,74 +450,77 @@ async fn root(
             try_join!(user_connections_f, balances_f, transactions_f)?;
 
         Ok(html::maud_page(html! {
-              p { "Welcome! " ( user.id)}
-              @if let Some(name) = user.name {
-                  p{ ( name ) }
-              }
-              @if let Some(email) = user.email {
-                  p{ ( email ) }
-              }
-
-              h2 { "Connections:" }
-              @for sfconn in &user_connections {
-              div {
-                    (sfconn.id)
-                  }
+              p {
+                @if let Some(name) = user.name {
+                    "Name: " ( name )
+                }
+                @if let Some(email) = user.email {
+                    "Email: " ( email )
+                }
               }
 
-              div {
-                h3 { "Add a SimpleFin Connection"}
-                form method="post" action="/simplefin-connection/add" {
-                  input id="simplefin_token" class="border min-w-full" name="simplefin_token" {}
-                  input type="submit" class="border" {}
-              }
-              }
-
-              h2 { "Accounts:" }
-              table class="table-auto"{
-                  thead {
-                    tr {
-                        th { "Account"}
-                        th { "Balance"}
+              div class="flex flex-col lg:flex-row"{
+              div class="sidebar"{
+                h2 { "Connections:" }
+                @for sfconn in &user_connections {
+                div {
+                      (sfconn.id)
                     }
-                  }
-                  tbody {
-                  @for balance in &balances {
-                  tr{
-                    td { (balance.name)}
-                    td { (balance.balance.to_decimal(2))}
-                  }
-                  }
-                  }
+                }
+                div {
+                  h3 { "Add a SimpleFin Connection"}
+                  form method="post" action="/simplefin-connection/add" {
+                    input id="simplefin_token" class="border min-w-full" name="simplefin_token" {}
+                    input type="submit" class="border" {}
+                }
+                }
 
-              }
-
-              h2 { "Transactions:" }
-              table class="table-auto"{
-                  thead {
-                    tr {
-                        th { "Date"}
-                        th { "Description"}
-                        th { "Amount"}
+                h2 { "Accounts:" }
+                table class="table-auto"{
+                    thead {
+                      tr {
+                          th { "Account"}
+                          th { "Balance"}
+                      }
                     }
-                  }
-                  tbody {
-                  @for tx in &transactions {
-                  tr{
-                    @if let Some(transacted_at) = tx.transacted_at {
-                        td { (transacted_at) }
-                    } @else {
-                        td {(tx.posted)}
+                    tbody {
+                    @for balance in &balances {
+                    tr{
+                      td { (balance.name)}
+                      td { (balance.balance.to_decimal(2))}
                     }
-                    td { (tx.description)}
-                    td { (tx.amount.to_decimal(2))}
-                  }
-                  }
-                  }
+                    }
+                    }
 
+                }
               }
+              div class="main" {
 
+                h2 { "Transactions:" }
+                table class="table-auto"{
+                    thead {
+                      tr {
+                          th { "Date"}
+                          th { "Description"}
+                          th { "Amount"}
+                      }
+                    }
+                    tbody {
+                    @for tx in &transactions {
+                    tr{
+                      @if let Some(transacted_at) = tx.transacted_at {
+                          td { (transacted_at) }
+                      } @else {
+                          td {(tx.posted)}
+                      }
+                      td { (tx.description)}
+                      td { (tx.amount.to_decimal(2))}
+                    }
+                    }
+                    }
 
+                }
+              }}
 
         })
         .into_response())
