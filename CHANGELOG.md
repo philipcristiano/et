@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.2](https://github.com/philipcristiano/et/compare/v0.4.1...v0.4.2) (2024-04-04)
+
+
+### Bug Fixes
+
+* Add /_health endpoint ([1709400](https://github.com/philipcristiano/et/commit/1709400879dd9d5d95117d2af993821d0a7b6276))
+* Attempt custom span ([fb553a9](https://github.com/philipcristiano/et/commit/fb553a973386fe995ad3ad97b26cf0fa96cc4f0d))
+* **deps:** update rust crate service_conventions to 0.0.13 ([87f62af](https://github.com/philipcristiano/et/commit/87f62af9a014d2b956c1afadac092d51f872c0b3))
+* **deps:** update rust crate service_conventions to 0.0.14 ([a564a62](https://github.com/philipcristiano/et/commit/a564a62de145ecc376a2151ccf75ffd667af24fa))
+* Fix formatting ([e969ce9](https://github.com/philipcristiano/et/commit/e969ce91e46f9104d965b9b51170c74dead74f46))
+* Revert "fix: Attemp axum tracing again" ([64f92da](https://github.com/philipcristiano/et/commit/64f92da4a7fedf9d827d89a16a03aeecd11e1431))
+* Revert "fix: Attempt custom span" ([8f3ba90](https://github.com/philipcristiano/et/commit/8f3ba90d199f8aa2fd8bbed7659e20432ffc7a21))
+
 ## [0.4.1](https://github.com/philipcristiano/et/compare/v0.4.0...v0.4.1) (2024-04-03)
 
 
