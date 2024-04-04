@@ -19,6 +19,6 @@ COPY atlas.hcl /
 COPY schema /schema
 COPY --from=builder /usr/local/cargo/bin/et /usr/local/bin/et
 
-COPY --from=arigaio/atlas:0.21.0-community /atlas /atlas
+COPY --from=arigaio/atlas:0.21.1-community /atlas /atlas
 
 ENTRYPOINT ["/usr/local/bin/et"]
