@@ -177,6 +177,7 @@ impl SFAccountBalanceQueryResult {
 
 pub struct SFAccountTXQueryResult {
     posted: chrono::NaiveDateTime,
+    transacted_at: Option<chrono::NaiveDateTime>,
     description: String,
     amount: sqlx::postgres::types::PgMoney,
 }
@@ -189,7 +190,7 @@ impl SFAccountTXQueryResult {
         let res = sqlx::query_as!(
             SFAccountTXQueryResult,
             r#"
-        SELECT sat.posted, sat.amount, sat.description
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
         FROM simplefin_accounts sa
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
@@ -458,7 +459,11 @@ async fn root(
                   tbody {
                   @for tx in &transactions {
                   tr{
-                    td { (tx.posted)}
+                    @if let Some(transacted_at) = tx.transacted_at {
+                        td { (transacted_at) }
+                    } @else {
+                        td {(tx.posted)}
+                    }
                     td { (tx.description)}
                     td { (tx.amount.to_decimal(2))}
                   }

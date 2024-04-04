@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description\n        FROM simplefin_accounts sa\n            JOIN simplefin_account_transactions sat\n            ON sa.id = sat.account_id\n            AND sa.connection_id = sat.connection_id\n        ORDER BY\n            sat.posted DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "posted",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 1,
+        "name": "transacted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount",
+        "type_info": "Money"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "99736a615d2b19855ad72ffc0462fb7180aac8628ec0153bc3baa3937c99fe1c"
+}
