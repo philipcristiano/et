@@ -17,6 +17,31 @@ table "simplefin_connections" {
   }
 }
 
+table "simplefin_connection_sync_info" {
+  schema = schema.public
+
+  column "connection_id" {
+    type = uuid
+  }
+  column "ts" {
+    type = timestamp
+  }
+
+  primary_key {
+    columns = [
+      column.connection_id,
+      column.ts,
+    ]
+  }
+
+  foreign_key "simplefin_connection" {
+    columns = [column.connection_id]
+    ref_columns = [table.simplefin_connections.column.id]
+    on_delete = CASCADE
+    on_update = NO_ACTION
+  }
+}
+
 table "simplefin_accounts" {
   schema = schema.public
 

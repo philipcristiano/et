@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT connection_id, ts FROM simplefin_connection_sync_info\n        WHERE connection_id = $1\n        ORDER BY ts DESC\n        LIMIT 1;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "connection_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ts",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "b321461e42429160613fc5db4f6d6fc2c62bd8ac329d3652ff279a0f0e1c2fbe"
+}

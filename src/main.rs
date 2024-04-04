@@ -18,6 +18,7 @@ use tower_cookies::CookieManagerLayer;
 
 mod html;
 mod simplefin_api;
+mod sync_manager;
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed, Clone)]
@@ -68,10 +69,28 @@ impl AppState {
 use sqlx::postgres::PgPool;
 use sqlx::postgres::PgPoolOptions;
 
-#[derive(Debug)]
+pub type SFConnectionID = uuid::Uuid;
+#[derive(Debug, Clone)]
 pub struct SFConnection {
-    id: uuid::Uuid,
+    id: SFConnectionID,
     access_url: String,
+}
+#[derive(Debug, Clone)]
+pub struct SFConnectionSyncInfo {
+    connection_id: SFConnectionID,
+    ts: chrono::NaiveDateTime,
+}
+
+impl SFConnectionSyncInfo {
+    fn is_since(&self, since: chrono::Duration) -> bool {
+        let now = chrono::Utc::now().naive_utc();
+        let diff = now - self.ts;
+        let ret = since > diff;
+        let ts = &self.ts;
+        tracing::debug!("Comparing times now {now:?}, ts {ts:?} diff {diff:?}, ret {ret}");
+        return true;
+        //return diff > since
+    }
 }
 
 impl SFConnection {
@@ -105,6 +124,40 @@ impl SFConnection {
 
         Ok(res)
     }
+    #[tracing::instrument]
+    async fn last_sync_info(&self, pool: &PgPool) -> anyhow::Result<Option<SFConnectionSyncInfo>> {
+        let res = sqlx::query_as!(
+            SFConnectionSyncInfo,
+            r#"
+        SELECT connection_id, ts FROM simplefin_connection_sync_info
+        WHERE connection_id = $1
+        ORDER BY ts DESC
+        LIMIT 1;
+            "#,
+            self.id
+        )
+        .fetch_optional(pool)
+        .await?;
+        Ok(res)
+    }
+    #[tracing::instrument]
+    async fn mark_synced(&self, pool: &PgPool) -> anyhow::Result<()> {
+        let now = chrono::Utc::now().naive_utc();
+        sqlx::query!(
+            r#"
+    INSERT INTO simplefin_connection_sync_info ( connection_id, ts )
+    VALUES ( $1, $2 )
+    ON CONFLICT (connection_id, ts) DO NOTHING
+            "#,
+            self.id,
+            now,
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
     #[tracing::instrument]
     async fn by_id(id: &uuid::Uuid, db: &PgPool) -> anyhow::Result<Option<SFConnection>> {
         Ok(sqlx::query_as!(
@@ -340,15 +393,13 @@ async fn main() {
         .await
         .expect("Cannot connect to DB");
 
-    // tracing::info!("Syncing SimpleFin connections to Database");
-    // for (sfconnect_id, _sfconnection_config) in app_config.simplefin.iter() {
-    //     let sfc = SFConnection::new(sfconnect_id.to_string());
-    //     println!("{sfc:?}");
-    //     sfc.ensure_in_db(&pool).await?;
-
-    // };
-
     let app_state = AppState::from_config(app_config, pool, pool_spike);
+
+    let app_state2 = app_state.clone();
+    tokio::spawn(async move {
+        sync_manager::sync_all(app_state2).await;
+    });
+
     let oidc_router = service_conventions::oidc::router(app_state.auth.clone());
     let serve_assets = axum_embed::ServeEmbed::<StaticAssets>::new();
     let app = Router::new()
@@ -356,10 +407,6 @@ async fn main() {
         .route("/", get(root))
         .route("/logged_in", get(handle_logged_in))
         .route("/simplefin-connection/add", post(add_simplefin_connection))
-        .route(
-            "/simplefin-connection/:simplefin_connection_id/sync",
-            post(sync_simplefin_connection),
-        )
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
         .nest_service("/static", serve_assets)
         .with_state(app_state.clone())
@@ -414,11 +461,9 @@ async fn root(
               h2 { "Connections:" }
               @for sfconn in &user_connections {
               div {
-                  form method="post" action={"/simplefin-connection/" (sfconn.id) "/sync"} {
                     (sfconn.id)
-                    input type="submit" class="border" value="Sync connection" {}
                   }
-              }}
+              }
 
               div {
                 h3 { "Add a SimpleFin Connection"}
@@ -517,50 +562,6 @@ async fn add_simplefin_connection(
     Ok(Redirect::to("/").into_response())
 }
 
-#[derive(Deserialize)]
-struct RequestSyncParams {
-    simplefin_connection_id: String,
-}
-async fn sync_simplefin_connection(
-    State(app_state): State<AppState>,
-    _user: service_conventions::oidc::OIDCUser,
-    Path(RequestSyncParams {
-        simplefin_connection_id,
-    }): Path<RequestSyncParams>,
-) -> Result<Response, AppError> {
-    tracing::info!("Request Sync for {}", simplefin_connection_id);
-    let uuid_id = uuid::Uuid::parse_str(&simplefin_connection_id)?;
-    let sfc = SFConnection::by_id(&uuid_id, &app_state.db).await?;
-    if let Some(sfc) = sfc {
-        let account_set = simplefin_api::accounts(&sfc.access_url).await?;
-        for account in account_set.accounts {
-            tracing::debug!("Saving account: {:?}", account.id);
-            let sfa = SFAccount {
-                id: account.id,
-                connection_id: sfc.id,
-                name: account.name,
-                currency: account.currency,
-            };
-            sfa.ensure_in_db(&app_state.db).await?;
-            let sfab = SFAccountBalance {
-                account_id: sfa.id.clone(),
-                connection_id: sfc.id,
-                timestamp: account.balance_date,
-                balance: account.balance,
-            };
-            sfab.ensure_in_db(&app_state.db).await?;
-
-            let txs_f = account.transactions.iter().map(|src_tx| {
-                let tx = SFAccountTransaction::from_transaction(&sfa, &src_tx);
-                SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
-            });
-
-            futures::future::try_join_all(txs_f).await?;
-            ()
-        }
-    }
-    Ok(Redirect::to("/").into_response())
-}
 // Make our own error that wraps `anyhow::Error`.
 struct AppError(anyhow::Error);
 
