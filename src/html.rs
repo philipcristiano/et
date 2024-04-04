@@ -10,7 +10,9 @@ pub fn maud_page(content: maud::Markup) -> maud::Markup {
 
 fn maud_header() -> maud::Markup {
     html! {
-        link rel="stylesheet" href="static/tailwind.css";
+        link rel="stylesheet" href="/static/tailwind.css";
+        link rel="script" href="";
+        script src="/static/htmx-1.9.11.js" {}
         meta name="viewport" content="width=device-width, initial-scale=1.0";
     }
 }
@@ -31,7 +33,7 @@ fn maud_body(content: maud::Markup) -> maud::Markup {
     html! {
         body {
             (maud_nav())
-            div class="w-full lg:max-w-3xl mx-auto pt-20 lg:place-content-center" {
+            div class="w-full lg:max-w-screen-xl lg:flex-auto mx-auto pt-20 lg:place-content-center" {
 
                 div class="w-full px-2 lg:px-6 leading-normal" {
                         (content)

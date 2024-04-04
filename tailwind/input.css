@@ -24,6 +24,12 @@
   nav.nav {
     @apply fixed w-full z-10 top-0 border-slate-600 border-b-2;
   }
+  div.sidebar {
+    @apply flex-auto p-2 max-w-sm
+  }
+  div.main {
+    @apply flex-auto p-2 max-w-screen-md
+  }
   p {
     @apply py-2;
   }
