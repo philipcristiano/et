@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0](https://github.com/philipcristiano/et/compare/v0.4.2...v0.5.0) (2024-04-04)
+
+
+### Features
+
+* Sync in background ([baa62d1](https://github.com/philipcristiano/et/commit/baa62d17893ee43abbd08c271edf1bdc739ef74f))
+
+
+### Bug Fixes
+
+* Display transaction time if set ([216ff96](https://github.com/philipcristiano/et/commit/216ff960e92a70d52b0e6ea0af98ed1df89ff342))
+* Error on tailwind error ([42e9841](https://github.com/philipcristiano/et/commit/42e9841bdfdee64206dd526088504aecca5dc68b))
+* style: Formatting in columns ([a1faac6](https://github.com/philipcristiano/et/commit/a1faac6a0b11d84e389c22809732a2b33a0c9377))
+
 ## [0.4.2](https://github.com/philipcristiano/et/compare/v0.4.1...v0.4.2) (2024-04-04)
 
 
