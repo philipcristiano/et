@@ -59,7 +59,7 @@ jobs:
         run: touch tailwind/tailwind.css
 
       - name: Apply Schema
-        uses: docker://arigaio/atlas:0.21.0-community
+        uses: docker://arigaio/atlas:0.21.1-community
         env:
           SKIP_TAILWIND: true
           DATABASE_URL: "postgres://postgres:postgres@postgres/et?sslmode=disable"
