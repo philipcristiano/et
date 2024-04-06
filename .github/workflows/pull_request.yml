@@ -58,6 +58,11 @@ jobs:
       - name: Create dummy tailwind file
         run: touch tailwind/tailwind.css
 
+      - name: Enable extension
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -d et -U postgres -tc "CREATE EXTENSION ltree;"
+
       - name: Apply Schema
         uses: docker://arigaio/atlas:0.21.1-community
         env:

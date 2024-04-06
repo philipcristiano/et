@@ -42,3 +42,69 @@ fn maud_body(content: maud::Markup) -> maud::Markup {
         };
     }
 }
+
+pub fn sidebar(
+    user_connections: Vec<crate::SFConnection>,
+    balances: Vec<crate::accounts::SFAccountBalanceQueryResult>,
+) -> maud::Markup {
+    html! {
+        div class="sidebar" {
+          h2 { "Connections:" }
+          @for sfconn in &user_connections {
+          div {
+                (sfconn.id)
+              }
+          }
+          div {
+            h3 { "Add a SimpleFin Connection"}
+            form method="post" action="/simplefin-connection/add" {
+              input id="simplefin_token" class="border min-w-full" name="simplefin_token" {}
+              input type="submit" class="border" {}
+          }
+          }
+
+
+          p
+                  hx-get="/f/transactions"
+                  hx-push-url={"/"}
+                  hx-target="#main"
+                  hx-swap="innerHTML"
+                  hx-trigger="click"
+          { "Transactions Page"}
+          p
+                  hx-get="/f/labels"
+                  hx-push-url={"/labels"}
+                  hx-target="#main"
+                  hx-swap="innerHTML"
+                  hx-trigger="click"
+          { "Labels Page"}
+
+          h2 { "Accounts:" }
+
+          table class="table-auto"{
+              thead {
+                tr
+                {
+                    th { "Account"}
+                    th { "Balance"}
+                }
+              }
+              tbody {
+              @for balance in &balances {
+              tr
+                  hx-get={"/f/transactions?account_id=" (balance.account_id) }
+                  hx-push-url={"/?account_id=" (balance.account_id) }
+                  hx-target="#main"
+                  hx-swap="innerHTML"
+                  hx-trigger="click"
+                  {
+                  td { (balance.name)}
+                  td { (balance.balance.to_decimal(2))}
+              }
+              }
+              }
+
+          }
+        }
+    }
+}

@@ -75,6 +75,7 @@ impl SFAccountTXQuery {
 impl maud::Render for SFAccountTXQuery {
     fn render(&self) -> maud::Markup {
         maud::html! {
+           h2 { "Transactions:" }
            table #transaction-table class="table-auto"{
                thead {
                  tr {
