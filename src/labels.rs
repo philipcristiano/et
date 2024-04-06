@@ -47,16 +47,14 @@ pub async fn handle_labels_fragment(
     let labels_result = LabelsQuery::all(&app_state.db).await?;
 
     Ok(html! {
-          div #main class="main" {
-            div {
-              h3 { "Add a label"}
-              form method="post" action="/labels" {
-                input id="label" class="border min-w-full" name="label" {}
-                input type="submit" class="border" {}
-              }
-            }
-            (&labels_result)
+        div {
+          h3 { "Add a label"}
+          form method="post" action="/labels" {
+            input id="label" class="border min-w-full" name="label" {}
+            input type="submit" class="border" {}
           }
+        }
+        (&labels_result)
 
     }
     .into_response())
