@@ -2,6 +2,7 @@ use clap::Parser;
 use futures::try_join;
 use serde::Deserialize;
 use std::fs;
+use std::ops::Deref;
 use std::str;
 
 use axum::{
@@ -229,17 +230,28 @@ impl SFAccountBalanceQueryResult {
 }
 
 #[derive(sqlx::FromRow)]
-pub struct SFAccountTXQueryResult {
+pub struct SFAccountTXQueryResultRow {
     posted: chrono::NaiveDateTime,
     transacted_at: Option<chrono::NaiveDateTime>,
     description: String,
     amount: sqlx::postgres::types::PgMoney,
 }
-impl SFAccountTXQueryResult {
+
+pub struct SFAccountTXQuery {
+    item: Vec<SFAccountTXQueryResultRow>,
+}
+
+impl From<Vec<SFAccountTXQueryResultRow>> for SFAccountTXQuery {
+    fn from(item: Vec<SFAccountTXQueryResultRow>) -> Self {
+        SFAccountTXQuery { item }
+    }
+}
+
+impl SFAccountTXQuery {
     #[tracing::instrument]
-    async fn all(pool: &PgPool) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
+    async fn all(pool: &PgPool) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
-            SFAccountTXQueryResult,
+            SFAccountTXQueryResultRow,
             r#"
         SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
         FROM simplefin_accounts sa
@@ -252,15 +264,14 @@ impl SFAccountTXQueryResult {
         )
         .fetch_all(pool)
         .await?;
-
-        Ok(res)
+        Ok(res.into())
     }
 
     #[tracing::instrument]
     async fn from_options(
         params: TransactionsFilterOptions,
         pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
+    ) -> anyhow::Result<Self> {
         if let Some(account_id) = params.account_id {
             Self::by_account_id(account_id, pool).await
         } else {
@@ -269,12 +280,9 @@ impl SFAccountTXQueryResult {
     }
 
     #[tracing::instrument]
-    async fn by_account_id(
-        account_id: AccountID,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
+    async fn by_account_id(account_id: AccountID, pool: &PgPool) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
-            SFAccountTXQueryResult,
+            SFAccountTXQueryResultRow,
             r#"
         SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
         FROM simplefin_account_transactions sat
@@ -287,10 +295,12 @@ impl SFAccountTXQueryResult {
         .fetch_all(pool)
         .await?;
 
-        Ok(res)
+        Ok(res.into())
     }
+}
 
-    fn as_html_table(transactions: &Vec<SFAccountTXQueryResult>) -> maud::Markup {
+impl maud::Render for SFAccountTXQuery {
+    fn render(&self) -> maud::Markup {
         maud::html! {
            table #transaction-table class="table-auto"{
                thead {
@@ -301,7 +311,7 @@ impl SFAccountTXQueryResult {
                  }
                }
                tbody {
-               @for tx in transactions {
+               @for tx in &self.item {
                tr{
                  @if let Some(transacted_at) = tx.transacted_at {
                      td { (transacted_at) }
@@ -466,7 +476,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        .route("/transactions", get(get_transactions))
+        .route("/f/transactions", get(get_transactions))
         .route("/logged_in", get(handle_logged_in))
         .route("/simplefin-connection/add", post(add_simplefin_connection))
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
@@ -504,26 +514,28 @@ struct TransactionsFilterOptions {
     account_id: Option<String>,
 }
 
+use maud::Render;
 async fn get_transactions(
     State(app_state): State<AppState>,
     _user: service_conventions::oidc::OIDCUser,
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
-    use std::ops::Deref;
     let filter_options = tx_filter.deref();
     let transactions =
-        SFAccountTXQueryResult::from_options(filter_options.clone(), &app_state.db).await?;
-    Ok(SFAccountTXQueryResult::as_html_table(&transactions).into_response())
+        SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db).await?;
+    Ok(transactions.render().into_response())
 }
 
 async fn root(
     State(app_state): State<AppState>,
     user: Option<service_conventions::oidc::OIDCUser>,
+    tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
     if let Some(user) = user {
+        let filter_options = tx_filter.deref();
         let user_connections_f = SFConnection::connections(&app_state.db);
         let balances_f = SFAccountBalanceQueryResult::get_balances(&app_state.db);
-        let transactions_f = SFAccountTXQueryResult::all(&app_state.db);
+        let transactions_f = SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db);
 
         let (user_connections, balances, transactions) =
             try_join!(user_connections_f, balances_f, transactions_f)?;
@@ -557,7 +569,8 @@ async fn root(
                 h2 { "Accounts:" }
 
                 p
-                        hx-get="/transactions"
+                        hx-get="/f/transactions"
+                        hx-push-url={"/"}
                         hx-target="#transaction-table"
                         hx-swap="outerHTML"
                         hx-trigger="click"
@@ -574,7 +587,8 @@ async fn root(
                     tbody {
                     @for balance in &balances {
                     tr
-                        hx-get={"/transactions?account_id=" (balance.account_id) }
+                        hx-get={"/f/transactions?account_id=" (balance.account_id) }
+                        hx-push-url={"/?account_id=" (balance.account_id) }
                         hx-target="#transaction-table"
                         hx-swap="outerHTML"
                         hx-trigger="click"
@@ -590,7 +604,7 @@ async fn root(
               div class="main" {
 
                 h2 { "Transactions:" }
-                (SFAccountTXQueryResult::as_html_table(&transactions))
+                (&transactions)
               }}
 
         })
