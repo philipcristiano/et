@@ -2,6 +2,7 @@ use clap::Parser;
 use futures::try_join;
 use serde::Deserialize;
 use std::fs;
+use std::ops::Deref;
 use std::str;
 
 use axum::{
@@ -16,9 +17,11 @@ use std::net::SocketAddr;
 use maud::html;
 use tower_cookies::CookieManagerLayer;
 
+mod accounts;
 mod html;
 mod simplefin_api;
 mod sync_manager;
+mod tx;
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed, Clone)]
@@ -169,234 +172,6 @@ impl SFConnection {
     }
 }
 
-#[derive(Debug)]
-pub struct SFAccount {
-    id: String,
-    connection_id: uuid::Uuid,
-    currency: String,
-    name: String,
-}
-impl SFAccount {
-    #[tracing::instrument]
-    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
-            r#"
-    INSERT INTO simplefin_accounts ( connection_id, id, name, currency )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (id, connection_id) DO NOTHING
-            "#,
-            self.connection_id,
-            self.id,
-            self.name,
-            self.currency,
-        )
-        .execute(pool)
-        .await?;
-
-        Ok(())
-    }
-}
-
-pub struct SFAccountBalanceQueryResult {
-    name: String,
-    account_id: AccountID,
-    balance: sqlx::postgres::types::PgMoney,
-}
-impl SFAccountBalanceQueryResult {
-    #[tracing::instrument]
-    async fn get_balances(pool: &PgPool) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
-        let res = sqlx::query_as!(
-            SFAccountBalanceQueryResult,
-            r#"
-        SELECT name, sab.account_id, sab.balance
-        FROM simplefin_accounts sa
-        JOIN (
-                SELECT account_id, max(ts) as ts
-                FROM simplefin_account_balances
-                GROUP BY (account_id)
-            ) as last_ts
-            ON sa.id = last_ts.account_id
-        LEFT JOIN simplefin_account_balances sab
-            ON last_ts.account_id = sab.account_id
-            AND last_ts.ts = sab.ts;
-            "#,
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(res)
-    }
-}
-
-#[derive(sqlx::FromRow)]
-pub struct SFAccountTXQueryResult {
-    posted: chrono::NaiveDateTime,
-    transacted_at: Option<chrono::NaiveDateTime>,
-    description: String,
-    amount: sqlx::postgres::types::PgMoney,
-}
-impl SFAccountTXQueryResult {
-    #[tracing::instrument]
-    async fn all(pool: &PgPool) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
-        let res = sqlx::query_as!(
-            SFAccountTXQueryResult,
-            r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
-        FROM simplefin_accounts sa
-            JOIN simplefin_account_transactions sat
-            ON sa.id = sat.account_id
-            AND sa.connection_id = sat.connection_id
-        ORDER BY
-            sat.posted DESC
-            "#,
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(res)
-    }
-
-    #[tracing::instrument]
-    async fn from_options(
-        params: TransactionsFilterOptions,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
-        if let Some(account_id) = params.account_id {
-            Self::by_account_id(account_id, pool).await
-        } else {
-            Self::all(pool).await
-        }
-    }
-
-    #[tracing::instrument]
-    async fn by_account_id(
-        account_id: AccountID,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXQueryResult>> {
-        let res = sqlx::query_as!(
-            SFAccountTXQueryResult,
-            r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
-        FROM simplefin_account_transactions sat
-        WHERE sat.account_id = $1
-        ORDER BY
-            sat.posted DESC
-            "#,
-            account_id
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(res)
-    }
-
-    fn as_html_table(transactions: &Vec<SFAccountTXQueryResult>) -> maud::Markup {
-        maud::html! {
-           table #transaction-table class="table-auto"{
-               thead {
-                 tr {
-                     th { "Date"}
-                     th { "Description"}
-                     th { "Amount"}
-                 }
-               }
-               tbody {
-               @for tx in transactions {
-               tr{
-                 @if let Some(transacted_at) = tx.transacted_at {
-                     td { (transacted_at) }
-                 } @else {
-                     td {(tx.posted)}
-                 }
-                 td { (tx.description)}
-                 td { (tx.amount.to_decimal(2))}
-               }
-               }
-               }
-
-           }
-        }
-    }
-}
-
-type AccountID = String;
-#[derive(Debug)]
-pub struct SFAccountBalance {
-    account_id: AccountID,
-    connection_id: uuid::Uuid,
-    timestamp: chrono::DateTime<chrono::Utc>,
-    balance: rust_decimal::Decimal,
-}
-impl SFAccountBalance {
-    #[tracing::instrument]
-    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
-            r#"
-    INSERT INTO simplefin_account_balances ( connection_id, account_id, ts, balance )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (account_id, connection_id, ts) DO NOTHING
-            "#,
-            self.connection_id,
-            self.account_id,
-            self.timestamp.naive_utc(),
-            sqlx::postgres::types::PgMoney::from_decimal(self.balance, 2),
-        )
-        .execute(pool)
-        .await?;
-
-        Ok(())
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SFAccountTransaction {
-    account_id: String,
-    connection_id: uuid::Uuid,
-    id: String,
-    posted: chrono::DateTime<chrono::Utc>,
-    transacted_at: Option<chrono::DateTime<chrono::Utc>>,
-    amount: rust_decimal::Decimal,
-    pending: Option<bool>,
-    description: String,
-}
-impl SFAccountTransaction {
-    #[tracing::instrument]
-    async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
-            r#"
-    INSERT INTO simplefin_account_transactions ( connection_id, account_id, id, posted, amount, transacted_at, pending, description )
-    VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
-    ON CONFLICT (account_id, connection_id, id) DO NOTHING
-            "#,
-            self.connection_id,
-            self.account_id,
-            self.id,
-            self.posted.naive_utc(),
-            sqlx::postgres::types::PgMoney::from_decimal(self.amount, 2),
-            self.transacted_at.map(|ta| ta.naive_utc()),
-            self.pending,
-            self.description
-        )
-        .execute(pool)
-        .await?;
-
-        Ok(())
-    }
-
-    fn from_transaction(act: &SFAccount, tx: &simplefin_api::Transaction) -> Self {
-        SFAccountTransaction {
-            account_id: act.id.clone(),
-            connection_id: act.connection_id,
-            id: tx.id.clone(),
-            posted: tx.posted,
-            transacted_at: tx.transacted_at,
-            amount: tx.amount,
-            pending: tx.pending,
-            description: tx.description.clone(),
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct ETUser {
     pub id: String,
@@ -466,7 +241,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        .route("/transactions", get(get_transactions))
+        .route("/f/transactions", get(get_transactions))
         .route("/logged_in", get(handle_logged_in))
         .route("/simplefin-connection/add", post(add_simplefin_connection))
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
@@ -504,26 +279,29 @@ struct TransactionsFilterOptions {
     account_id: Option<String>,
 }
 
+use maud::Render;
 async fn get_transactions(
     State(app_state): State<AppState>,
     _user: service_conventions::oidc::OIDCUser,
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
-    use std::ops::Deref;
     let filter_options = tx_filter.deref();
     let transactions =
-        SFAccountTXQueryResult::from_options(filter_options.clone(), &app_state.db).await?;
-    Ok(SFAccountTXQueryResult::as_html_table(&transactions).into_response())
+        tx::SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db).await?;
+    Ok(transactions.render().into_response())
 }
 
 async fn root(
     State(app_state): State<AppState>,
     user: Option<service_conventions::oidc::OIDCUser>,
+    tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
     if let Some(user) = user {
+        let filter_options = tx_filter.deref();
         let user_connections_f = SFConnection::connections(&app_state.db);
-        let balances_f = SFAccountBalanceQueryResult::get_balances(&app_state.db);
-        let transactions_f = SFAccountTXQueryResult::all(&app_state.db);
+        let balances_f = accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
+        let transactions_f =
+            tx::SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db);
 
         let (user_connections, balances, transactions) =
             try_join!(user_connections_f, balances_f, transactions_f)?;
@@ -557,7 +335,8 @@ async fn root(
                 h2 { "Accounts:" }
 
                 p
-                        hx-get="/transactions"
+                        hx-get="/f/transactions"
+                        hx-push-url={"/"}
                         hx-target="#transaction-table"
                         hx-swap="outerHTML"
                         hx-trigger="click"
@@ -574,7 +353,8 @@ async fn root(
                     tbody {
                     @for balance in &balances {
                     tr
-                        hx-get={"/transactions?account_id=" (balance.account_id) }
+                        hx-get={"/f/transactions?account_id=" (balance.account_id) }
+                        hx-push-url={"/?account_id=" (balance.account_id) }
                         hx-target="#transaction-table"
                         hx-swap="outerHTML"
                         hx-trigger="click"
@@ -590,7 +370,7 @@ async fn root(
               div class="main" {
 
                 h2 { "Transactions:" }
-                (SFAccountTXQueryResult::as_html_table(&transactions))
+                (&transactions)
               }}
 
         })
