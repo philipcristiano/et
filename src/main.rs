@@ -248,6 +248,7 @@ async fn main() {
         .nest_service("/static", serve_assets)
         .with_state(app_state.clone())
         .layer(CookieManagerLayer::new())
+        .layer(tower_http::compression::CompressionLayer::new())
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
