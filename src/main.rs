@@ -17,9 +17,11 @@ use std::net::SocketAddr;
 use maud::html;
 use tower_cookies::CookieManagerLayer;
 
+mod accounts;
 mod html;
 mod simplefin_api;
 mod sync_manager;
+mod tx;
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed, Clone)]
@@ -170,243 +172,6 @@ impl SFConnection {
     }
 }
 
-#[derive(Debug)]
-pub struct SFAccount {
-    id: String,
-    connection_id: uuid::Uuid,
-    currency: String,
-    name: String,
-}
-impl SFAccount {
-    #[tracing::instrument]
-    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
-            r#"
-    INSERT INTO simplefin_accounts ( connection_id, id, name, currency )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (id, connection_id) DO NOTHING
-            "#,
-            self.connection_id,
-            self.id,
-            self.name,
-            self.currency,
-        )
-        .execute(pool)
-        .await?;
-
-        Ok(())
-    }
-}
-
-pub struct SFAccountBalanceQueryResult {
-    name: String,
-    account_id: AccountID,
-    balance: sqlx::postgres::types::PgMoney,
-}
-impl SFAccountBalanceQueryResult {
-    #[tracing::instrument]
-    async fn get_balances(pool: &PgPool) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
-        let res = sqlx::query_as!(
-            SFAccountBalanceQueryResult,
-            r#"
-        SELECT name, sab.account_id, sab.balance
-        FROM simplefin_accounts sa
-        JOIN (
-                SELECT account_id, max(ts) as ts
-                FROM simplefin_account_balances
-                GROUP BY (account_id)
-            ) as last_ts
-            ON sa.id = last_ts.account_id
-        LEFT JOIN simplefin_account_balances sab
-            ON last_ts.account_id = sab.account_id
-            AND last_ts.ts = sab.ts;
-            "#,
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(res)
-    }
-}
-
-#[derive(sqlx::FromRow)]
-pub struct SFAccountTXQueryResultRow {
-    posted: chrono::NaiveDateTime,
-    transacted_at: Option<chrono::NaiveDateTime>,
-    description: String,
-    amount: sqlx::postgres::types::PgMoney,
-}
-
-pub struct SFAccountTXQuery {
-    item: Vec<SFAccountTXQueryResultRow>,
-}
-
-impl From<Vec<SFAccountTXQueryResultRow>> for SFAccountTXQuery {
-    fn from(item: Vec<SFAccountTXQueryResultRow>) -> Self {
-        SFAccountTXQuery { item }
-    }
-}
-
-impl SFAccountTXQuery {
-    #[tracing::instrument]
-    async fn all(pool: &PgPool) -> anyhow::Result<Self> {
-        let res = sqlx::query_as!(
-            SFAccountTXQueryResultRow,
-            r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
-        FROM simplefin_accounts sa
-            JOIN simplefin_account_transactions sat
-            ON sa.id = sat.account_id
-            AND sa.connection_id = sat.connection_id
-        ORDER BY
-            sat.posted DESC
-            "#,
-        )
-        .fetch_all(pool)
-        .await?;
-        Ok(res.into())
-    }
-
-    #[tracing::instrument]
-    async fn from_options(
-        params: TransactionsFilterOptions,
-        pool: &PgPool,
-    ) -> anyhow::Result<Self> {
-        if let Some(account_id) = params.account_id {
-            Self::by_account_id(account_id, pool).await
-        } else {
-            Self::all(pool).await
-        }
-    }
-
-    #[tracing::instrument]
-    async fn by_account_id(account_id: AccountID, pool: &PgPool) -> anyhow::Result<Self> {
-        let res = sqlx::query_as!(
-            SFAccountTXQueryResultRow,
-            r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
-        FROM simplefin_account_transactions sat
-        WHERE sat.account_id = $1
-        ORDER BY
-            sat.posted DESC
-            "#,
-            account_id
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(res.into())
-    }
-}
-
-impl maud::Render for SFAccountTXQuery {
-    fn render(&self) -> maud::Markup {
-        maud::html! {
-           table #transaction-table class="table-auto"{
-               thead {
-                 tr {
-                     th { "Date"}
-                     th { "Description"}
-                     th { "Amount"}
-                 }
-               }
-               tbody {
-               @for tx in &self.item {
-               tr{
-                 @if let Some(transacted_at) = tx.transacted_at {
-                     td { (transacted_at) }
-                 } @else {
-                     td {(tx.posted)}
-                 }
-                 td { (tx.description)}
-                 td { (tx.amount.to_decimal(2))}
-               }
-               }
-               }
-
-           }
-        }
-    }
-}
-
-type AccountID = String;
-#[derive(Debug)]
-pub struct SFAccountBalance {
-    account_id: AccountID,
-    connection_id: uuid::Uuid,
-    timestamp: chrono::DateTime<chrono::Utc>,
-    balance: rust_decimal::Decimal,
-}
-impl SFAccountBalance {
-    #[tracing::instrument]
-    async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
-            r#"
-    INSERT INTO simplefin_account_balances ( connection_id, account_id, ts, balance )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (account_id, connection_id, ts) DO NOTHING
-            "#,
-            self.connection_id,
-            self.account_id,
-            self.timestamp.naive_utc(),
-            sqlx::postgres::types::PgMoney::from_decimal(self.balance, 2),
-        )
-        .execute(pool)
-        .await?;
-
-        Ok(())
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SFAccountTransaction {
-    account_id: String,
-    connection_id: uuid::Uuid,
-    id: String,
-    posted: chrono::DateTime<chrono::Utc>,
-    transacted_at: Option<chrono::DateTime<chrono::Utc>>,
-    amount: rust_decimal::Decimal,
-    pending: Option<bool>,
-    description: String,
-}
-impl SFAccountTransaction {
-    #[tracing::instrument]
-    async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
-            r#"
-    INSERT INTO simplefin_account_transactions ( connection_id, account_id, id, posted, amount, transacted_at, pending, description )
-    VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
-    ON CONFLICT (account_id, connection_id, id) DO NOTHING
-            "#,
-            self.connection_id,
-            self.account_id,
-            self.id,
-            self.posted.naive_utc(),
-            sqlx::postgres::types::PgMoney::from_decimal(self.amount, 2),
-            self.transacted_at.map(|ta| ta.naive_utc()),
-            self.pending,
-            self.description
-        )
-        .execute(pool)
-        .await?;
-
-        Ok(())
-    }
-
-    fn from_transaction(act: &SFAccount, tx: &simplefin_api::Transaction) -> Self {
-        SFAccountTransaction {
-            account_id: act.id.clone(),
-            connection_id: act.connection_id,
-            id: tx.id.clone(),
-            posted: tx.posted,
-            transacted_at: tx.transacted_at,
-            amount: tx.amount,
-            pending: tx.pending,
-            description: tx.description.clone(),
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct ETUser {
     pub id: String,
@@ -522,7 +287,7 @@ async fn get_transactions(
 ) -> Result<Response, AppError> {
     let filter_options = tx_filter.deref();
     let transactions =
-        SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db).await?;
+        tx::SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db).await?;
     Ok(transactions.render().into_response())
 }
 
@@ -534,8 +299,9 @@ async fn root(
     if let Some(user) = user {
         let filter_options = tx_filter.deref();
         let user_connections_f = SFConnection::connections(&app_state.db);
-        let balances_f = SFAccountBalanceQueryResult::get_balances(&app_state.db);
-        let transactions_f = SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db);
+        let balances_f = accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
+        let transactions_f =
+            tx::SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db);
 
         let (user_connections, balances, transactions) =
             try_join!(user_connections_f, balances_f, transactions_f)?;

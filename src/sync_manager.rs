@@ -1,4 +1,8 @@
-use crate::{AppState, SFAccount, SFAccountBalance, SFAccountTransaction, SFConnection};
+use crate::{
+    accounts::{SFAccount, SFAccountBalance},
+    tx::SFAccountTransaction,
+    AppState, SFConnection,
+};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::Level;
