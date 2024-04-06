@@ -19,6 +19,7 @@ use tower_cookies::CookieManagerLayer;
 
 mod accounts;
 mod html;
+mod labels;
 mod simplefin_api;
 mod sync_manager;
 mod tx;
@@ -242,6 +243,11 @@ async fn main() {
         // `GET /` goes to `root`
         .route("/", get(root))
         .route("/f/transactions", get(get_transactions))
+        .route(
+            "/labels",
+            get(labels::handle_labels).post(labels::add_label),
+        )
+        .route("/f/labels", get(labels::handle_labels_fragment))
         .route("/logged_in", get(handle_logged_in))
         .route("/simplefin-connection/add", post(add_simplefin_connection))
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
@@ -308,69 +314,9 @@ async fn root(
             try_join!(user_connections_f, balances_f, transactions_f)?;
 
         Ok(html::maud_page(html! {
-              p {
-                @if let Some(name) = user.name {
-                    "Name: " ( name )
-                }
-                @if let Some(email) = user.email {
-                    "Email: " ( email )
-                }
-              }
-
               div class="flex flex-col lg:flex-row"{
-              div class="sidebar"{
-                h2 { "Connections:" }
-                @for sfconn in &user_connections {
-                div {
-                      (sfconn.id)
-                    }
-                }
-                div {
-                  h3 { "Add a SimpleFin Connection"}
-                  form method="post" action="/simplefin-connection/add" {
-                    input id="simplefin_token" class="border min-w-full" name="simplefin_token" {}
-                    input type="submit" class="border" {}
-                }
-                }
-
-                h2 { "Accounts:" }
-
-                p
-                        hx-get="/f/transactions"
-                        hx-push-url={"/"}
-                        hx-target="#transaction-table"
-                        hx-swap="outerHTML"
-                        hx-trigger="click"
-                { "All Transactions"}
-
-                table class="table-auto"{
-                    thead {
-                      tr
-                      {
-                          th { "Account"}
-                          th { "Balance"}
-                      }
-                    }
-                    tbody {
-                    @for balance in &balances {
-                    tr
-                        hx-get={"/f/transactions?account_id=" (balance.account_id) }
-                        hx-push-url={"/?account_id=" (balance.account_id) }
-                        hx-target="#transaction-table"
-                        hx-swap="outerHTML"
-                        hx-trigger="click"
-                        {
-                        td { (balance.name)}
-                        td { (balance.balance.to_decimal(2))}
-                    }
-                    }
-                    }
-
-                }
-              }
-              div class="main" {
-
-                h2 { "Transactions:" }
+              (html::sidebar(user_connections, balances))
+              div #main class="main" {
                 (&transactions)
               }}
 
