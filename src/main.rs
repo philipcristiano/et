@@ -88,8 +88,7 @@ impl SFConnectionSyncInfo {
         let ret = since > diff;
         let ts = &self.ts;
         tracing::debug!("Comparing times now {now:?}, ts {ts:?} diff {diff:?}, ret {ret}");
-        return true;
-        //return diff > since
+        ret
     }
 }
 
