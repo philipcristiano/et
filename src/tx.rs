@@ -1,10 +1,85 @@
+use axum::{
+    extract::{Path, State},
+    response::{IntoResponse, Response},
+    Form,
+};
+use futures::try_join;
+use maud::Render;
 use sqlx::postgres::PgPool;
+
+pub type TransactionID = String;
 #[derive(sqlx::FromRow)]
 pub struct SFAccountTXQueryResultRow {
+    id: String,
     posted: chrono::NaiveDateTime,
     transacted_at: Option<chrono::NaiveDateTime>,
     description: String,
     amount: sqlx::postgres::types::PgMoney,
+    connection_id: crate::SFConnectionID,
+    account_id: crate::accounts::AccountID,
+}
+impl SFAccountTXQueryResultRow {
+    fn render_edit(&self, labels_markup: maud::Markup) -> maud::Markup {
+        maud::html! {
+         tr hx-target="this"
+            hx-swap="outerHTML"
+            {
+              @if let Some(transacted_at) = self.transacted_at {
+                  td { (transacted_at) }
+              } @else {
+                  td {(self.posted)}
+              }
+              td { (self.description)}
+              td { (self.amount.to_decimal(2))}
+        }
+        td {
+              div {
+                  form
+                        //hx-from={ "find #search-input-" (self.id)}
+                        //hx-from={ "(find #search-input-" (self.id) ")"}
+                        hx-from="input"
+                        hx-get="/f/labels/search"
+                        hx-target={"#search-results-" (self.id)}
+                        hx-trigger="input changed delay:100ms from:input"
+                   {
+                    input #{ "search-input-" (self.id)}
+                        hx-get="/f/labels/search"
+                        name="search"
+                        placeholder="Begin typing to search labels"
+                    {}
+                    input type="hidden" name="connection_id" value={(self.connection_id)} {}
+                    input type="hidden" name="account_id" value={(self.account_id)} {}
+                    input type="hidden" name="transaction_id" value={(self.id)} {}
+
+                    ul #{"search-results-" (self.id)} {}
+                  }
+
+             }
+            div {
+                span {"Current labels:"}
+                (labels_markup)}
+        }}
+    }
+}
+
+impl maud::Render for SFAccountTXQueryResultRow {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+         tr
+            hx-target="this"
+            hx-swap="outerHTML"
+            hx-trigger="click"
+            hx-get={"/f/transactions/" (self.connection_id) "/" (self.account_id) "/" (self.id) "/edit" }
+            {
+              @if let Some(transacted_at) = self.transacted_at {
+                  td { (transacted_at) }
+              } @else {
+                  td {(self.posted)}
+              }
+              td { (self.description)}
+              td { (self.amount.to_decimal(2))}
+        }}
+    }
 }
 
 pub struct SFAccountTXQuery {
@@ -23,7 +98,7 @@ impl SFAccountTXQuery {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.id, sat.account_id
         FROM simplefin_accounts sa
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
@@ -35,6 +110,28 @@ impl SFAccountTXQuery {
         .fetch_all(pool)
         .await?;
         Ok(res.into())
+    }
+    pub async fn one(
+        params: &FullTransactionID,
+        pool: &PgPool,
+    ) -> anyhow::Result<SFAccountTXQueryResultRow> {
+        let res = sqlx::query_as!(
+            SFAccountTXQueryResultRow,
+            r#"
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.id, sat.account_id
+        FROM simplefin_account_transactions sat
+        WHERE
+            connection_id = $1
+        AND account_id = $2
+        AND id = $3
+            "#,
+            params.connection_id,
+            params.account_id,
+            params.transaction_id
+        )
+        .fetch_one(pool)
+        .await?;
+        Ok(res)
     }
 
     #[tracing::instrument]
@@ -57,7 +154,7 @@ impl SFAccountTXQuery {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
         WHERE sat.account_id = $1
         ORDER BY
@@ -86,15 +183,7 @@ impl maud::Render for SFAccountTXQuery {
                }
                tbody {
                @for tx in &self.item {
-               tr{
-                 @if let Some(transacted_at) = tx.transacted_at {
-                     td { (transacted_at) }
-                 } @else {
-                     td {(tx.posted)}
-                 }
-                 td { (tx.description)}
-                 td { (tx.amount.to_decimal(2))}
-               }
+                  (tx)
                }
                }
 
@@ -103,6 +192,44 @@ impl maud::Render for SFAccountTXQuery {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct AccountTransactionLabel {
+    connection_id: crate::SFConnectionID,
+    account_id: crate::accounts::AccountID,
+    transaction_id: TransactionID,
+    label_id: crate::labels::LabelID,
+}
+
+impl From<TXAddLabelPost> for AccountTransactionLabel {
+    fn from(item: TXAddLabelPost) -> Self {
+        AccountTransactionLabel {
+            connection_id: item.full_transaction_id.connection_id,
+            account_id: item.full_transaction_id.account_id,
+            transaction_id: item.full_transaction_id.transaction_id,
+            label_id: item.label_id,
+        }
+    }
+}
+
+impl AccountTransactionLabel {
+    pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+    INSERT INTO transaction_labels ( connection_id, account_id, transaction_id, label_id )
+    VALUES ( $1, $2, $3, $4 )
+    ON CONFLICT (account_id, connection_id, transaction_id, label_id) DO NOTHING
+            "#,
+            self.connection_id,
+            self.account_id,
+            self.transaction_id,
+            self.label_id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+}
 #[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
     account_id: String,
@@ -114,6 +241,7 @@ pub struct SFAccountTransaction {
     pending: Option<bool>,
     description: String,
 }
+
 impl SFAccountTransaction {
     #[tracing::instrument]
     pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
@@ -153,4 +281,59 @@ impl SFAccountTransaction {
             description: tx.description.clone(),
         }
     }
+}
+
+#[derive(serde::Deserialize, Clone, Debug)]
+pub struct FullTransactionID {
+    pub connection_id: crate::SFConnectionID,
+    pub account_id: crate::accounts::AccountID,
+    pub transaction_id: TransactionID,
+}
+pub async fn handle_tx_edit_get(
+    State(app_state): State<crate::AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<FullTransactionID>,
+) -> Result<Response, crate::AppError> {
+    let full_tx_id: FullTransactionID = params.into();
+
+    let row_f = SFAccountTXQuery::one(&full_tx_id, &app_state.db);
+    let labels_f = crate::labels::LabelsQuery::for_tx(&full_tx_id, &app_state.db);
+
+    let (row, labels) = try_join!(row_f, labels_f)?;
+
+    let r = row.render_edit(labels.render_as_table_for_tx(full_tx_id));
+    Ok(r.into_response())
+}
+pub async fn handle_tx_edit_post(
+    State(app_state): State<crate::AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<FullTransactionID>,
+) -> Result<Response, crate::AppError> {
+    let full_tx_id: FullTransactionID = params.into();
+    let row = SFAccountTXQuery::one(&full_tx_id, &app_state.db).await?;
+
+    Ok(row.render().into_response())
+}
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct TXAddLabelPost {
+    label_id: crate::labels::LabelID,
+    #[serde(flatten)]
+    full_transaction_id: crate::tx::FullTransactionID,
+}
+
+pub async fn handle_tx_add_label(
+    State(app_state): State<crate::AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+
+    Form(form): Form<TXAddLabelPost>,
+) -> Result<Response, crate::AppError> {
+    let ftxid = form.full_transaction_id.clone();
+
+    let tx_label: AccountTransactionLabel = form.into();
+    tx_label.ensure_in_db(&app_state.db).await?;
+
+    let labels = crate::labels::LabelsQuery::for_tx(&ftxid, &app_state.db).await?;
+
+    Ok(labels.render_as_table_for_tx(ftxid).into_response())
 }

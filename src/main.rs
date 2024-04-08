@@ -6,7 +6,7 @@ use std::ops::Deref;
 use std::str;
 
 use axum::{
-    extract::{FromRef, Path, Query, State},
+    extract::{FromRef, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     routing::{get, post},
@@ -244,10 +244,19 @@ async fn main() {
         .route("/", get(root))
         .route("/f/transactions", get(get_transactions))
         .route(
+            "/f/transactions/:connection_id/:account_id/:transaction_id/edit",
+            get(crate::tx::handle_tx_edit_get).post(crate::tx::handle_tx_edit_post),
+        )
+        .route("/f/transaction_label", post(crate::tx::handle_tx_add_label))
+        .route(
             "/labels",
             get(labels::handle_labels).post(labels::add_label),
         )
         .route("/f/labels", get(labels::handle_labels_fragment))
+        .route(
+            "/f/labels/search",
+            get(labels::handle_labels_search_fragment),
+        )
         .route("/logged_in", get(handle_logged_in))
         .route("/simplefin-connection/add", post(add_simplefin_connection))
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
@@ -303,7 +312,7 @@ async fn root(
     user: Option<service_conventions::oidc::OIDCUser>,
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
-    if let Some(user) = user {
+    if let Some(_user) = user {
         let filter_options = tx_filter.deref();
         let user_connections_f = SFConnection::connections(&app_state.db);
         let balances_f = accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
