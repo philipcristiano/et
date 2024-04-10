@@ -80,7 +80,7 @@ pub async fn handle_labels_search_fragment(
 }
 
 pub type LabelID = uuid::Uuid;
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 struct Label {
     id: LabelID,
     label: sqlx::postgres::types::PgLTree,
@@ -94,6 +94,7 @@ impl Label {
         Ok(Label { id, label })
     }
 
+    #[tracing::instrument]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -138,6 +139,7 @@ impl LabelsQuery {
         Ok(res.into())
     }
 
+    #[tracing::instrument]
     pub async fn search(name: String, pool: &PgPool) -> anyhow::Result<Self> {
         tracing::debug!("Label name {:?}", &name);
         let query_label = sqlx::postgres::types::PgLQueryLevel::from_str(&format!("{name}*"))?;
@@ -164,6 +166,7 @@ impl LabelsQuery {
         Ok(res.into())
     }
 
+    #[tracing::instrument]
     pub async fn for_tx(
         ftxid: &crate::tx::FullTransactionID,
         pool: &PgPool,

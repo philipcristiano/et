@@ -212,6 +212,8 @@ impl From<TXAddLabelPost> for AccountTransactionLabel {
 }
 
 impl AccountTransactionLabel {
+
+    #[tracing::instrument]
     pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
