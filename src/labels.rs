@@ -60,9 +60,29 @@ pub async fn handle_labels_fragment(
     .into_response())
 }
 
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct LabelSearch {
+    search: String,
+    #[serde(flatten)]
+    full_transaction_id: crate::tx::FullTransactionID,
+}
+
+pub async fn handle_labels_search_fragment(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Form(form): Form<LabelSearch>,
+) -> Result<Response, crate::AppError> {
+    let results = LabelsQuery::search(form.search, &app_state.db).await?;
+    Ok(
+        html! {(results.render_add_labels_for_tx(form.full_transaction_id.clone()))}
+            .into_response(),
+    )
+}
+
+pub type LabelID = uuid::Uuid;
 #[derive(sqlx::FromRow)]
 struct Label {
-    id: uuid::Uuid,
+    id: LabelID,
     label: sqlx::postgres::types::PgLTree,
 }
 
@@ -91,7 +111,7 @@ impl Label {
     }
 }
 
-struct LabelsQuery {
+pub struct LabelsQuery {
     item: Vec<Label>,
 }
 
@@ -117,18 +137,118 @@ impl LabelsQuery {
         .await?;
         Ok(res.into())
     }
-}
 
-impl maud::Render for LabelsQuery {
-    fn render(&self) -> maud::Markup {
+    pub async fn search(name: String, pool: &PgPool) -> anyhow::Result<Self> {
+        tracing::debug!("Label name {:?}", &name);
+        let query_label = sqlx::postgres::types::PgLQueryLevel::from_str(&format!("{name}*"))?;
+        let star = sqlx::postgres::types::PgLQueryLevel::from_str("*")?;
+        tracing::debug!("Label  {:?}", &query_label);
+        let qv = vec![star.clone(), query_label, star.clone()];
+        let query = sqlx::postgres::types::PgLQuery::from(qv);
+        tracing::debug!("Label query {:?}", &query);
+
+        let res = sqlx::query_as!(
+            Label,
+            r#"
+        SELECT id, label
+        FROM labels l
+        WHERE label ~ $1
+        ORDER BY
+            l.label ASC
+            "#,
+            query as _,
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res.into())
+    }
+
+    pub async fn for_tx(
+        ftxid: &crate::tx::FullTransactionID,
+        pool: &PgPool,
+    ) -> anyhow::Result<Self> {
+        let res = sqlx::query_as!(
+            Label,
+            r#"
+        SELECT id, label
+        FROM labels l
+        JOIN transaction_labels tl
+            ON l.id = tl.label_id
+        WHERE
+            tl.connection_id = $1
+        AND tl.account_id = $2
+        AND tl.transaction_id = $3
+        ORDER BY
+            l.label ASC
+            "#,
+            ftxid.connection_id,
+            ftxid.account_id,
+            ftxid.transaction_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res.into())
+    }
+
+    pub fn render_as_table_for_tx(&self, ftxid: crate::tx::FullTransactionID) -> maud::Markup {
         maud::html! {
-           h2 { "Labels:" }
-           table #transaction-table class="table-auto"{
+           table
+               #{"transaction-labels-" (ftxid.connection_id) "-" (ftxid.account_id) "-" (ftxid.transaction_id)}
+               class="table-auto"{
+               tbody {
+               @for label in &self.item {
+               tr{
+                    td {(label.label)}
+                 }
+               }
+               }
+
+           }
+        }
+    }
+
+    fn render_add_labels_for_tx(&self, ftxid: crate::tx::FullTransactionID) -> maud::Markup {
+        maud::html! {
+           table class="table-auto"{
                thead {
                  tr {
                      th { "Label"}
                  }
                }
+               tbody {
+               @for label in &self.item {
+               tr{
+                    td{
+
+                        form
+                        hx-target={"#transaction-labels-" (ftxid.connection_id) "-" (ftxid.account_id) "-" (ftxid.transaction_id)}
+                        hx-post={"/f/transaction_label"}
+                        hx-trigger="click"
+                        {
+
+                            input type="hidden" name="connection_id" value={(ftxid.connection_id)} {}
+                            input type="hidden" name="label_id" value={(label.id)} {}
+                            input type="hidden" name="account_id" value={(ftxid.account_id)} {}
+                            input type="hidden" name="transaction_id" value={(ftxid.transaction_id)} {}
+                            {
+                             (label.label)
+                            }
+                       }
+                 }}
+               }
+               }
+
+           }
+        }
+    }
+}
+
+impl maud::Render for LabelsQuery {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+           table #transaction-table class="table-auto"{
                tbody {
                @for label in &self.item {
                tr{

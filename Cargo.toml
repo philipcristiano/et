@@ -30,7 +30,7 @@ service_conventions = { version = "0.0.14", features = ["tracing", "oidc"]}
 sqlx = { version = "0.7.4", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "time", "chrono", "rust_decimal"] }
 base64 = "0.22.0"
 reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
-uuid = {version = "1.8.0", features = ["v4"]}
+uuid = {version = "1.8.0", features = ["v4", "serde"]}
 thiserror = "1.0.58"
 rust_decimal = { version = "1.35.0", features = ["db-postgres", "serde-float"] }
 rust-embed = { version = "8.3.0", features = ["axum", "mime-guess", "mime_guess"] }
