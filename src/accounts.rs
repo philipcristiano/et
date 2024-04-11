@@ -1,31 +1,41 @@
 use sqlx::postgres::PgPool;
 
+pub type AccountID = uuid::Uuid;
 #[derive(Debug)]
 pub struct SFAccount {
-    pub id: String,
-    pub connection_id: uuid::Uuid,
+    pub simplefin_id: String,
+    pub connection_id: crate::ConnectionID,
     pub currency: String,
     pub name: String,
 }
 impl SFAccount {
     #[tracing::instrument]
-    pub async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
+    pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<Account> {
+        let res = sqlx::query_as!(
+            Account,
             r#"
-    INSERT INTO simplefin_accounts ( connection_id, id, name, currency )
+    INSERT INTO simplefin_accounts ( connection_id, simplefin_id, name, currency )
     VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (id, connection_id) DO NOTHING
+    ON CONFLICT (connection_id, simplefin_id) DO UPDATE set name = EXCLUDED.name
+    RETURNING id, connection_id, currency, name
             "#,
             self.connection_id,
-            self.id,
+            self.simplefin_id,
             self.name,
             self.currency,
         )
-        .execute(pool)
+        .fetch_one(pool)
         .await?;
 
-        Ok(())
+        Ok(res)
     }
+}
+
+pub struct Account {
+    pub id: AccountID,
+    pub connection_id: crate::ConnectionID,
+    pub currency: String,
+    pub name: String,
 }
 
 pub struct SFAccountBalanceQueryResult {
@@ -59,11 +69,9 @@ impl SFAccountBalanceQueryResult {
     }
 }
 
-pub type AccountID = String;
 #[derive(Debug)]
 pub struct SFAccountBalance {
     pub account_id: AccountID,
-    pub connection_id: uuid::Uuid,
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub balance: rust_decimal::Decimal,
 }
@@ -72,13 +80,12 @@ impl SFAccountBalance {
     pub async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-    INSERT INTO simplefin_account_balances ( connection_id, account_id, ts, balance )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (account_id, connection_id, ts) DO NOTHING
+    INSERT INTO simplefin_account_balances ( account_id, ts, balance )
+    VALUES ( $1, $2, $3 )
+    ON CONFLICT (account_id, ts) DO UPDATE set balance = EXCLUDED.balance
             "#,
-            self.connection_id,
             self.account_id,
-            self.timestamp.naive_utc(),
+            self.timestamp,
             sqlx::postgres::types::PgMoney::from_decimal(self.balance, 2),
         )
         .execute(pool)

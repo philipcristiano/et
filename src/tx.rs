@@ -7,15 +7,14 @@ use futures::try_join;
 use maud::Render;
 use sqlx::postgres::PgPool;
 
-pub type TransactionID = String;
+pub type TransactionID = uuid::Uuid;
 #[derive(sqlx::FromRow)]
 pub struct SFAccountTXQueryResultRow {
     id: String,
-    posted: chrono::NaiveDateTime,
-    transacted_at: Option<chrono::NaiveDateTime>,
+    posted: chrono::DateTime<chrono::Utc>,
+    transacted_at: Option<chrono::DateTime<chrono::Utc>>,
     description: String,
     amount: sqlx::postgres::types::PgMoney,
-    connection_id: crate::SFConnectionID,
     account_id: crate::accounts::AccountID,
 }
 impl SFAccountTXQueryResultRow {
@@ -47,8 +46,6 @@ impl SFAccountTXQueryResultRow {
                         name="search"
                         placeholder="Begin typing to search labels"
                     {}
-                    input type="hidden" name="connection_id" value={(self.connection_id)} {}
-                    input type="hidden" name="account_id" value={(self.account_id)} {}
                     input type="hidden" name="transaction_id" value={(self.id)} {}
 
                     ul #{"search-results-" (self.id)} {}
@@ -69,7 +66,7 @@ impl maud::Render for SFAccountTXQueryResultRow {
             hx-target="this"
             hx-swap="outerHTML"
             hx-trigger="click"
-            hx-get={"/f/transactions/" (self.connection_id) "/" (self.account_id) "/" (self.id) "/edit" }
+            hx-get={"/f/transactions/"  (self.id) "/edit" }
             {
               @if let Some(transacted_at) = self.transacted_at {
                   td { (transacted_at) }
@@ -98,11 +95,10 @@ impl SFAccountTXQuery {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.id, sat.account_id
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.id, sat.account_id
         FROM simplefin_accounts sa
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
-            AND sa.connection_id = sat.connection_id
         ORDER BY
             sat.posted DESC
             "#,
@@ -118,15 +114,10 @@ impl SFAccountTXQuery {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.id, sat.account_id
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.id, sat.account_id
         FROM simplefin_account_transactions sat
-        WHERE
-            connection_id = $1
-        AND account_id = $2
-        AND id = $3
+        WHERE id = $1
             "#,
-            params.connection_id,
-            params.account_id,
             params.transaction_id
         )
         .fetch_one(pool)
@@ -140,9 +131,9 @@ impl SFAccountTXQuery {
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         if let Some(account_id) = params.account_id {
-            Self::by_account_id(account_id, pool).await
+            return Self::by_account_id(account_id, pool).await;
         } else {
-            Self::all(pool).await
+            return Self::all(pool).await;
         }
     }
 
@@ -154,13 +145,32 @@ impl SFAccountTXQuery {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.account_id, sat.id
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
         WHERE sat.account_id = $1
         ORDER BY
             sat.posted DESC
             "#,
             account_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res.into())
+    }
+
+    #[tracing::instrument]
+    pub async fn with_labels(labels: &Vec<String>, pool: &PgPool) -> anyhow::Result<Self> {
+        // TODO Make this use labels
+        let res = sqlx::query_as!(
+            SFAccountTXQueryResultRow,
+            r#"
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
+        FROM simplefin_account_transactions sat
+        WHERE sat.account_id = gen_random_uuid()
+        ORDER BY
+            sat.posted DESC
+            "#,
         )
         .fetch_all(pool)
         .await?;
@@ -194,8 +204,6 @@ impl maud::Render for SFAccountTXQuery {
 
 #[derive(Clone, Debug)]
 pub struct AccountTransactionLabel {
-    connection_id: crate::SFConnectionID,
-    account_id: crate::accounts::AccountID,
     transaction_id: TransactionID,
     label_id: crate::labels::LabelID,
 }
@@ -203,8 +211,6 @@ pub struct AccountTransactionLabel {
 impl From<TXAddLabelPost> for AccountTransactionLabel {
     fn from(item: TXAddLabelPost) -> Self {
         AccountTransactionLabel {
-            connection_id: item.full_transaction_id.connection_id,
-            account_id: item.full_transaction_id.account_id,
             transaction_id: item.full_transaction_id.transaction_id,
             label_id: item.label_id,
         }
@@ -212,17 +218,14 @@ impl From<TXAddLabelPost> for AccountTransactionLabel {
 }
 
 impl AccountTransactionLabel {
-
     #[tracing::instrument]
     pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-    INSERT INTO transaction_labels ( connection_id, account_id, transaction_id, label_id )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (account_id, connection_id, transaction_id, label_id) DO NOTHING
+    INSERT INTO transaction_labels ( transaction_id, label_id )
+    VALUES ( $1, $2 )
+    ON CONFLICT (transaction_id, label_id) DO NOTHING
             "#,
-            self.connection_id,
-            self.account_id,
             self.transaction_id,
             self.label_id
         )
@@ -234,7 +237,7 @@ impl AccountTransactionLabel {
 }
 #[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
-    account_id: String,
+    account_id: crate::accounts::AccountID,
     connection_id: uuid::Uuid,
     id: String,
     posted: chrono::DateTime<chrono::Utc>,
@@ -243,33 +246,45 @@ pub struct SFAccountTransaction {
     pending: Option<bool>,
     description: String,
 }
+pub type AccountTransactionID = uuid::Uuid;
+#[derive(Clone, Debug)]
+pub struct AccountTransaction {
+    account_id: crate::accounts::AccountID,
+    id: AccountTransactionID,
+    posted: chrono::DateTime<chrono::Utc>,
+    transacted_at: Option<chrono::DateTime<chrono::Utc>>,
+    amount: sqlx::postgres::types::PgMoney,
+    pending: Option<bool>,
+    description: String,
+}
 
 impl SFAccountTransaction {
     #[tracing::instrument]
     pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
-        sqlx::query!(
+        sqlx::query_as!(
+            AccountTransaction,
             r#"
-    INSERT INTO simplefin_account_transactions ( connection_id, account_id, id, posted, amount, transacted_at, pending, description )
-    VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
-    ON CONFLICT (account_id, connection_id, id) DO NOTHING
+    INSERT INTO simplefin_account_transactions ( account_id, simplefin_id, posted, amount, transacted_at, pending, description )
+    VALUES ( $1, $2, $3, $4, $5, $6, $7 )
+    ON CONFLICT (account_id, simplefin_id) DO UPDATE set pending = EXCLUDED.pending
+    RETURNING id, account_id, posted, amount, transacted_at, pending, description
             "#,
-            self.connection_id,
             self.account_id,
             self.id,
-            self.posted.naive_utc(),
+            self.posted,
             sqlx::postgres::types::PgMoney::from_decimal(self.amount, 2),
-            self.transacted_at.map(|ta| ta.naive_utc()),
+            self.transacted_at,
             self.pending,
             self.description
         )
-        .execute(pool)
+        .fetch_one(pool)
         .await?;
 
         Ok(())
     }
 
     pub fn from_transaction(
-        act: &crate::accounts::SFAccount,
+        act: &crate::accounts::Account,
         tx: &crate::simplefin_api::Transaction,
     ) -> Self {
         SFAccountTransaction {
@@ -287,8 +302,6 @@ impl SFAccountTransaction {
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct FullTransactionID {
-    pub connection_id: crate::SFConnectionID,
-    pub account_id: crate::accounts::AccountID,
     pub transaction_id: TransactionID,
 }
 pub async fn handle_tx_edit_get(

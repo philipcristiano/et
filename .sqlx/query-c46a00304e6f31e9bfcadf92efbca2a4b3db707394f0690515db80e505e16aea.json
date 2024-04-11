@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO simplefin_account_balances ( account_id, ts, balance )\n    VALUES ( $1, $2, $3 )\n    ON CONFLICT (account_id, ts) DO UPDATE set balance = EXCLUDED.balance\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Money"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c46a00304e6f31e9bfcadf92efbca2a4b3db707394f0690515db80e505e16aea"
+}

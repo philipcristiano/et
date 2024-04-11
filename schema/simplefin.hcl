@@ -24,7 +24,7 @@ table "simplefin_connection_sync_info" {
     type = uuid
   }
   column "ts" {
-    type = timestamp
+    type = timestamptz
   }
 
   primary_key {
@@ -45,10 +45,14 @@ table "simplefin_connection_sync_info" {
 table "simplefin_accounts" {
   schema = schema.public
 
+  column "id" {
+    type = uuid
+    default = sql("gen_random_uuid()")
+  }
   column "connection_id" {
     type = uuid
   }
-  column "id" {
+  column "simplefin_id" {
     type = varchar
   }
   column "name" {
@@ -60,8 +64,17 @@ table "simplefin_accounts" {
   primary_key {
     columns = [
       column.id,
-      column.connection_id,
     ]
+  }
+
+  index "idx_connection_source_id" {
+      on {
+          column = column.connection_id
+      }
+      on {
+          column = column.simplefin_id
+      }
+      unique = true
   }
 
   foreign_key "simplefin_connection" {
@@ -75,14 +88,11 @@ table "simplefin_accounts" {
 table "simplefin_account_balances" {
   schema = schema.public
 
-  column "connection_id" {
+  column "account_id" {
     type = uuid
   }
-  column "account_id" {
-    type = varchar
-  }
   column "ts" {
-    type = timestamp
+    type = timestamptz
   }
   column "balance" {
     type = money
@@ -90,7 +100,6 @@ table "simplefin_account_balances" {
   primary_key {
     columns = [
       column.account_id,
-      column.connection_id,
       column.ts,
     ]
   }
@@ -107,11 +116,9 @@ table "simplefin_account_balances" {
 
   foreign_key "simplefin_account" {
     columns = [
-        column.connection_id,
         column.account_id
     ]
     ref_columns = [
-        table.simplefin_accounts.column.connection_id,
         table.simplefin_accounts.column.id
     ]
     on_delete = CASCADE
@@ -122,23 +129,24 @@ table "simplefin_account_balances" {
 table "simplefin_account_transactions" {
   schema = schema.public
 
-  column "connection_id" {
+  column "id" {
     type = uuid
+    default = sql("gen_random_uuid()")
   }
   column "account_id" {
-    type = varchar
+    type = uuid
   }
-  column "id" {
+  column "simplefin_id" {
     type = varchar
   }
   column "posted" {
-    type = timestamp
+    type = timestamptz
   }
   column "amount" {
     type = money
   }
   column "transacted_at" {
-    type = timestamp
+    type = timestamptz
     null = true
   }
   column "pending" {
@@ -150,19 +158,25 @@ table "simplefin_account_transactions" {
   }
   primary_key {
     columns = [
-      column.account_id,
-      column.connection_id,
       column.id,
     ]
   }
 
+  index "idx_account_source_id" {
+      on {
+          column = column.account_id
+      }
+      on {
+          column = column.simplefin_id
+      }
+      unique = true
+  }
+
   foreign_key "simplefin_account" {
     columns = [
-        column.connection_id,
         column.account_id
     ]
     ref_columns = [
-        table.simplefin_accounts.column.connection_id,
         table.simplefin_accounts.column.id
     ]
     on_delete = CASCADE

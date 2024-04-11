@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        WHERE sat.account_id = gen_random_uuid()\n        ORDER BY\n            sat.posted DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "posted",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "transacted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount",
+        "type_info": "Money"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "account_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "86ca8f0592a8c48837989e8104e305e554becaa7b8c03d76632d2e1f815f9304"
+}
