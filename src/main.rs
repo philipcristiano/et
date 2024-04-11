@@ -6,12 +6,13 @@ use std::ops::Deref;
 use std::str;
 
 use axum::{
-    extract::{FromRef, Query, State},
+    extract::{FromRef, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     routing::{get, post},
     Form, Router,
 };
+use axum_extra::extract::Query;
 use std::net::SocketAddr;
 
 use maud::html;
@@ -73,21 +74,22 @@ impl AppState {
 use sqlx::postgres::PgPool;
 use sqlx::postgres::PgPoolOptions;
 
-pub type SFConnectionID = uuid::Uuid;
-#[derive(Debug, Clone)]
-pub struct SFConnection {
-    id: SFConnectionID,
+pub type ConnectionID = uuid::Uuid;
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct Connection {
+    id: ConnectionID,
     access_url: String,
 }
 #[derive(Debug, Clone)]
 pub struct SFConnectionSyncInfo {
-    connection_id: SFConnectionID,
-    ts: chrono::NaiveDateTime,
+    connection_id: ConnectionID,
+    ts: chrono::DateTime<chrono::Utc>,
 }
 
 impl SFConnectionSyncInfo {
     fn is_since(&self, since: chrono::Duration) -> bool {
-        let now = chrono::Utc::now().naive_utc();
+        let now = chrono::Utc::now();
         let diff = now - self.ts;
         let ret = since > diff;
         let ts = &self.ts;
@@ -96,7 +98,7 @@ impl SFConnectionSyncInfo {
     }
 }
 
-impl SFConnection {
+impl Connection {
     #[tracing::instrument(skip_all)]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
@@ -115,9 +117,9 @@ impl SFConnection {
     }
 
     #[tracing::instrument]
-    async fn connections(pool: &PgPool) -> anyhow::Result<Vec<SFConnection>> {
+    async fn connections(pool: &PgPool) -> anyhow::Result<Vec<Connection>> {
         let res = sqlx::query_as!(
-            SFConnection,
+            Connection,
             r#"
         SELECT * FROM simplefin_connections
             "#,
@@ -145,7 +147,7 @@ impl SFConnection {
     }
     #[tracing::instrument]
     async fn mark_synced(&self, pool: &PgPool) -> anyhow::Result<()> {
-        let now = chrono::Utc::now().naive_utc();
+        let now = chrono::Utc::now();
         sqlx::query!(
             r#"
     INSERT INTO simplefin_connection_sync_info ( connection_id, ts )
@@ -162,9 +164,9 @@ impl SFConnection {
     }
 
     #[tracing::instrument]
-    async fn by_id(id: &uuid::Uuid, db: &PgPool) -> anyhow::Result<Option<SFConnection>> {
+    async fn by_id(id: &uuid::Uuid, db: &PgPool) -> anyhow::Result<Option<Connection>> {
         Ok(sqlx::query_as!(
-            SFConnection,
+            Connection,
             "select * from simplefin_connections where id = $1;",
             id
         )
@@ -244,7 +246,7 @@ async fn main() {
         .route("/", get(root))
         .route("/f/transactions", get(get_transactions))
         .route(
-            "/f/transactions/:connection_id/:account_id/:transaction_id/edit",
+            "/f/transactions/:transaction_id/edit",
             get(crate::tx::handle_tx_edit_get).post(crate::tx::handle_tx_edit_post),
         )
         .route("/f/transaction_label", post(crate::tx::handle_tx_add_label))
@@ -292,7 +294,7 @@ async fn health() -> Response {
 
 #[derive(Deserialize, Debug, Clone)]
 struct TransactionsFilterOptions {
-    account_id: Option<String>,
+    account_id: Option<crate::accounts::AccountID>,
 }
 
 use maud::Render;
@@ -314,7 +316,7 @@ async fn root(
 ) -> Result<Response, AppError> {
     if let Some(_user) = user {
         let filter_options = tx_filter.deref();
-        let user_connections_f = SFConnection::connections(&app_state.db);
+        let user_connections_f = Connection::connections(&app_state.db);
         let balances_f = accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
         let transactions_f =
             tx::SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db);
@@ -365,7 +367,7 @@ async fn add_simplefin_connection(
     tracing::info!("access_url to {}", access_url);
 
     let id = uuid::Uuid::new_v4();
-    let sfc = SFConnection { id, access_url };
+    let sfc = Connection { id, access_url };
     tracing::info!("saving access_url");
     sfc.ensure_in_db(&app_state.db).await?;
 

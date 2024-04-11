@@ -9,13 +9,13 @@ use axum::{
     Form,
 };
 
-use crate::{html, AppState, SFConnection};
+use crate::{html, AppState, Connection};
 
 pub async fn handle_labels(
     State(app_state): State<AppState>,
     user: service_conventions::oidc::OIDCUser,
 ) -> Result<Response, crate::AppError> {
-    let user_connections_f = SFConnection::connections(&app_state.db);
+    let user_connections_f = Connection::connections(&app_state.db);
     let balances_f = crate::accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
     let labels_fut = LabelsQuery::all(&app_state.db);
 
@@ -178,15 +178,10 @@ impl LabelsQuery {
         FROM labels l
         JOIN transaction_labels tl
             ON l.id = tl.label_id
-        WHERE
-            tl.connection_id = $1
-        AND tl.account_id = $2
-        AND tl.transaction_id = $3
+        WHERE tl.transaction_id = $1
         ORDER BY
             l.label ASC
             "#,
-            ftxid.connection_id,
-            ftxid.account_id,
             ftxid.transaction_id
         )
         .fetch_all(pool)
@@ -198,7 +193,7 @@ impl LabelsQuery {
     pub fn render_as_table_for_tx(&self, ftxid: crate::tx::FullTransactionID) -> maud::Markup {
         maud::html! {
            table
-               #{"transaction-labels-" (ftxid.connection_id) "-" (ftxid.account_id) "-" (ftxid.transaction_id)}
+               #{"transaction-labels-" (ftxid.transaction_id)}
                class="table-auto"{
                tbody {
                @for label in &self.item {
@@ -226,14 +221,12 @@ impl LabelsQuery {
                     td{
 
                         form
-                        hx-target={"#transaction-labels-" (ftxid.connection_id) "-" (ftxid.account_id) "-" (ftxid.transaction_id)}
+                        hx-target={"#transaction-labels-" (ftxid.transaction_id)}
                         hx-post={"/f/transaction_label"}
                         hx-trigger="click"
                         {
 
-                            input type="hidden" name="connection_id" value={(ftxid.connection_id)} {}
                             input type="hidden" name="label_id" value={(label.id)} {}
-                            input type="hidden" name="account_id" value={(ftxid.account_id)} {}
                             input type="hidden" name="transaction_id" value={(ftxid.transaction_id)} {}
                             {
                              (label.label)

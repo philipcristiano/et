@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, label\n        FROM labels l\n        JOIN transaction_labels tl\n            ON l.id = tl.label_id\n        WHERE\n            tl.connection_id = $1\n        AND tl.account_id = $2\n        AND tl.transaction_id = $3\n        ORDER BY\n            l.label ASC\n            ",
+  "query": "\n        SELECT id, label\n        FROM labels l\n        JOIN transaction_labels tl\n            ON l.id = tl.label_id\n        WHERE tl.transaction_id = $1\n        ORDER BY\n            l.label ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -21,9 +21,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text",
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -31,5 +29,5 @@
       false
     ]
   },
-  "hash": "a1904dba8538ebaa3f57902463a070a2da788e12d60c1ccfdbd2f93bcddac027"
+  "hash": "21344ce8c23b513a2635be8cd678c17935e44f987af759012388c73e0bc84453"
 }

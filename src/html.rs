@@ -44,7 +44,7 @@ fn maud_body(content: maud::Markup) -> maud::Markup {
 }
 
 pub fn sidebar(
-    user_connections: Vec<crate::SFConnection>,
+    user_connections: Vec<crate::Connection>,
     balances: Vec<crate::accounts::SFAccountBalanceQueryResult>,
 ) -> maud::Markup {
     html! {

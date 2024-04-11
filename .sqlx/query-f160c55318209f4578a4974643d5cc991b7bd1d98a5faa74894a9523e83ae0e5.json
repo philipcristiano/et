@@ -1,17 +1,17 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.connection_id, sat.id, sat.account_id\n        FROM simplefin_account_transactions sat\n        WHERE\n            connection_id = $1\n        AND account_id = $2\n        AND id = $3\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.id, sat.account_id\n        FROM simplefin_account_transactions sat\n        WHERE id = $1\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "posted",
-        "type_info": "Timestamp"
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 1,
         "name": "transacted_at",
-        "type_info": "Timestamp"
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 2,
@@ -25,25 +25,18 @@
       },
       {
         "ordinal": 4,
-        "name": "connection_id",
+        "name": "id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 5,
-        "name": "id",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 6,
         "name": "account_id",
-        "type_info": "Varchar"
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text",
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -52,9 +45,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "b79eab92ea7fe9e9d72160f60539bb65146047d764562c04f26b6665d4463b56"
+  "hash": "f160c55318209f4578a4974643d5cc991b7bd1d98a5faa74894a9523e83ae0e5"
 }
