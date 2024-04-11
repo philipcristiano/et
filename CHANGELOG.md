@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0](https://github.com/philipcristiano/et/compare/v0.5.0...v1.0.0) (2024-04-11)
+## [0.6.0](https://github.com/philipcristiano/et/compare/v0.5.0...v1.0.0) (2024-04-11)
 
 
 ### ⚠ BREAKING CHANGES
