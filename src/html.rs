@@ -11,7 +11,6 @@ pub fn maud_page(content: maud::Markup) -> maud::Markup {
 fn maud_header() -> maud::Markup {
     html! {
         link rel="stylesheet" href="/static/tailwind.css";
-        link rel="script" href="";
         script src="/static/htmx-1.9.11.js" {}
         meta name="viewport" content="width=device-width, initial-scale=1.0";
     }

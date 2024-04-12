@@ -301,6 +301,21 @@ impl AccountTransactionLabel {
 
         Ok(())
     }
+    pub async fn delete_in_db(self, pool: &PgPool) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+    DELETE FROM transaction_labels
+    WHERE transaction_id = $1
+    AND label_id = $2
+            "#,
+            self.transaction_id,
+            self.label_id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
 }
 #[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
@@ -414,6 +429,22 @@ pub async fn handle_tx_add_label(
 
     let tx_label: AccountTransactionLabel = form.into();
     tx_label.ensure_in_db(&app_state.db).await?;
+
+    let labels = crate::labels::LabelsQuery::for_tx(&ftxid, &app_state.db).await?;
+
+    Ok(labels.render_as_table_for_tx(ftxid).into_response())
+}
+
+pub async fn handle_tx_delete_label(
+    State(app_state): State<crate::AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+
+    Form(form): Form<TXAddLabelPost>,
+) -> Result<Response, crate::AppError> {
+    let ftxid = form.full_transaction_id.clone();
+
+    let tx_label: AccountTransactionLabel = form.into();
+    tx_label.delete_in_db(&app_state.db).await?;
 
     let labels = crate::labels::LabelsQuery::for_tx(&ftxid, &app_state.db).await?;
 

@@ -198,9 +198,23 @@ impl LabelsQuery {
                tbody {
                @for label in &self.item {
                tr{
-                    td {(label.label)}
+                    td {
+                        form
+                            hx-target={"#transaction-labels-" (ftxid.transaction_id)}
+                            hx-delete={"/f/transaction_label"}
+                            hx-trigger="click"
+                        {
+
+                            input type="hidden" name="label_id" value={(label.id)} {}
+                            input type="hidden" name="transaction_id" value={(ftxid.transaction_id)} {}
+                            (crate::svg_icon::x_circle())
+                        }
+
+                             (label.label)
+
+                       }
+                    }
                  }
-               }
                }
 
            }
