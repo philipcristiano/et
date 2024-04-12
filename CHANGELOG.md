@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.6.0](https://github.com/philipcristiano/et/compare/v0.5.0...v1.0.0) (2024-04-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* breaking: use timestamptz / don't use natural keys
+
+### Features
+
+* Add labels to transactions ([1d71a2c](https://github.com/philipcristiano/et/commit/1d71a2c5ecc66eb6c30f75a3e45fca17b823cdef))
+
+
+### Bug Fixes
+
+* Actually sync after time period ([dff136e](https://github.com/philipcristiano/et/commit/dff136ea4e8154d89f49378aec7203aa4b25a9a9))
+* breaking: use timestamptz / don't use natural keys ([9a3e5bf](https://github.com/philipcristiano/et/commit/9a3e5bf76fd19ee1574f31fdc08b67e5f60a0890))
+* Clicking on transaction filters table ([3819426](https://github.com/philipcristiano/et/commit/3819426c9dd168a76c7de72e1a72bc9723a5b92b))
+* **deps:** update rust crate anyhow to 1.0.82 ([b6f56f8](https://github.com/philipcristiano/et/commit/b6f56f8232a5cf1dd388b43ccba2473ee7902791))
+* Include tracing for more queries ([12244f4](https://github.com/philipcristiano/et/commit/12244f45e4abf6dcbcc5e64c8ecb509ab5359d2c))
+* labels: Remove duplicate #main ([5e73ed9](https://github.com/philipcristiano/et/commit/5e73ed9e5481ca5c2c6ce13a04ed0e7c136f2189))
+* Save URL state when switching accounts ([8d746dc](https://github.com/philipcristiano/et/commit/8d746dc378291d2f3c11790eab73fdd5a08a9769))
+* Start saving labels ([c573778](https://github.com/philipcristiano/et/commit/c573778b590a29dd7ce383cbd012dfcc6104b863))
+
 ## [0.5.0](https://github.com/philipcristiano/et/compare/v0.4.2...v0.5.0) (2024-04-04)
 
 
