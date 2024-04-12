@@ -5,7 +5,9 @@ use axum::{
 };
 use futures::try_join;
 use maud::Render;
+use sqlx::postgres::types::{PgLQuery, PgLQueryLevel};
 use sqlx::postgres::PgPool;
+use std::str::FromStr;
 
 pub type TransactionID = uuid::Uuid;
 #[derive(sqlx::FromRow)]
@@ -130,7 +132,11 @@ impl SFAccountTXQuery {
         params: crate::TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
-        if let Some(account_id) = params.account_id {
+        if let Some(label) = params.labeled {
+            return Self::with_label(label, pool).await;
+        } else if let Some(label) = params.not_labeled {
+            return Self::without_label(label, pool).await;
+        } else if let Some(account_id) = params.account_id {
             return Self::by_account_id(account_id, pool).await;
         } else {
             return Self::all(pool).await;
@@ -160,17 +166,67 @@ impl SFAccountTXQuery {
     }
 
     #[tracing::instrument]
-    pub async fn with_labels(labels: &Vec<String>, pool: &PgPool) -> anyhow::Result<Self> {
-        // TODO Make this use labels
+    pub async fn with_label(label: String, pool: &PgPool) -> anyhow::Result<Self> {
+        let query_levels = string_label_to_plquerylevels(label)?;
+        let query = PgLQuery::from(query_levels);
+        Self::tx_label_query(query, pool).await
+    }
+
+    #[tracing::instrument]
+    pub async fn without_label(label: String, pool: &PgPool) -> anyhow::Result<Self> {
+        let query_levels = string_label_to_plquerylevels(label)?;
+        let query = PgLQuery::from(query_levels);
+        Self::tx_not_label_query(query, pool).await
+    }
+
+    #[tracing::instrument]
+    async fn tx_label_query(
+        q: sqlx::postgres::types::PgLQuery,
+        pool: &PgPool,
+    ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
         SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
-        WHERE sat.account_id = gen_random_uuid()
+        JOIN transaction_labels tl
+            ON sat.id = tl.transaction_id
+        JOIN labels l
+            ON tl.label_id = l.id
+        WHERE l.label ~ $1
         ORDER BY
             sat.posted DESC
             "#,
+            q
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res.into())
+    }
+    #[tracing::instrument]
+    async fn tx_not_label_query(
+        q: sqlx::postgres::types::PgLQuery,
+        pool: &PgPool,
+    ) -> anyhow::Result<Self> {
+        let res = sqlx::query_as!(
+            SFAccountTXQueryResultRow,
+            r#"
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
+        FROM simplefin_account_transactions sat
+        LEFT OUTER JOIN (
+            SELECT transaction_id, label_id
+            FROM transaction_labels stl
+            JOIN labels sl
+              ON stl.label_id = sl.id
+            WHERE sl.label ~ $1
+        ) AS tl
+        ON sat.id = tl.transaction_id
+        WHERE tl.transaction_id IS NULL
+        ORDER BY
+            sat.posted DESC
+            "#,
+            q
         )
         .fetch_all(pool)
         .await?;
@@ -200,6 +256,17 @@ impl maud::Render for SFAccountTXQuery {
            }
         }
     }
+}
+
+fn string_label_to_plquerylevels(label: String) -> anyhow::Result<Vec<PgLQueryLevel>> {
+    let label_string_parts = label.split(".");
+    let mut query_parts: Vec<PgLQueryLevel> = Vec::new();
+    for string_part in label_string_parts {
+        let ql = PgLQueryLevel::from_str(&string_part)?;
+        query_parts.push(ql)
+    }
+    query_parts.push(PgLQueryLevel::from_str("*")?);
+    Ok(query_parts)
 }
 
 #[derive(Clone, Debug)]
