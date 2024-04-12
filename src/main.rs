@@ -22,6 +22,7 @@ mod accounts;
 mod html;
 mod labels;
 mod simplefin_api;
+mod svg_icon;
 mod sync_manager;
 mod tx;
 use rust_embed::RustEmbed;
@@ -249,7 +250,10 @@ async fn main() {
             "/f/transactions/:transaction_id/edit",
             get(crate::tx::handle_tx_edit_get).post(crate::tx::handle_tx_edit_post),
         )
-        .route("/f/transaction_label", post(crate::tx::handle_tx_add_label))
+        .route(
+            "/f/transaction_label",
+            post(crate::tx::handle_tx_add_label).delete(crate::tx::handle_tx_delete_label),
+        )
         .route(
             "/labels",
             get(labels::handle_labels).post(labels::add_label),
