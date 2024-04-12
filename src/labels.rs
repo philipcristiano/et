@@ -244,11 +244,29 @@ impl LabelsQuery {
 impl maud::Render for LabelsQuery {
     fn render(&self) -> maud::Markup {
         maud::html! {
-           table #transaction-table class="table-auto"{
+           table #labels-table class="table-auto"{
                tbody {
                @for label in &self.item {
                tr{
-                    td {(label.label)}
+                    td { (label.label) }
+                    td
+                        hx-get={"/f/transactions?labeled=" (label.label) }
+                        hx-push-url={"/?labeled=" (label.label) }
+                        hx-target="#main"
+                        hx-swap="innerHTML"
+                        hx-trigger="click"
+                        {
+                            "TX With Label"
+                    }
+                    td
+                        hx-get={"/f/transactions?not_labeled=" (label.label) }
+                        hx-push-url={"/?not_labeled=" (label.label) }
+                        hx-target="#main"
+                        hx-swap="innerHTML"
+                        hx-trigger="click"
+                        {
+                            "TX Without Label"
+                    }
                  }
                }
                }

@@ -295,6 +295,8 @@ async fn health() -> Response {
 #[derive(Deserialize, Debug, Clone)]
 struct TransactionsFilterOptions {
     account_id: Option<crate::accounts::AccountID>,
+    labeled: Option<String>,
+    not_labeled: Option<String>,
 }
 
 use maud::Render;
