@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO simplefin_connection_sync_errors ( connection_id, ts, message )\n    VALUES ( $1, $2, $3 )\n    ON CONFLICT (connection_id, ts) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3c47be4115d04204b5ffeccce59d5373d05414716b100938ad83213b24b691ba"
+}

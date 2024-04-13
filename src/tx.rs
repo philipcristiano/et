@@ -53,8 +53,8 @@ impl SFAccountTXQueryResultRow {
         td {
               div {
                   form
-                        //hx-from={ "find #search-input-" (self.id)}
-                        //hx-from={ "(find #search-input-" (self.id) ")"}
+                        action="/f/labels/search-and-apply-first"
+                        method="post"
                         hx-from="input"
                         hx-get="/f/labels/search"
                         hx-target={"#search-results-" (self.id)}

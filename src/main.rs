@@ -6,7 +6,7 @@ use std::ops::Deref;
 use std::str;
 
 use axum::{
-    extract::{FromRef, State},
+    extract::{FromRef, Path, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     routing::{get, post},
@@ -99,6 +99,13 @@ impl SFConnectionSyncInfo {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct ConnectionSyncError {
+    connection_id: ConnectionID,
+    ts: Option<chrono::DateTime<chrono::Utc>>,
+    message: String,
+}
+
 impl Connection {
     #[tracing::instrument(skip_all)]
     async fn ensure_in_db(&self, pool: &PgPool) -> anyhow::Result<()> {
@@ -147,7 +154,7 @@ impl Connection {
         Ok(res)
     }
     #[tracing::instrument]
-    async fn mark_synced(&self, pool: &PgPool) -> anyhow::Result<()> {
+    async fn mark_synced(&self, errors: &Vec<String>, pool: &PgPool) -> anyhow::Result<()> {
         let now = chrono::Utc::now();
         sqlx::query!(
             r#"
@@ -160,8 +167,56 @@ impl Connection {
         )
         .execute(pool)
         .await?;
+        for error in errors {
+            self.save_error(&now, &error, pool).await?;
+        }
 
         Ok(())
+    }
+
+    #[tracing::instrument]
+    async fn save_error(
+        &self,
+        now: &chrono::DateTime<chrono::Utc>,
+        error: &String,
+        pool: &PgPool,
+    ) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+    INSERT INTO simplefin_connection_sync_errors ( connection_id, ts, message )
+    VALUES ( $1, $2, $3 )
+    ON CONFLICT (connection_id, ts) DO NOTHING
+            "#,
+            self.id,
+            now,
+            error,
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn get_last_sync_errors(
+        connection_id: ConnectionID,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<ConnectionSyncError>> {
+        let res = sqlx::query_as!(
+            ConnectionSyncError,
+            r#"
+        SELECT connection_id, last_sync.ts, message FROM
+            ( SELECT max(ts) as ts
+              FROM simplefin_connection_sync_info
+              WHERE connection_id = $1 ) AS last_sync
+        JOIN simplefin_connection_sync_errors AS scse
+        ON scse.connection_id = $1
+        AND scse.ts = last_sync.ts
+            "#,
+            connection_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res)
     }
 
     #[tracing::instrument]
@@ -245,6 +300,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
+        .route("/f/connection/:connection_id", get(get_connection))
         .route("/f/transactions", get(get_transactions))
         .route("/f/transactions/value", get(get_transactions_value))
         .route(
@@ -295,6 +351,27 @@ fn read_app_config(path: String) -> AppConfig {
 
 async fn health() -> Response {
     "OK".into_response()
+}
+
+#[derive(serde::Deserialize, Clone, Debug)]
+pub struct ConnectionIDFilter {
+    pub connection_id: ConnectionID,
+}
+async fn get_connection(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<ConnectionIDFilter>,
+) -> Result<Response, AppError> {
+    let connection_id = params.connection_id;
+    let errors = Connection::get_last_sync_errors(connection_id, &app_state.db).await?;
+    let resp = html! {
+        (connection_id)
+        @for e in errors {
+            p { (svg_icon::exclamation_circle()) (e.message) }
+        }
+
+    };
+    Ok(resp.into_response())
 }
 
 #[derive(Deserialize, Debug, Clone)]

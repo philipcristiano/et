@@ -68,6 +68,7 @@ async fn sync_connection(app_state: &AppState, sfc: &Connection) -> anyhow::Resu
         futures::future::try_join_all(txs_f).await?;
         ()
     }
-    sfc.mark_synced(&app_state.db_spike).await?;
+    sfc.mark_synced(&account_set.errors, &app_state.db_spike)
+        .await?;
     Ok(())
 }
