@@ -1,7 +1,7 @@
 use sqlx::postgres::PgPool;
 
-use futures::try_join;
 use crate::svg_icon;
+use futures::try_join;
 
 use axum::{
     extract::{FromRef, Path, Query, State},
@@ -282,6 +282,15 @@ impl maud::Render for LabelsQuery {
                         hx-trigger="click"
                         {
                             (svg_icon::magnifying_glass_plus())
+                        }
+                    td
+                        hx-get={"/f/transactions/value?labeled=" (label.label) }
+                        hx-push-url={"/?labeled=" (label.label) }
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-trigger="load"
+                        {
+                            "Loading..."
                         }
                  }
                }

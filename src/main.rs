@@ -246,6 +246,7 @@ async fn main() {
         // `GET /` goes to `root`
         .route("/", get(root))
         .route("/f/transactions", get(get_transactions))
+        .route("/f/transactions/value", get(get_transactions_value))
         .route(
             "/f/transactions/:transaction_id/edit",
             get(crate::tx::handle_tx_edit_get).post(crate::tx::handle_tx_edit_post),
@@ -313,6 +314,17 @@ async fn get_transactions(
     let transactions =
         tx::SFAccountTXQuery::from_options(filter_options.clone(), &app_state.db).await?;
     Ok(transactions.render().into_response())
+}
+
+async fn get_transactions_value(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    tx_filter: Query<TransactionsFilterOptions>,
+) -> Result<Response, AppError> {
+    let filter_options = tx_filter.deref();
+    let value =
+        tx::SFAccountTXQuery::amount_from_options(filter_options.clone(), &app_state.db).await?;
+    Ok(value.render().into_response())
 }
 
 async fn root(
