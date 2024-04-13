@@ -19,6 +19,23 @@ pub struct SFAccountTXQueryResultRow {
     amount: sqlx::postgres::types::PgMoney,
     account_id: crate::accounts::AccountID,
 }
+
+#[derive(sqlx::FromRow)]
+pub struct SFAccountTXAmountQueryResultRow {
+    amount: Option<sqlx::postgres::types::PgMoney>,
+}
+
+impl maud::Render for SFAccountTXAmountQueryResultRow {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+              @if let Some(amount) = self.amount {
+                  span {"Amount: " (amount.to_decimal(2))}
+              } @else {
+                  span {"No records found"}
+              }
+        }
+    }
+}
 impl SFAccountTXQueryResultRow {
     fn render_edit(&self, labels_markup: maud::Markup) -> maud::Markup {
         maud::html! {
@@ -141,6 +158,18 @@ impl SFAccountTXQuery {
         } else {
             return Self::all(pool).await;
         }
+        return Err(anyhow::anyhow!("Not implemented"));
+    }
+
+    #[tracing::instrument]
+    pub async fn amount_from_options(
+        params: crate::TransactionsFilterOptions,
+        pool: &PgPool,
+    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
+        if let Some(label) = params.labeled {
+            return Self::amount_with_label(label, pool).await;
+        }
+        return Err(anyhow::anyhow!("Not implemented"));
     }
 
     #[tracing::instrument]
@@ -163,6 +192,40 @@ impl SFAccountTXQuery {
         .await?;
 
         Ok(res.into())
+    }
+
+    #[tracing::instrument]
+    pub async fn amount_with_label(
+        label: String,
+        pool: &PgPool,
+    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
+        let query_levels = string_label_to_plquerylevels(label)?;
+        let query = PgLQuery::from(query_levels);
+        Self::tx_label_amount_query(query, pool).await
+    }
+
+    #[tracing::instrument]
+    async fn tx_label_amount_query(
+        q: sqlx::postgres::types::PgLQuery,
+        pool: &PgPool,
+    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
+        let res = sqlx::query_as!(
+            SFAccountTXAmountQueryResultRow,
+            r#"
+        SELECT sum(sat.amount) as amount
+        FROM simplefin_account_transactions sat
+        JOIN transaction_labels tl
+            ON sat.id = tl.transaction_id
+        JOIN labels l
+            ON tl.label_id = l.id
+        WHERE l.label ~ $1
+            "#,
+            q
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(res)
     }
 
     #[tracing::instrument]
