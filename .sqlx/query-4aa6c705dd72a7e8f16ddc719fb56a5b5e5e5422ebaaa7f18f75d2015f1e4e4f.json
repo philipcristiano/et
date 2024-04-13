@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT connection_id, last_sync.ts, message FROM\n            ( SELECT max(ts) as ts\n              FROM simplefin_connection_sync_info\n              WHERE connection_id = $1 ) AS last_sync\n        JOIN simplefin_connection_sync_errors AS scse\n        ON scse.connection_id = $1\n        AND scse.ts = last_sync.ts\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "connection_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ts",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "message",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "4aa6c705dd72a7e8f16ddc719fb56a5b5e5e5422ebaaa7f18f75d2015f1e4e4f"
+}

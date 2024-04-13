@@ -42,6 +42,34 @@ table "simplefin_connection_sync_info" {
   }
 }
 
+table "simplefin_connection_sync_errors" {
+  schema = schema.public
+
+  column "connection_id" {
+    type = uuid
+  }
+  column "ts" {
+    type = timestamptz
+  }
+  column "message" {
+    type = varchar
+  }
+
+  primary_key {
+    columns = [
+      column.connection_id,
+      column.ts,
+    ]
+  }
+
+  foreign_key "simplefin_connection" {
+    columns = [column.connection_id, column.ts]
+    ref_columns = [table.simplefin_connection_sync_info.column.connection_id, table.simplefin_connection_sync_info.column.ts]
+    on_delete = CASCADE
+    on_update = NO_ACTION
+  }
+}
+
 table "simplefin_accounts" {
   schema = schema.public
 
