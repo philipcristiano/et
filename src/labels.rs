@@ -285,7 +285,6 @@ impl maud::Render for LabelsQuery {
                         }
                     td
                         hx-get={"/f/transactions/value?labeled=" (label.label) }
-                        hx-push-url={"/?labeled=" (label.label) }
                         hx-target="this"
                         hx-swap="innerHTML"
                         hx-trigger="load"
