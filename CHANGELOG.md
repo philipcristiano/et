@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/philipcristiano/et/compare/v2.1.0...v2.1.1) (2024-04-13)
+
+
+### Bug Fixes
+
+* Don't push url state for balance loads ([f7b271f](https://github.com/philipcristiano/et/commit/f7b271fb1c0d22887202c32ea878d958de755dd6))
+
 ## [2.1.0](https://github.com/philipcristiano/et/compare/v2.0.1...v2.1.0) (2024-04-13)
 
 
