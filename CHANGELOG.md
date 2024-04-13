@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.0](https://github.com/philipcristiano/et/compare/v2.0.1...v2.1.0) (2024-04-13)
+
+
+### Features
+
+* Display aggregate value of a label ([1e0da28](https://github.com/philipcristiano/et/commit/1e0da28730f75bc3255646cf0ef80d0b13c384fc))
+* Display connection errors ([34702e1](https://github.com/philipcristiano/et/commit/34702e12bc694dc9237ae753b9237df7e837fb30))
+
 ## [2.0.1](https://github.com/philipcristiano/et/compare/v2.0.0...v2.0.1) (2024-04-13)
 
 
