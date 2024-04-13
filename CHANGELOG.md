@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/philipcristiano/et/compare/v2.0.0...v2.0.1) (2024-04-13)
+
+
+### Bug Fixes
+
+* Use search icons ([902b3e3](https://github.com/philipcristiano/et/commit/902b3e371ee2b35e4566095a82384f353504192f))
+
 ## [2.0.0](https://github.com/philipcristiano/et/compare/v1.0.0...v2.0.0) (2024-04-12)
 
 
