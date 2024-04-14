@@ -300,7 +300,21 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        .route("/f/connection/:connection_id", get(get_connection))
+        .route("/f/connection/:connection_id", get(get_connection_f))
+        .route("/accounts", get(crate::accounts::get_accounts_f))
+        .route(
+            "/f/accounts/:account_id",
+            get(crate::accounts::get_account_f),
+        )
+        .route(
+            "/f/accounts/:account_id/active",
+            post(crate::accounts::handle_active_post).delete(crate::accounts::handle_active_delete),
+        )
+        .route(
+            "/f/accounts/:account_id/delete-transactions",
+            post(crate::accounts::handle_delete_transactions),
+        )
+        .route("/accounts/:account_id", get(crate::accounts::get_account))
         .route("/f/transactions", get(get_transactions))
         .route("/f/transactions/value", get(get_transactions_value))
         .route(
@@ -357,7 +371,24 @@ async fn health() -> Response {
 pub struct ConnectionIDFilter {
     pub connection_id: ConnectionID,
 }
-async fn get_connection(
+async fn get_connection_f(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<ConnectionIDFilter>,
+) -> Result<Response, AppError> {
+    let connection_id = params.connection_id;
+    let errors = Connection::get_last_sync_errors(connection_id, &app_state.db).await?;
+    let resp = html! {
+        (connection_id)
+        @for e in errors {
+            p { (svg_icon::exclamation_circle()) (e.message) }
+        }
+
+    };
+    Ok(resp.into_response())
+}
+
+async fn get_account_f(
     State(app_state): State<AppState>,
     _user: service_conventions::oidc::OIDCUser,
     Path(params): Path<ConnectionIDFilter>,

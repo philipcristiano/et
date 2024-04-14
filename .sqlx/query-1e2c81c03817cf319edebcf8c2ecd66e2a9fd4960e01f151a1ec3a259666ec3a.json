@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE simplefin_accounts\n        SET active = false\n        WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1e2c81c03817cf319edebcf8c2ecd66e2a9fd4960e01f151a1ec3a259666ec3a"
+}

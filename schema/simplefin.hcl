@@ -26,7 +26,6 @@ table "simplefin_connection_sync_info" {
   column "ts" {
     type = timestamptz
   }
-
   primary_key {
     columns = [
       column.connection_id,
@@ -89,6 +88,11 @@ table "simplefin_accounts" {
   column "currency" {
     type = varchar
   }
+  column "active" {
+    type = bool
+    default = true
+  }
+
   primary_key {
     columns = [
       column.id,

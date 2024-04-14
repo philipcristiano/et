@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n    INSERT INTO simplefin_accounts ( connection_id, simplefin_id, name, currency )\n    VALUES ( $1, $2, $3, $4 )\n    ON CONFLICT (connection_id, simplefin_id) DO UPDATE set name = EXCLUDED.name\n    RETURNING id, connection_id, currency, name\n            ",
+  "query": "\n        SELECT id, connection_id, currency, name, active\n        FROM simplefin_accounts\n        WHERE id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -22,22 +22,25 @@
         "ordinal": 3,
         "name": "name",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "active",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Varchar",
-        "Varchar",
-        "Varchar"
+        "Uuid"
       ]
     },
     "nullable": [
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "0705826f6ff427c9abbf960886ce564650d2ac032d048321b81ff4c30cd64c36"
+  "hash": "116c75c5f3fcd22728352fe1300b0c5e121b4af1ee0be5a6dd7ca502e10fac44"
 }

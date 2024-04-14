@@ -962,6 +962,7 @@ dependencies = [
  "chrono",
  "clap",
  "futures",
+ "http 1.1.0",
  "maud",
  "once_cell",
  "reqwest 0.12.3",

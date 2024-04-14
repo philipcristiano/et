@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE\n        FROM simplefin_account_transactions\n        WHERE account_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dfbb6e8b55ca51d0f8e614dd3bc6935fbf96d848897f7e7de4cbeadd9f5ecfca"
+}
