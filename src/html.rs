@@ -1,3 +1,4 @@
+use crate::svg_icon;
 use maud::{html, DOCTYPE};
 
 pub fn maud_page(content: maud::Markup) -> maud::Markup {
@@ -90,6 +91,7 @@ pub fn sidebar(
               thead {
                 tr
                 {
+                    th {}
                     th { "Account"}
                     th { "Balance"}
                 }
@@ -97,14 +99,27 @@ pub fn sidebar(
               tbody {
               @for balance in &balances {
               tr
-                  hx-get={"/f/transactions?account_id=" (balance.account_id) }
-                  hx-push-url={"/?account_id=" (balance.account_id) }
-                  hx-target="#main"
-                  hx-swap="innerHTML"
-                  hx-trigger="click"
                   {
-                  td { (balance.name)}
-                  td { (balance.balance.to_decimal(2))}
+                  td
+                    hx-get={"/f/transactions?account_id=" (balance.account_id) }
+                    hx-push-url={"/?account_id=" (balance.account_id) }
+                    hx-target="#main"
+                    hx-swap="innerHTML"
+                    hx-trigger="click"
+                    class="peer"
+                    { (balance.name)}
+
+                  td
+                    class="peer"
+                    { (balance.balance.to_decimal(2))}
+                  td
+                    hx-get={"/f/accounts/" (balance.account_id) }
+                    hx-push-url={"/accounts/" (balance.account_id) }
+                    hx-target="#main"
+                    hx-swap="innerHTML"
+                    hx-trigger="click"
+                    class="invisible peer-hover:visible hover:visible"
+                    { (svg_icon::pencil_square())}
               }
               }
               }

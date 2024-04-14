@@ -53,9 +53,6 @@ impl SFAccountTXQueryResultRow {
         td {
               div {
                   form
-                        action="/f/labels/search-and-apply-first"
-                        method="post"
-                        hx-from="input"
                         hx-get="/f/labels/search"
                         hx-target={"#search-results-" (self.id)}
                         hx-trigger="input changed delay:100ms from:input"
@@ -401,6 +398,26 @@ pub struct AccountTransaction {
     amount: sqlx::postgres::types::PgMoney,
     pending: Option<bool>,
     description: String,
+}
+
+impl AccountTransaction {
+    pub async fn delete_for_account(
+        account_id: crate::accounts::AccountID,
+        pool: &PgPool,
+    ) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+        DELETE
+        FROM simplefin_account_transactions
+        WHERE account_id = $1
+            "#,
+            account_id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
 }
 
 impl SFAccountTransaction {
