@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/philipcristiano/et/compare/v2.1.1...v2.2.0) (2024-04-14)
+
+
+### Features
+
+* Disable individual accounts from syncing ([75aaa94](https://github.com/philipcristiano/et/commit/75aaa940e8dcd038ad7e3ae87f8909d55a28572b))
+
 ## [2.1.1](https://github.com/philipcristiano/et/compare/v2.1.0...v2.1.1) (2024-04-13)
 
 
