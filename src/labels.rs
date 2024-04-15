@@ -2,6 +2,7 @@ use sqlx::postgres::PgPool;
 
 use crate::svg_icon;
 use futures::try_join;
+use std::ops::Deref;
 
 use axum::{
     extract::{FromRef, Path, Query, State},
@@ -22,6 +23,7 @@ pub async fn handle_labels(
 
     let (user_connections, balances, labels_result) =
         try_join!(user_connections_f, balances_f, labels_fut)?;
+    let f = crate::TransactionFilter::default();
 
     Ok(html::maud_page(html! {
           div class="flex flex-col lg:flex-row"{
@@ -35,7 +37,7 @@ pub async fn handle_labels(
                 input type="submit" class="border" {}
               }
             }
-            (&labels_result)
+            (&labels_result.render_with_tx_filter(f)?)
           }}
 
     })
@@ -46,7 +48,7 @@ pub async fn handle_labels_fragment(
     _user: service_conventions::oidc::OIDCUser,
 ) -> Result<Response, crate::AppError> {
     let labels_result = LabelsQuery::all(&app_state.db).await?;
-
+    let f = crate::TransactionFilter::default();
     Ok(html! {
         div {
           h3 { "Add a label"}
@@ -55,7 +57,7 @@ pub async fn handle_labels_fragment(
             input type="submit" class="border" {}
           }
         }
-        (&labels_result)
+        (&labels_result.render_with_tx_filter(f)?)
 
     }
     .into_response())
@@ -65,7 +67,7 @@ pub async fn handle_labels_fragment(
 pub struct LabelSearch {
     search: String,
     #[serde(flatten)]
-    full_transaction_id: crate::tx::FullTransactionID,
+    transaction_filter: crate::TransactionsFilterOptions,
 }
 
 pub async fn handle_labels_search_fragment(
@@ -74,10 +76,8 @@ pub async fn handle_labels_search_fragment(
     Form(form): Form<LabelSearch>,
 ) -> Result<Response, crate::AppError> {
     let results = LabelsQuery::search(form.search, &app_state.db).await?;
-    Ok(
-        html! {(results.render_add_labels_for_tx(form.full_transaction_id.clone()))}
-            .into_response(),
-    )
+    let tx_filter: crate::TransactionFilter = form.transaction_filter.into();
+    Ok(html! {(results.render_add_labels_for_tx(tx_filter))}.into_response())
 }
 
 pub type LabelID = uuid::Uuid;
@@ -168,10 +168,7 @@ impl LabelsQuery {
     }
 
     #[tracing::instrument]
-    pub async fn for_tx(
-        ftxid: &crate::tx::FullTransactionID,
-        pool: &PgPool,
-    ) -> anyhow::Result<Self> {
+    pub async fn for_tx(ftxid: &crate::tx::TransactionID, pool: &PgPool) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
             Label,
             r#"
@@ -183,7 +180,7 @@ impl LabelsQuery {
         ORDER BY
             l.label ASC
             "#,
-            ftxid.transaction_id
+            ftxid
         )
         .fetch_all(pool)
         .await?;
@@ -191,23 +188,23 @@ impl LabelsQuery {
         Ok(res.into())
     }
 
-    pub fn render_as_table_for_tx(&self, ftxid: crate::tx::FullTransactionID) -> maud::Markup {
+    pub fn render_as_table_for_tx(&self, ftxid: crate::tx::TransactionID) -> maud::Markup {
         maud::html! {
            table
-               #{"transaction-labels-" (ftxid.transaction_id)}
+               #{"transaction-labels-" (ftxid)}
                class="table-auto"{
                tbody {
                @for label in &self.item {
                tr{
                     td {
                         form
-                            hx-target={"#transaction-labels-" (ftxid.transaction_id)}
+                            hx-target={"#transaction-labels-" (ftxid)}
                             hx-delete={"/f/transaction_label"}
                             hx-trigger="click"
                         {
 
                             input type="hidden" name="label_id" value={(label.id)} {}
-                            input type="hidden" name="transaction_id" value={(ftxid.transaction_id)} {}
+                            input type="hidden" name="transaction_id" value={(ftxid)} {}
                             (crate::svg_icon::x_circle())
                         }
 
@@ -222,7 +219,13 @@ impl LabelsQuery {
         }
     }
 
-    fn render_add_labels_for_tx(&self, ftxid: crate::tx::FullTransactionID) -> maud::Markup {
+    fn render_add_labels_for_tx(&self, txf: crate::TransactionFilter) -> maud::Markup {
+        let options = txf.clone().render_to_hidden_input_fields();
+
+        let mut hx_target = String::new();
+        if let crate::TransactionFilterComponent::TransactionID(tid) = txf.component {
+            hx_target = format!("#transaction-labels-{}", tid);
+        };
         maud::html! {
            table class="table-auto"{
                thead {
@@ -236,13 +239,13 @@ impl LabelsQuery {
                     td{
 
                         form
-                        hx-target={"#transaction-labels-" (ftxid.transaction_id)}
+                        hx-target={(hx_target)}
                         hx-post={"/f/transaction_label"}
                         hx-trigger="click"
                         {
 
                             input type="hidden" name="label_id" value={(label.id)} {}
-                            input type="hidden" name="transaction_id" value={(ftxid.transaction_id)} {}
+                            (options)
                             {
                              (label.label)
                             }
@@ -254,24 +257,22 @@ impl LabelsQuery {
            }
         }
     }
-}
 
-impl maud::Render for LabelsQuery {
-    fn render(&self) -> maud::Markup {
+    fn render_with_tx_filter(&self, txf: crate::TransactionFilter) -> anyhow::Result<maud::Markup> {
         let now = chrono::Utc::now();
-        let ago_30 = now - chrono::Duration::days(30);;
-        let ago_90 = now - chrono::Duration::days(90);;
+        let ago_30 = now - chrono::Duration::days(30);
+        let ago_90 = now - chrono::Duration::days(90);
         let midnight = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
         let start_datetime_30 = ago_30.with_time(midnight).unwrap();
         let start_datetime_90 = ago_90.with_time(midnight).unwrap();
-        maud::html! {
+        Ok(maud::html! {
            table #labels-table class="table-auto"{
                tbody {
                @for label in &self.item {
                tr{
                     td { (label.label) }
                     td
-                        hx-get={"/f/transactions?not_labeled=" (label.label) }
+                        hx-get={"/f/transactions?" (txf.without_pltree(label.label.clone())?.to_querystring()?) }
                         hx-push-url={"/?not_labeled=" (label.label) }
                         hx-target="#main"
                         hx-swap="innerHTML"
@@ -281,7 +282,7 @@ impl maud::Render for LabelsQuery {
                         }
 
                     td
-                        hx-get={"/f/transactions?labeled=" (label.label) }
+                        hx-get={"/f/transactions?" (txf.with_pltree(label.label.clone())?.to_querystring()?) }
                         hx-push-url={"/?labeled=" (label.label) }
                         hx-target="#main"
                         hx-swap="innerHTML"
@@ -320,7 +321,7 @@ impl maud::Render for LabelsQuery {
                }
 
            }
-        }
+        })
     }
 }
 
