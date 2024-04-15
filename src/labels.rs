@@ -258,6 +258,12 @@ impl LabelsQuery {
 
 impl maud::Render for LabelsQuery {
     fn render(&self) -> maud::Markup {
+        let now = chrono::Utc::now();
+        let ago_30 = now - chrono::Duration::days(30);;
+        let ago_90 = now - chrono::Duration::days(90);;
+        let midnight = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+        let start_datetime_30 = ago_30.with_time(midnight).unwrap();
+        let start_datetime_90 = ago_90.with_time(midnight).unwrap();
         maud::html! {
            table #labels-table class="table-auto"{
                tbody {
@@ -282,6 +288,24 @@ impl maud::Render for LabelsQuery {
                         hx-trigger="click"
                         {
                             (svg_icon::magnifying_glass_plus())
+                        }
+                    td
+                        hx-get={"/f/transactions/value?labeled=" (label.label)
+                                "&start_datetime=" (start_datetime_30) }
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-trigger="load"
+                        {
+                            "Loading..."
+                        }
+                    td
+                        hx-get={"/f/transactions/value?labeled=" (label.label)
+                                "&start_datetime=" (start_datetime_90) }
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-trigger="load"
+                        {
+                            "Loading..."
                         }
                     td
                         hx-get={"/f/transactions/value?labeled=" (label.label) }
