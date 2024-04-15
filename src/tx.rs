@@ -164,7 +164,7 @@ impl SFAccountTXQuery {
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         if let Some(label) = params.labeled {
-            return Self::amount_with_label(label, pool).await;
+            return Self::amount_with_label(label, params.start_datetime, pool).await;
         }
         return Err(anyhow::anyhow!("Not implemented"));
     }
@@ -194,16 +194,18 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn amount_with_label(
         label: String,
+        start_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         let query_levels = string_label_to_plquerylevels(label)?;
         let query = PgLQuery::from(query_levels);
-        Self::tx_label_amount_query(query, pool).await
+        Self::tx_label_amount_query(query, start_datetime, pool).await
     }
 
     #[tracing::instrument]
     async fn tx_label_amount_query(
         q: sqlx::postgres::types::PgLQuery,
+        start_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         let res = sqlx::query_as!(
@@ -216,8 +218,10 @@ impl SFAccountTXQuery {
         JOIN labels l
             ON tl.label_id = l.id
         WHERE l.label ~ $1
+        AND sat.posted >= $2
             "#,
-            q
+            q,
+            start_datetime
         )
         .fetch_one(pool)
         .await?;

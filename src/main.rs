@@ -405,11 +405,17 @@ async fn get_account_f(
     Ok(resp.into_response())
 }
 
+fn early_date() -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::from_timestamp(0, 0).expect("Could not construct date")
+}
+
 #[derive(Deserialize, Debug, Clone)]
 struct TransactionsFilterOptions {
     account_id: Option<crate::accounts::AccountID>,
     labeled: Option<String>,
     not_labeled: Option<String>,
+    #[serde(default = "early_date")]
+    start_datetime: chrono::DateTime<chrono::Utc>,
 }
 
 use maud::Render;
