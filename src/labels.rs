@@ -143,7 +143,7 @@ impl LabelsQuery {
     #[tracing::instrument]
     pub async fn search(name: String, pool: &PgPool) -> anyhow::Result<Self> {
         tracing::debug!("Label name {:?}", &name);
-        let query_label = sqlx::postgres::types::PgLQueryLevel::from_str(&format!("{name}*"))?;
+        let query_label = sqlx::postgres::types::PgLQueryLevel::from_str(&format!("{name}@*"))?;
         let star = sqlx::postgres::types::PgLQueryLevel::from_str("*")?;
         tracing::debug!("Label  {:?}", &query_label);
         let qv = vec![star.clone(), query_label, star.clone()];
