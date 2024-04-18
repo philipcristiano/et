@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.3.0](https://github.com/philipcristiano/et/compare/v2.2.0...v2.3.0) (2024-04-18)
+
+
+### Features
+
+* Filter transactions by text description ([ff86934](https://github.com/philipcristiano/et/commit/ff869346ff09c9103139f4146881684e307362fd))
+* Set Account Name ([17f7b95](https://github.com/philipcristiano/et/commit/17f7b957387941a6f797d1cfceba1844f32b2aa6))
+* Show labels by 30 and 90 days windows ([1c2a5b9](https://github.com/philipcristiano/et/commit/1c2a5b99e827b2b680d82a4bcdd68c4f48d08e4a))
+
+
+### Bug Fixes
+
+* **deps:** update rust crate chrono to 0.4.38 ([e05aec1](https://github.com/philipcristiano/et/commit/e05aec1a6dd119132c2b7ab63bc7e2c986860605))
+* **deps:** update rust crate service_conventions to 0.0.15 ([bb32d1b](https://github.com/philipcristiano/et/commit/bb32d1b8160656cade2e52ead2a7713c416be62e))
+* **deps:** update rust crate service_conventions to 0.0.16 ([ec5c417](https://github.com/philipcristiano/et/commit/ec5c4178c29a1b59f077978ca196795843b5263f))
+* Search for labels case insentively ([45d947f](https://github.com/philipcristiano/et/commit/45d947f793b57a60734f7b3f77a6ef0b5b90ef3a))
+
 ## [2.2.0](https://github.com/philipcristiano/et/compare/v2.1.1...v2.2.0) (2024-04-14)
 
 
