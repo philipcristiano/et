@@ -2,7 +2,7 @@ use crate::{AppError, AppState};
 use sqlx::postgres::PgPool;
 
 use axum::{
-    extract::{FromRef, Path, State},
+    extract::{Path, State},
     response::{IntoResponse, Response},
     Form,
 };
@@ -24,7 +24,7 @@ impl SFAccount {
     INSERT INTO simplefin_accounts ( connection_id, simplefin_id, name, currency )
     VALUES ( $1, $2, $3, $4 )
     ON CONFLICT (connection_id, simplefin_id) DO UPDATE set name = EXCLUDED.name
-    RETURNING id, connection_id, currency, name, active
+    RETURNING id, connection_id, currency, name, active, custom_name
             "#,
             self.connection_id,
             self.simplefin_id,
@@ -44,11 +44,13 @@ pub struct Account {
     pub connection_id: crate::ConnectionID,
     pub currency: String,
     pub name: String,
+    pub custom_name: Option<String>,
     pub active: bool,
 }
 
 pub struct SFAccountBalanceQueryResult {
     pub name: String,
+    pub custom_name: Option<String>,
     pub account_id: AccountID,
     pub balance: sqlx::postgres::types::PgMoney,
 }
@@ -58,7 +60,7 @@ impl SFAccountBalanceQueryResult {
         let res = sqlx::query_as!(
             SFAccountBalanceQueryResult,
             r#"
-        SELECT name, sab.account_id, sab.balance
+        SELECT name, custom_name, sab.account_id, sab.balance
         FROM simplefin_accounts sa
         JOIN (
                 SELECT account_id, max(ts) as ts
@@ -68,7 +70,10 @@ impl SFAccountBalanceQueryResult {
             ON sa.id = last_ts.account_id
         LEFT JOIN simplefin_account_balances sab
             ON last_ts.account_id = sab.account_id
-            AND last_ts.ts = sab.ts;
+            AND last_ts.ts = sab.ts
+        ORDER BY
+            COALESCE(custom_name, name),
+            balance
             "#,
         )
         .fetch_all(pool)
@@ -84,7 +89,7 @@ impl Account {
         let res = sqlx::query_as!(
             Self,
             r#"
-        SELECT id, connection_id, currency, name, active
+        SELECT id, connection_id, currency, name, active, custom_name
         FROM simplefin_accounts
             "#,
         )
@@ -93,13 +98,16 @@ impl Account {
 
         Ok(res)
     }
+    #[tracing::instrument]
     pub async fn get(account_id: AccountID, pool: &PgPool) -> anyhow::Result<Option<Self>> {
         let res = sqlx::query_as!(
             Self,
             r#"
-        SELECT id, connection_id, currency, name, active
+        SELECT id, connection_id, currency, name, active, custom_name
         FROM simplefin_accounts
         WHERE id = $1
+        ORDER BY
+            COALESCE(custom_name, name)
             "#,
             account_id
         )
@@ -109,6 +117,7 @@ impl Account {
         Ok(res)
     }
 
+    #[tracing::instrument]
     pub async fn enable_sync(account_id: AccountID, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -124,6 +133,7 @@ impl Account {
         Ok(())
     }
 
+    #[tracing::instrument]
     pub async fn disable_sync(account_id: AccountID, pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -139,11 +149,34 @@ impl Account {
         Ok(())
     }
 
+    #[tracing::instrument]
+    pub async fn set_name(
+        account_id: AccountID,
+        name: Option<String>,
+        pool: &PgPool,
+    ) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+        UPDATE simplefin_accounts
+        SET custom_name = $2
+        WHERE id = $1
+            "#,
+            account_id,
+            name,
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument]
     pub fn render_edit(&self) -> maud::Markup {
         maud::html!( {
             div #{"account-" (self.id)}{
             (self.id)
                 {
+                (render_account_name_get_edit_form_markup(self))
                 @if self.active {
                     div
                         hx-delete={"/f/accounts/" (self.id) "/active"}
@@ -226,6 +259,74 @@ fn render_maybe_edit(maybe_account: Option<Account>) -> Result<Response, AppErro
     }
 }
 
+fn render_account_name_get_edit_form_markup(account: &Account) -> maud::Markup {
+    maud::html! {
+       div
+           hx-target="this"
+           hx-get={"/f/accounts/" (account.id) "/name"}
+           hx-swap="outerHTML"
+           hx-trigger="click"
+
+       {
+           (account.name)
+           @if let Some(custom_name) = account.custom_name.clone() {
+               (custom_name)
+           }
+           (crate::svg_icon::pencil_square())
+       }
+    }
+}
+
+fn render_account_name_edit(maybe_account: Option<&Account>) -> Result<Response, AppError> {
+    if let Some(account) = maybe_account {
+        Ok(maud::html! {
+            (render_account_name_get_edit_form_markup(account))
+        }
+        .into_response())
+    } else {
+        Ok((http::StatusCode::NOT_FOUND, format!("Not Found")).into_response())
+    }
+}
+
+fn render_account_name_edit_form_markup(account: &Account) -> maud::Markup {
+    maud::html! {
+        form
+            hx-target="this"
+            hx-swap="outerHTML"
+            hx-post={"/f/accounts/" (account.id) "/name"}
+
+        {
+            (account.name)
+
+            @if let Some(custom_name) = account.custom_name.clone() {
+            input
+                name="name"
+                placeholder={(custom_name)}
+                type="text"
+                    {}
+            } @else{
+            input
+                name="name"
+                placeholder="New Name"
+                type="text"
+                    {}
+            }
+
+        }
+    }
+}
+fn render_account_name_editable(maybe_account: Option<&Account>) -> Result<Response, AppError> {
+    if let Some(account) = maybe_account {
+        Ok(maud::html! {
+            (render_account_name_edit_form_markup(account))
+
+        }
+        .into_response())
+    } else {
+        Ok((http::StatusCode::NOT_FOUND, format!("Not Found")).into_response())
+    }
+}
+
 pub async fn get_account_f(
     State(app_state): State<AppState>,
     _user: service_conventions::oidc::OIDCUser,
@@ -255,6 +356,38 @@ pub async fn handle_active_delete(
     Account::disable_sync(account_id, &app_state.db).await?;
     let maybe_account = Account::get(account_id, &app_state.db).await?;
     render_maybe_edit(maybe_account)
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct PostAccountName {
+    name: String,
+}
+
+pub async fn handle_name(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<AccountIDFilter>,
+) -> Result<Response, AppError> {
+    let account_id = params.account_id;
+    Account::enable_sync(account_id, &app_state.db).await?;
+    let maybe_account = Account::get(account_id, &app_state.db).await?;
+    render_account_name_editable(maybe_account.as_ref())
+}
+
+pub async fn handle_name_post(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<AccountIDFilter>,
+    Form(form): Form<PostAccountName>,
+) -> Result<Response, AppError> {
+    let account_id = params.account_id;
+    let mut new_name = None;
+    if form.name != "" {
+        new_name = Some(form.name)
+    }
+    Account::set_name(account_id, new_name, &app_state.db).await?;
+    let maybe_account = Account::get(account_id, &app_state.db).await?;
+    render_account_name_edit(maybe_account.as_ref())
 }
 
 pub async fn handle_delete_transactions(

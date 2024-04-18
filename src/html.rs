@@ -107,7 +107,13 @@ pub fn sidebar(
                     hx-swap="innerHTML"
                     hx-trigger="click"
                     class="peer"
-                    { (balance.name)}
+                    {
+                        @if let Some(name) = balance.custom_name.clone() {
+                            (name)
+                        } @else {
+                            (balance.name)
+                        }
+                    }
 
                   td
                     class="peer"

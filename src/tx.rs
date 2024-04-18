@@ -42,7 +42,7 @@ pub fn label_search_box(
     id: &String,
     txf: crate::TransactionFilter,
 ) -> anyhow::Result<maud::Markup> {
-    let qs = txf.clone();
+    let _qs = txf.clone();
     //TODO: use txf to construct input fields
     Ok(maud::html! {
     form
@@ -243,14 +243,14 @@ impl SFAccountTXQuery {
     }
 
     #[tracing::instrument]
-    pub async fn with_label(label: String, pool: &PgPool) -> anyhow::Result<Self> {
+    pub async fn with_label(label: crate::Label, pool: &PgPool) -> anyhow::Result<Self> {
         let query_levels = string_label_to_plquerylevels(label)?;
         let query = PgLQuery::from(query_levels);
         Self::tx_label_query(query, pool).await
     }
 
     #[tracing::instrument]
-    pub async fn without_label(label: String, pool: &PgPool) -> anyhow::Result<Self> {
+    pub async fn without_label(label: crate::Label, pool: &PgPool) -> anyhow::Result<Self> {
         let query_levels = string_label_to_plquerylevels(label)?;
         let query = PgLQuery::from(query_levels);
         Self::tx_not_label_query(query, pool).await
@@ -360,7 +360,7 @@ impl maud::Render for SFAccountTXQuery {
     }
 }
 
-fn string_label_to_plquerylevels(label: String) -> anyhow::Result<Vec<PgLQueryLevel>> {
+fn string_label_to_plquerylevels(label: crate::Label) -> anyhow::Result<Vec<PgLQueryLevel>> {
     let label_string_parts = label.split(".");
     let mut query_parts: Vec<PgLQueryLevel> = Vec::new();
     for string_part in label_string_parts {

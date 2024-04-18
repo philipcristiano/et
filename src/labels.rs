@@ -2,12 +2,10 @@ use sqlx::postgres::PgPool;
 
 use crate::svg_icon;
 use futures::try_join;
-use std::ops::Deref;
 
 use axum::{
-    extract::{FromRef, Path, Query, State},
+    extract::State,
     response::{IntoResponse, Redirect, Response},
-    routing::{get, post},
     Form,
 };
 
@@ -15,7 +13,7 @@ use crate::{html, AppState, Connection};
 
 pub async fn handle_labels(
     State(app_state): State<AppState>,
-    user: service_conventions::oidc::OIDCUser,
+    _user: service_conventions::oidc::OIDCUser,
 ) -> Result<Response, crate::AppError> {
     let user_connections_f = Connection::connections(&app_state.db);
     let balances_f = crate::accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
