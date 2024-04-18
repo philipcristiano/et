@@ -257,7 +257,9 @@ impl LabelsQuery {
     }
 
     fn render_with_tx_filter(&self, txf: crate::TransactionFilter) -> anyhow::Result<maud::Markup> {
+        use chrono::Datelike;
         let now = chrono::Utc::now();
+        let start_end_pairs = crate::dates::month_ranges(now, 4)?;
         let ago_30 = now - chrono::Duration::days(30);
         let ago_90 = now - chrono::Duration::days(90);
         let midnight = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
@@ -265,8 +267,21 @@ impl LabelsQuery {
         let start_datetime_90 = ago_90.with_time(midnight).unwrap();
         Ok(maud::html! {
            table #labels-table class="table-auto"{
+
+               thead {
+                 tr {
+                     th { "Label"}
+                     th {}
+                     th {}
+                     th { "Last 30 days"}
+                     th { "This Month"}
+                     th { "Last Month"}
+                     th { "Last Last Month"}
+                 }
+               }
                tbody {
                @for label in &self.item {
+               @let label_txf = txf.with_pltree(label.label.clone())?;
                tr{
                     td { (label.label) }
                     td
@@ -280,7 +295,7 @@ impl LabelsQuery {
                         }
 
                     td
-                        hx-get={"/f/transactions?" (txf.with_pltree(label.label.clone())?.to_querystring()?) }
+                        hx-get={"/f/transactions?" (label_txf.clone().to_querystring()?) }
                         hx-push-url={"/?labeled=" (label.label) }
                         hx-target="#main"
                         hx-swap="innerHTML"
@@ -288,32 +303,19 @@ impl LabelsQuery {
                         {
                             (svg_icon::magnifying_glass_plus())
                         }
+                    @for (s, e) in &start_end_pairs {
+                    @let label_se_txf = label_txf.clone().with_datetimes(s.to_owned(),e.to_owned());
                     td
-                        hx-get={"/f/transactions/value?labeled=" (label.label)
-                                "&start_datetime=" (start_datetime_30) }
+                        hx-get={"/f/transactions/value?" (
+                            label_se_txf.to_querystring()?)
+                                 }
                         hx-target="this"
                         hx-swap="innerHTML"
                         hx-trigger="load"
                         {
                             "Loading..."
                         }
-                    td
-                        hx-get={"/f/transactions/value?labeled=" (label.label)
-                                "&start_datetime=" (start_datetime_90) }
-                        hx-target="this"
-                        hx-swap="innerHTML"
-                        hx-trigger="load"
-                        {
-                            "Loading..."
-                        }
-                    td
-                        hx-get={"/f/transactions/value?labeled=" (label.label) }
-                        hx-target="this"
-                        hx-swap="innerHTML"
-                        hx-trigger="load"
-                        {
-                            "Loading..."
-                        }
+                    }
                  }
                }
                }
