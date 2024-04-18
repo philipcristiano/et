@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE simplefin_accounts\n        SET custom_name = $2\n        WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c078412cc9615c8d401f85ce02e13e7009408cce803ff620a6543829981c2d57"
+}

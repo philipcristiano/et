@@ -92,6 +92,10 @@ table "simplefin_accounts" {
     type = bool
     default = true
   }
+  column "custom_name" {
+    type = varchar
+    null = true
+  }
 
   primary_key {
     columns = [

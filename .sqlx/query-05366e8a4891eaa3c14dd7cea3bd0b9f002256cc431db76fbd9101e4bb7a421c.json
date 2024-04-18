@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT name, custom_name, sab.account_id, sab.balance\n        FROM simplefin_accounts sa\n        JOIN (\n                SELECT account_id, max(ts) as ts\n                FROM simplefin_account_balances\n                GROUP BY (account_id)\n            ) as last_ts\n            ON sa.id = last_ts.account_id\n        LEFT JOIN simplefin_account_balances sab\n            ON last_ts.account_id = sab.account_id\n            AND last_ts.ts = sab.ts\n        ORDER BY\n            COALESCE(custom_name, name),\n            balance\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "custom_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "account_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "balance",
+        "type_info": "Money"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "05366e8a4891eaa3c14dd7cea3bd0b9f002256cc431db76fbd9101e4bb7a421c"
+}

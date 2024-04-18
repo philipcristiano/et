@@ -311,6 +311,10 @@ async fn main() {
             post(crate::accounts::handle_active_post).delete(crate::accounts::handle_active_delete),
         )
         .route(
+            "/f/accounts/:account_id/name",
+            get(crate::accounts::handle_name).post(crate::accounts::handle_name_post),
+        )
+        .route(
             "/f/accounts/:account_id/delete-transactions",
             post(crate::accounts::handle_delete_transactions),
         )
@@ -409,12 +413,15 @@ fn early_date() -> chrono::DateTime<chrono::Utc> {
     chrono::DateTime::from_timestamp(0, 0).expect("Could not construct date")
 }
 
+pub type Label = String;
+pub type DescriptionFragment = String;
+
 #[derive(Deserialize, Debug, Clone, Default, Serialize)]
 struct TransactionsFilterOptions {
     account_id: Option<crate::accounts::AccountID>,
-    labeled: Option<String>,
-    not_labeled: Option<String>,
-    description_contains: Option<String>,
+    labeled: Option<Label>,
+    not_labeled: Option<Label>,
+    description_contains: Option<DescriptionFragment>,
     transaction_id: Option<crate::tx::TransactionID>,
 
     #[serde(default = "early_date")]
@@ -505,7 +512,7 @@ impl TransactionFilter {
             ..self.clone()
         });
         match self.component.clone() {
-            TransactionFilterComponent::Label(l) => new_tf,
+            TransactionFilterComponent::Label(_l) => new_tf,
             TransactionFilterComponent::None => new_tf,
             _ => Err(anyhow::anyhow!("Invalid filter options to set label")),
         }
@@ -517,7 +524,7 @@ impl TransactionFilter {
             ..self.clone()
         });
         match self.component.clone() {
-            TransactionFilterComponent::NotLabel(l) => new_tf,
+            TransactionFilterComponent::NotLabel(_l) => new_tf,
             TransactionFilterComponent::None => new_tf,
             _ => Err(anyhow::anyhow!("Invalid filter options to set label")),
         }
