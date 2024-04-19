@@ -257,14 +257,9 @@ impl LabelsQuery {
     }
 
     fn render_with_tx_filter(&self, txf: crate::TransactionFilter) -> anyhow::Result<maud::Markup> {
-        use chrono::Datelike;
+
         let now = chrono::Utc::now();
         let start_end_pairs = crate::dates::month_ranges(now, 4)?;
-        let ago_30 = now - chrono::Duration::days(30);
-        let ago_90 = now - chrono::Duration::days(90);
-        let midnight = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
-        let start_datetime_30 = ago_30.with_time(midnight).unwrap();
-        let start_datetime_90 = ago_90.with_time(midnight).unwrap();
         Ok(maud::html! {
            table #labels-table class="table-auto"{
 
