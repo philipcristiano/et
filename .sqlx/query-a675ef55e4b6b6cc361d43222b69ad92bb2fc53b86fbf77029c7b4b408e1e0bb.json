@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        WHERE sat.description LIKE $1\n        AND sat.posted >= $2\n        ORDER BY\n            sat.posted DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        WHERE sat.description LIKE $1\n        AND sat.posted >= $2\n        AND sat.posted < $3\n        ORDER BY\n            sat.posted DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -37,6 +37,7 @@
     "parameters": {
       "Left": [
         "Text",
+        "Timestamptz",
         "Timestamptz"
       ]
     },
@@ -49,5 +50,5 @@
       false
     ]
   },
-  "hash": "6383cbe1e8f0d23f7ef8a0423cbc6d4fcc25357377942fcd0a9ec7fed117f875"
+  "hash": "a675ef55e4b6b6cc361d43222b69ad92bb2fc53b86fbf77029c7b4b408e1e0bb"
 }

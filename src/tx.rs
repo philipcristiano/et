@@ -30,9 +30,9 @@ impl maud::Render for SFAccountTXAmountQueryResultRow {
     fn render(&self) -> maud::Markup {
         maud::html! {
               @if let Some(amount) = self.amount {
-                  span {"Amount: " (amount.to_decimal(2))}
+                  span {(amount.to_decimal(2))}
               } @else {
-                  span {"No records found"}
+                  span {"-"}
               }
         }
     }
@@ -163,7 +163,8 @@ impl SFAccountTXQuery {
                 Ok(SFAccountTXQuery { item: vec![row] })
             }
             TransactionFilterComponent::DescriptionFragment(df) => {
-                Self::with_description_like(df, params.start_datetime, pool).await
+                Self::with_description_like(df, params.start_datetime, params.end_datetime, pool)
+                    .await
             }
             TransactionFilterComponent::None => Self::all(pool).await,
         }
@@ -176,7 +177,7 @@ impl SFAccountTXQuery {
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         match params.component {
             TransactionFilterComponent::Label(l) => {
-                Self::amount_with_label(l, params.start_datetime, pool).await
+                Self::amount_with_label(l, params.start_datetime, params.end_datetime, pool).await
             }
             _ => return Err(anyhow::anyhow!("Not implemented")),
         }
@@ -208,17 +209,19 @@ impl SFAccountTXQuery {
     pub async fn amount_with_label(
         label: String,
         start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         let query_levels = string_label_to_plquerylevels(label)?;
         let query = PgLQuery::from(query_levels);
-        Self::tx_label_amount_query(query, start_datetime, pool).await
+        Self::tx_label_amount_query(query, start_datetime, end_datetime, pool).await
     }
 
     #[tracing::instrument]
     async fn tx_label_amount_query(
         q: sqlx::postgres::types::PgLQuery,
         start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         let res = sqlx::query_as!(
@@ -232,9 +235,11 @@ impl SFAccountTXQuery {
             ON tl.label_id = l.id
         WHERE l.label ~ $1
         AND sat.posted >= $2
+        AND sat.posted < $3
             "#,
             q,
-            start_datetime
+            start_datetime,
+            end_datetime,
         )
         .fetch_one(pool)
         .await?;
@@ -315,8 +320,14 @@ impl SFAccountTXQuery {
     pub async fn with_description_like(
         df: String,
         start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
+        tracing::debug!(
+            "With description like {:?} {:?}",
+            &start_datetime,
+            &end_datetime
+        );
         let query = format!("%{df}%");
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
@@ -325,11 +336,13 @@ impl SFAccountTXQuery {
         FROM simplefin_account_transactions sat
         WHERE sat.description LIKE $1
         AND sat.posted >= $2
+        AND sat.posted < $3
         ORDER BY
             sat.posted DESC
             "#,
             query,
-            start_datetime
+            start_datetime,
+            end_datetime,
         )
         .fetch_all(pool)
         .await?;

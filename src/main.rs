@@ -19,6 +19,7 @@ use maud::html;
 use tower_cookies::CookieManagerLayer;
 
 mod accounts;
+mod dates;
 mod html;
 mod labels;
 mod simplefin_api;
@@ -412,6 +413,11 @@ async fn get_account_f(
 fn early_date() -> chrono::DateTime<chrono::Utc> {
     chrono::DateTime::from_timestamp(0, 0).expect("Could not construct date")
 }
+fn future_date() -> chrono::DateTime<chrono::Utc> {
+    let now = chrono::Utc::now();
+    let from_now = chrono::Duration::days(30);
+    now + from_now
+}
 
 pub type Label = String;
 pub type DescriptionFragment = String;
@@ -426,6 +432,8 @@ struct TransactionsFilterOptions {
 
     #[serde(default = "early_date")]
     start_datetime: chrono::DateTime<chrono::Utc>,
+    #[serde(default = "future_date")]
+    end_datetime: chrono::DateTime<chrono::Utc>,
 }
 
 impl From<TransactionFilter> for TransactionsFilterOptions {
@@ -451,6 +459,7 @@ impl From<TransactionFilter> for TransactionsFilterOptions {
             description_contains,
             transaction_id,
             start_datetime: item.start_datetime,
+            end_datetime: item.end_datetime,
         }
     }
 }
@@ -470,12 +479,15 @@ enum TransactionFilterComponent {
 struct TransactionFilter {
     component: TransactionFilterComponent,
     start_datetime: chrono::DateTime<chrono::Utc>,
+    end_datetime: chrono::DateTime<chrono::Utc>,
 }
 
 impl TransactionFilter {
     fn to_querystring(self) -> Result<String, serde_qs::Error> {
         let tfo: TransactionsFilterOptions = self.into();
-        serde_qs::to_string(&tfo)
+        let qs = serde_qs::to_string(&tfo)?;
+        tracing::debug!(qs = qs, "To querystring");
+        Ok(qs)
     }
 
     fn with_transaction_id(
@@ -530,6 +542,18 @@ impl TransactionFilter {
         }
     }
 
+    fn with_datetimes(
+        &self,
+        start: chrono::DateTime<chrono::Utc>,
+        end: chrono::DateTime<chrono::Utc>,
+    ) -> TransactionFilter {
+        TransactionFilter {
+            start_datetime: start,
+            end_datetime: end,
+            component: self.component.clone(),
+        }
+    }
+
     pub fn render_to_hidden_input_fields(self) -> maud::Markup {
         let options: TransactionsFilterOptions = self.into();
         maud::html! {
@@ -565,6 +589,7 @@ impl From<TransactionsFilterOptions> for TransactionFilter {
         TransactionFilter {
             component,
             start_datetime: item.start_datetime,
+            end_datetime: item.end_datetime,
         }
     }
 }
@@ -605,8 +630,12 @@ async fn root(
             &filter_options.description_contains
         );
         let f: TransactionFilter = filter_options.clone().into();
-        tracing::debug!("Transaction Filter {:?}", &f.component);
-        let f: TransactionFilter = filter_options.clone().into();
+        tracing::debug!(
+            "Transaction Filter {:?} {:?} {:?}",
+            &f.component,
+            &f.start_datetime,
+            &f.end_datetime
+        );
         let user_connections_f = Connection::connections(&app_state.db);
         let balances_f = accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
         let transactions_f =
@@ -615,6 +644,7 @@ async fn root(
         let (user_connections, balances, transactions) =
             try_join!(user_connections_f, balances_f, transactions_f)?;
 
+        let qs = f.clone().to_querystring()?;
         Ok(html::maud_page(html! {
               div class="flex flex-col lg:flex-row"{
               (html::sidebar(user_connections, balances))
@@ -622,8 +652,8 @@ async fn root(
                 // #TODO: add in tx filtering
 
                 form
-                      hx-get="/f/transactions"
-                      hx-push-url={"/?" (f.clone().to_querystring()?) }
+                      hx-get={"/f/transactions?" (qs)}
+                      hx-push-url={"/?" (qs) }
                       hx-target={"#transaction-list"}
     o                 hx-trigger="input changed delay:100ms from:input#search-input-transactions"
                  {
