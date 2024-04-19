@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        JOIN transaction_labels tl\n            ON sat.id = tl.transaction_id\n        JOIN labels l\n            ON tl.label_id = l.id\n        WHERE l.label ~ $1\n        ORDER BY\n            sat.posted DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        JOIN transaction_labels tl\n            ON sat.id = tl.transaction_id\n        JOIN labels l\n            ON tl.label_id = l.id\n        WHERE l.label ~ $1\n        AND sat.posted >= $2\n        AND sat.posted < $3\n        ORDER BY\n            sat.posted DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -41,7 +41,9 @@
             "name": "lquery",
             "kind": "Simple"
           }
-        }
+        },
+        "Timestamptz",
+        "Timestamptz"
       ]
     },
     "nullable": [
@@ -53,5 +55,5 @@
       false
     ]
   },
-  "hash": "1b42903219c9ec326de7a17a9b0d0eed00af27220260e3831b4d51db30572d54"
+  "hash": "a535843611858595d3ecd6d601587079f6621b24b9f316539f06b63ff2ad62ff"
 }

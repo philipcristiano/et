@@ -156,8 +156,12 @@ impl SFAccountTXQuery {
     pub async fn from_options(params: TransactionFilter, pool: &PgPool) -> anyhow::Result<Self> {
         match params.component {
             TransactionFilterComponent::AccountID(aid) => Self::by_account_id(aid, pool).await,
-            TransactionFilterComponent::Label(l) => Self::with_label(l, pool).await,
-            TransactionFilterComponent::NotLabel(l) => Self::without_label(l, pool).await,
+            TransactionFilterComponent::Label(l) => {
+                Self::with_label(l, params.start_datetime, params.end_datetime, pool).await
+            }
+            TransactionFilterComponent::NotLabel(l) => {
+                Self::without_label(l, params.start_datetime, params.end_datetime, pool).await
+            }
             TransactionFilterComponent::TransactionID(tid) => {
                 let row = SFAccountTXQuery::one(&tid, pool).await?;
                 Ok(SFAccountTXQuery { item: vec![row] })
@@ -248,22 +252,35 @@ impl SFAccountTXQuery {
     }
 
     #[tracing::instrument]
-    pub async fn with_label(label: crate::Label, pool: &PgPool) -> anyhow::Result<Self> {
+    pub async fn with_label(
+        label: crate::Label,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Self> {
         let query_levels = string_label_to_plquerylevels(label)?;
         let query = PgLQuery::from(query_levels);
-        Self::tx_label_query(query, pool).await
+        Self::tx_label_query(query, start_datetime, end_datetime, pool).await
     }
 
     #[tracing::instrument]
-    pub async fn without_label(label: crate::Label, pool: &PgPool) -> anyhow::Result<Self> {
+    pub async fn without_label(
+        label: crate::Label,
+
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Self> {
         let query_levels = string_label_to_plquerylevels(label)?;
         let query = PgLQuery::from(query_levels);
-        Self::tx_not_label_query(query, pool).await
+        Self::tx_not_label_query(query, start_datetime, end_datetime, pool).await
     }
 
     #[tracing::instrument]
     async fn tx_label_query(
         q: sqlx::postgres::types::PgLQuery,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
@@ -276,10 +293,14 @@ impl SFAccountTXQuery {
         JOIN labels l
             ON tl.label_id = l.id
         WHERE l.label ~ $1
+        AND sat.posted >= $2
+        AND sat.posted < $3
         ORDER BY
             sat.posted DESC
             "#,
-            q
+            q,
+            start_datetime,
+            end_datetime,
         )
         .fetch_all(pool)
         .await?;
@@ -289,6 +310,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     async fn tx_not_label_query(
         q: sqlx::postgres::types::PgLQuery,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
@@ -305,10 +328,14 @@ impl SFAccountTXQuery {
         ) AS tl
         ON sat.id = tl.transaction_id
         WHERE tl.transaction_id IS NULL
+        AND sat.posted >= $2
+        AND sat.posted < $3
         ORDER BY
             sat.posted DESC
             "#,
-            q
+            q,
+            start_datetime,
+            end_datetime,
         )
         .fetch_all(pool)
         .await?;
