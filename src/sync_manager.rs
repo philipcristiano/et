@@ -17,16 +17,42 @@ pub async fn sync_all(app_state: AppState) -> () {
     }
 }
 
+struct Lock {
+    pg_try_advisory_lock: Option<bool>,
+}
+
+impl Lock {
+    fn held(&self) -> bool {
+        if let Some(b) = self.pg_try_advisory_lock {
+            return b;
+        }
+        return false;
+    }
+}
+
 #[tracing::instrument(name = "sync_connections", skip_all)]
 async fn try_sync_all(app_state: &AppState) -> anyhow::Result<()> {
-    for conn in Connection::connections(&app_state.db_spike).await? {
-        tracing::event!(
-            Level::INFO,
-            connection_id = conn.id.to_string(),
-            "Syncing connection"
-        );
-        sync_connection(&app_state, &conn).await?;
+    let k = sqlx::postgres::PgAdvisoryLock::new("Sync connections")
+        .key()
+        .as_bigint();
+    let mut c = app_state.db_spike.begin().await?;
+    let lock = sqlx::query_as!(Lock, "SELECT  pg_try_advisory_lock($1)", k)
+        .fetch_one(c.as_mut())
+        .await?;
+    if lock.held() {
+        tracing::event!(Level::DEBUG, "Holding PG Advisory lock");
+        for conn in Connection::connections(&app_state.db_spike).await? {
+            tracing::event!(
+                Level::INFO,
+                connection_id = conn.id.to_string(),
+                "Syncing connection"
+            );
+            sync_connection(&app_state, &conn).await?;
+        }
+    } else {
+        tracing::event!(Level::INFO, "Could not get PG Advisory lock");
     }
+    c.rollback().await?;
     Ok(())
 }
 
