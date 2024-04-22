@@ -475,11 +475,21 @@ enum TransactionFilterComponent {
     TransactionID(crate::tx::TransactionID),
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Debug, Clone)]
 struct TransactionFilter {
     component: TransactionFilterComponent,
     start_datetime: chrono::DateTime<chrono::Utc>,
     end_datetime: chrono::DateTime<chrono::Utc>,
+}
+
+impl Default for TransactionFilter {
+    fn default() -> Self {
+        Self {
+            component: TransactionFilterComponent::None,
+            start_datetime: early_date(),
+            end_datetime: future_date(),
+        }
+    }
 }
 
 impl TransactionFilter {
