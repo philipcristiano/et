@@ -257,8 +257,10 @@ impl LabelsQuery {
     }
 
     fn render_with_tx_filter(&self, txf: crate::TransactionFilter) -> anyhow::Result<maud::Markup> {
-
         let now = chrono::Utc::now();
+        let ago_30 = now - chrono::Duration::days(30);
+        let midnight = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+        let start_datetime_30 = ago_30.with_time(midnight).unwrap();
         let start_end_pairs = crate::dates::month_ranges(now, 4)?;
         Ok(maud::html! {
            table #labels-table class="table-auto"{
@@ -297,6 +299,16 @@ impl LabelsQuery {
                         hx-trigger="click"
                         {
                             (svg_icon::magnifying_glass_plus())
+                        }
+                    td
+                        hx-get={"/f/transactions/value?" (
+                            label_txf.with_datetimes(start_datetime_30, now).to_querystring()?)
+                                 }
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-trigger="load"
+                        {
+                            "Loading..."
                         }
                     @for (s, e) in &start_end_pairs {
                     @let label_se_txf = label_txf.clone().with_datetimes(s.to_owned(),e.to_owned());

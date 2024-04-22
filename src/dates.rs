@@ -11,7 +11,7 @@ pub fn month_ranges(
         .date()
         .with_day(1)
         .ok_or_else(|| anyhow::anyhow!("Error"))?;
-    let start = naive_now + RelativeDuration::months(2);
+    let start = naive_now + RelativeDuration::months(1);
     let delta = RelativeDuration::months(-1);
     let size: usize = num_back.try_into()?;
     let rule = DateRule::new(start, delta).with_count(size);
