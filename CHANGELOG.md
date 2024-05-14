@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.4.0](https://github.com/philipcristiano/et/compare/v2.3.0...v2.4.0) (2024-05-13)
+
+
+### Features
+
+* Date range filtering ([f86e8ca](https://github.com/philipcristiano/et/commit/f86e8ca85fc19ffd59bdd5225703405ef33675f8))
+
+
+### Bug Fixes
+
+* Default to later-than-now end_datetime ([431e54f](https://github.com/philipcristiano/et/commit/431e54fa2fb9dcdafb78d071700602ea81712595))
+* **deps:** update rust crate anyhow to v1.0.83 ([6c911bd](https://github.com/philipcristiano/et/commit/6c911bdccbda383d64ebe408eabe4a06bb60e9d6))
+* **deps:** update rust crate base64 to 0.22.1 ([58cda3d](https://github.com/philipcristiano/et/commit/58cda3d2e6bfa485e5e2b227ede4218f528a4618))
+* **deps:** update rust crate chronoutil to 0.2.7 ([562345b](https://github.com/philipcristiano/et/commit/562345bbee9a0111d62194e8eb22d399c63d5ea6))
+* **deps:** update rust crate reqwest to 0.12.4 ([3bfadad](https://github.com/philipcristiano/et/commit/3bfadad0a5c5680b52d43746b7fbec88e132b1c6))
+* **deps:** update rust crate rust-embed to v8.4.0 ([625dc4b](https://github.com/philipcristiano/et/commit/625dc4bdbfa94ee481d4866f701d2158162ead56))
+* **deps:** update rust crate serde to 1.0.199 ([98222d5](https://github.com/philipcristiano/et/commit/98222d5d3af0566d98642c8482af4b1f4f64a8f5))
+* **deps:** update rust crate serde to 1.0.200 ([b41819c](https://github.com/philipcristiano/et/commit/b41819cebc68c59a707268e06e2dbabedf694c08))
+* **deps:** update rust crate serde to v1.0.201 ([7a086c2](https://github.com/philipcristiano/et/commit/7a086c29a63374fc5bfa0317886683e571ce46be))
+* **deps:** update rust crate serde_json to 1.0.116 ([6c6884d](https://github.com/philipcristiano/et/commit/6c6884d058a5201b61fad5e48327093cbb9de074))
+* **deps:** update rust crate serde_json to v1.0.117 ([33cbf5d](https://github.com/philipcristiano/et/commit/33cbf5db0ee300791b6be0fe7d5324686db28db4))
+* **deps:** update rust crate thiserror to 1.0.59 ([c244b9c](https://github.com/philipcristiano/et/commit/c244b9c19b6354b42004d6354cdb8e10b9067fd6))
+* **deps:** update rust crate thiserror to v1.0.60 ([500d4eb](https://github.com/philipcristiano/et/commit/500d4eb7560bbe40b2ec90df39df88dd531ea6ed))
+* Label dates ([96060b8](https://github.com/philipcristiano/et/commit/96060b83a13f3b5c9e429426beec711ce77a8b96))
+* Link label amounts to transactions ([d72bfb6](https://github.com/philipcristiano/et/commit/d72bfb6b709078d8d12b376888a42d7c8c7f02d3))
+* off-by-1 error on date calculations ([cda36bc](https://github.com/philipcristiano/et/commit/cda36bc1fc25a304b6b9b300850e5372c38d5650))
+* Prevent multiple instances syncing the same connection ([fd12efe](https://github.com/philipcristiano/et/commit/fd12efe7c8c41a1a063cafb1221319071dd80668))
+* Remove unused code ([a2ff471](https://github.com/philipcristiano/et/commit/a2ff471d1d2137aa38e459ea6a298687d02d7da4))
+
 ## [2.3.0](https://github.com/philipcristiano/et/compare/v2.2.0...v2.3.0) (2024-04-18)
 
 
