@@ -64,7 +64,7 @@ jobs:
         run: psql -h 127.0.0.1 -d et -U postgres -tc "CREATE EXTENSION ltree;"
 
       - name: Apply Schema
-        uses: docker://arigaio/atlas:0.22.0-community
+        uses: docker://arigaio/atlas:0.23.0-community
         env:
           SKIP_TAILWIND: true
           DATABASE_URL: "postgres://postgres:postgres@postgres/et?sslmode=disable"
