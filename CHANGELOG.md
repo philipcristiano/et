@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.4.1](https://github.com/philipcristiano/et/compare/v2.4.0...v2.4.1) (2024-06-12)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.84 ([274e676](https://github.com/philipcristiano/et/commit/274e67624a7745748971862932e6226af625702a))
+* **deps:** update rust crate anyhow to v1.0.85 ([a9cd576](https://github.com/philipcristiano/et/commit/a9cd57613e7970af2968a64cb5d548c610dede95))
+* **deps:** update rust crate anyhow to v1.0.86 ([5c98962](https://github.com/philipcristiano/et/commit/5c98962ab43eb065b8a151082ebb8ee0a653b880))
+* **deps:** update rust crate clap to v4.5.6 ([11e5709](https://github.com/philipcristiano/et/commit/11e570988230a29a66ed760a7e151ba424ac5c80))
+* **deps:** update rust crate clap to v4.5.7 ([e6b2f03](https://github.com/philipcristiano/et/commit/e6b2f03c60632b256c67ffea675a55ccd4866626))
+* **deps:** update rust crate serde to v1.0.202 ([82fb8fc](https://github.com/philipcristiano/et/commit/82fb8fc7ac6a228db4e15379a545f17c98a5a0a9))
+* **deps:** update rust crate serde to v1.0.203 ([b91b1b5](https://github.com/philipcristiano/et/commit/b91b1b5ae28abe4260b1a634978edac0f503a5b0))
+* **deps:** update rust crate thiserror to v1.0.61 ([317fe75](https://github.com/philipcristiano/et/commit/317fe7520a3ffb614dd2fbe38385b63a12dac5e0))
+* **deps:** update rust crate tokio to v1.38.0 ([e8eef9e](https://github.com/philipcristiano/et/commit/e8eef9e7a20f69052755b985e97097a7f7004fb8))
+* **deps:** update rust crate toml to v0.8.13 ([4632bcf](https://github.com/philipcristiano/et/commit/4632bcfa592407842fddd27ef0550946dc6673f6))
+* **deps:** update rust crate toml to v0.8.14 ([b09cc5d](https://github.com/philipcristiano/et/commit/b09cc5d4c3b7599a698f25952fc6e1dbfd0cc1c5))
+* **deps:** update rust crate url to v2.5.1 ([7cc5b95](https://github.com/philipcristiano/et/commit/7cc5b95246734a6a5c42486dc2f721026fd05761))
+
 ## [2.4.0](https://github.com/philipcristiano/et/compare/v2.3.0...v2.4.0) (2024-05-13)
 
 
