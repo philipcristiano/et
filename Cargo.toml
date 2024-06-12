@@ -6,6 +6,9 @@ description = "Expense Tracker"
 license = "Apache-2.0"
 publish = false
 
+[[bin]]
+name = "et-migrate"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -39,3 +42,6 @@ axum-extra = { version = "0.9.3", features = ["query"] }
 http = "1.1.0"
 serde_qs = "0.13.0"
 chronoutil = "0.2.7"
+
+sqlparser = { version="0.46.0", git = "https://github.com/philipcristiano/sqlparser-rs.git", branch = "main"}
+declare_schema = { git = "https://github.com/philipcristiano/declare-schema.git", branch = "main"}

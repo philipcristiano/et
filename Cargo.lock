@@ -820,6 +820,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "declare_schema"
+version = "0.0.1"
+source = "git+https://github.com/philipcristiano/declare-schema.git?branch=main#8a6f9179cdaae72a52da59383ff17fda5d894435"
+dependencies = [
+ "anyhow",
+ "clap",
+ "futures",
+ "serde",
+ "serde_json",
+ "service_conventions",
+ "sqlparser 0.47.0",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "toml",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "der"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -989,6 +1010,7 @@ dependencies = [
  "chrono",
  "chronoutil",
  "clap",
+ "declare_schema",
  "futures",
  "http 1.1.0",
  "maud",
@@ -1001,6 +1023,7 @@ dependencies = [
  "serde_qs",
  "service_conventions",
  "signal-hook",
+ "sqlparser 0.46.0",
  "sqlx",
  "thiserror",
  "tokio",
@@ -3446,6 +3469,22 @@ dependencies = [
  "itertools 0.12.1",
  "nom",
  "unicode_categories",
+]
+
+[[package]]
+name = "sqlparser"
+version = "0.46.0"
+source = "git+https://github.com/philipcristiano/sqlparser-rs.git?branch=main#d5faf3c54bba16a0b617117a312eb96eee59706a"
+dependencies = [
+ "log",
+]
+
+[[package]]
+name = "sqlparser"
+version = "0.47.0"
+source = "git+https://github.com/sqlparser-rs/sqlparser-rs.git?branch=main#be77ce50ca34958f94bc05d92795b38ca286614a"
+dependencies = [
+ "log",
 ]
 
 [[package]]

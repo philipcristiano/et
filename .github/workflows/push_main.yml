@@ -10,7 +10,7 @@ jobs:
   docker_push:
     name: "Push docker image"
     uses: "philipcristiano/workflows/.github/workflows/docker-build-push.yml@main"
-    needs: [flake, rust, atlas]
+    needs: [flake, rust, database]
     with:
       repository: ${{ github.repository }}
       timeout: 25
@@ -19,7 +19,7 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
-  atlas:
+  database:
     services:
       postgres:
         image: postgres:16
@@ -36,30 +36,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4.1.6
-
-      - name: Create dummy tailwind file
-        run: touch tailwind/tailwind.css
+      - uses: actions/checkout@v4.1.3
 
       - name: Enable extension
         env:
           PGPASSWORD: postgres
         run: psql -h 127.0.0.1 -d et -U postgres -tc "CREATE EXTENSION ltree;"
 
-      - name: Apply Schema
-        uses: docker://arigaio/atlas:0.23.0-community
-        env:
-          SKIP_TAILWIND: true
-          DATABASE_URL: "postgres://postgres:postgres@postgres/et?sslmode=disable"
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
         with:
-          args: schema apply --env local --auto-approve
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-      - name: sqlx check
-        run: cargo install sqlx-cli && cargo sqlx prepare --check
-        # uses: docker://arigaio/atlas:0.16.0-community
-        env:
-          SKIP_TAILWIND: true
-          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/et?sslmode=disable"
+      - uses: workflow/nix-shell-action@v3.3.0
+        with:
+          flakes-from-devshell: true
+          script: |
+            unset DATABASE_URL
+            cargo build --bin et-migrate
+            cargo run --bin et-migrate -- --config-file="config.github-actions.toml" migrate
 
   rust:
     uses: "philipcristiano/workflows/.github/workflows/rust.yml@main"
