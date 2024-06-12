@@ -1,24 +1,14 @@
 FROM rust:1.78-bookworm as builder
 WORKDIR /usr/src/app
 
-COPY Cargo.toml Cargo.lock /usr/src/app/
-COPY --from=d3fk/tailwindcss:stable /tailwindcss /usr/local/bin/tailwindcss
-RUN \
-    mkdir /usr/src/app/src && \
-    echo 'fn main() {}' > /usr/src/app/src/main.rs && \
-    cargo build --release && \
-    rm -Rvf /usr/src/app/src
-
 COPY . .
-RUN touch src/main.rs
+COPY --from=d3fk/tailwindcss:stable /tailwindcss /usr/local/bin/tailwindcss
 RUN cargo install --path .
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y procps ca-certificates && rm -rf /var/lib/apt/lists/*
-COPY atlas.hcl /
-COPY schema /schema
-COPY --from=builder /usr/local/cargo/bin/et /usr/local/bin/et
 
-COPY --from=arigaio/atlas:0.23.0-community /atlas /atlas
+COPY --from=builder /usr/local/cargo/bin/et-migrate /usr/local/bin/et-migrate
+COPY --from=builder /usr/local/cargo/bin/et /usr/local/bin/et
 
 ENTRYPOINT ["/usr/local/bin/et"]
