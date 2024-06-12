@@ -38,11 +38,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.7
 
-      - name: Enable extension
-        env:
-          PGPASSWORD: postgres
-        run: psql -h 127.0.0.1 -d et -U postgres -tc "CREATE EXTENSION ltree;"
-
       - name: Install Nix
         uses: cachix/install-nix-action@v26
         with:

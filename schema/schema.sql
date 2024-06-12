@@ -1,3 +1,4 @@
+CREATE EXTENSION ltree;
 
 CREATE TABLE et_user (
     id character varying NOT NULL,
