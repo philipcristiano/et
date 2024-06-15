@@ -6,6 +6,7 @@ use axum::{
     response::{IntoResponse, Response},
     Form,
 };
+use axum_extra::extract::Query;
 
 pub type AccountID = uuid::Uuid;
 #[derive(Debug)]
@@ -75,6 +76,47 @@ impl SFAccountBalanceQueryResult {
             COALESCE(custom_name, name),
             balance
             "#,
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res)
+    }
+    pub async fn get_active_balances(
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
+        SFAccountBalanceQueryResult::get_balances_activity_state(pool, true).await
+    }
+    pub async fn get_inactive_balances(
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
+        SFAccountBalanceQueryResult::get_balances_activity_state(pool, false).await
+    }
+
+    async fn get_balances_activity_state(
+        pool: &PgPool,
+        active: bool,
+    ) -> anyhow::Result<Vec<SFAccountBalanceQueryResult>> {
+        let res = sqlx::query_as!(
+            SFAccountBalanceQueryResult,
+            r#"
+        SELECT name, custom_name, sab.account_id, sab.balance
+        FROM simplefin_accounts sa
+        JOIN (
+                SELECT account_id, max(ts) as ts
+                FROM simplefin_account_balances
+                GROUP BY (account_id)
+            ) as last_ts
+            ON sa.id = last_ts.account_id
+        LEFT JOIN simplefin_account_balances sab
+            ON last_ts.account_id = sab.account_id
+            AND last_ts.ts = sab.ts
+        WHERE sa.active = $1
+        ORDER BY
+            COALESCE(custom_name, name),
+            balance
+            "#,
+            active
         )
         .fetch_all(pool)
         .await?;
@@ -226,6 +268,28 @@ impl SFAccountBalance {
 
         Ok(())
     }
+}
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct BalancesFilter {
+    active: Option<bool>,
+}
+
+pub async fn get_balances_f(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    balances_filter: Query<BalancesFilter>,
+) -> Result<Response, AppError> {
+    let balances = match balances_filter.active {
+        Some(true) => SFAccountBalanceQueryResult::get_active_balances(&app_state.db).await?,
+        Some(false) => SFAccountBalanceQueryResult::get_inactive_balances(&app_state.db).await?,
+        None => SFAccountBalanceQueryResult::get_balances(&app_state.db).await?,
+    };
+    let resp = maud::html! {
+        (crate::html::render_balances(balances))
+
+    };
+    Ok(resp.into_response())
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -410,7 +474,7 @@ pub async fn get_account(
     let maybe_account_f = Account::get(account_id, &app_state.db);
 
     let user_connections_f = crate::Connection::connections(&app_state.db);
-    let balances_f = SFAccountBalanceQueryResult::get_balances(&app_state.db);
+    let balances_f = SFAccountBalanceQueryResult::get_active_balances(&app_state.db);
     let (user_connections, balances, maybe_account) =
         futures::try_join!(user_connections_f, balances_f, maybe_account_f)?;
     if let Some(account) = maybe_account {

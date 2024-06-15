@@ -12,7 +12,7 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Migrate ,
+    Migrate,
     Print,
 }
 
@@ -41,17 +41,15 @@ async fn main() -> anyhow::Result<()> {
     let target_schema = include_str!("../../schema/schema.sql").to_string();
 
     match &args.command {
-        Commands::Migrate {
-        } => {
+        Commands::Migrate {} => {
             declare_schema::migrate_from_string(&target_schema, &pool).await?;
         }
         Commands::Print => {
-            let steps = declare_schema::generate_migrations_from_string(&target_schema, &pool).await?;
+            let steps =
+                declare_schema::generate_migrations_from_string(&target_schema, &pool).await?;
             for step in steps {
                 println!("{}", step)
-
             }
-
         }
     }
     Ok(())

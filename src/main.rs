@@ -320,6 +320,7 @@ async fn main() {
             post(crate::accounts::handle_delete_transactions),
         )
         .route("/accounts/:account_id", get(crate::accounts::get_account))
+        .route("/balances/f", get(crate::accounts::get_balances_f))
         .route("/f/transactions", get(get_transactions))
         .route("/f/transactions/value", get(get_transactions_value))
         .route(
@@ -652,7 +653,7 @@ async fn root(
             &f.end_datetime
         );
         let user_connections_f = Connection::connections(&app_state.db);
-        let balances_f = accounts::SFAccountBalanceQueryResult::get_balances(&app_state.db);
+        let balances_f = accounts::SFAccountBalanceQueryResult::get_active_balances(&app_state.db);
         let transactions_f =
             tx::SFAccountTXQuery::from_options(filter_options.into(), &app_state.db);
 
