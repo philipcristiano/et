@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/philipcristiano/et/compare/v2.4.1...v2.5.0) (2024-06-15)
+
+
+### Features
+
+* Hide inactive accounts ([5ac3204](https://github.com/philipcristiano/et/commit/5ac3204d386958492c3cbb8b033df54611e3a4ac))
+
 ## [2.4.1](https://github.com/philipcristiano/et/compare/v2.4.0...v2.4.1) (2024-06-12)
 
 
