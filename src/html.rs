@@ -97,6 +97,28 @@ pub fn sidebar(
                 }
               }
               tbody {
+                  (render_balances(balances))
+                  tr {
+                      td{p
+
+                        hx-get={"/balances/f?active=false"}
+                        hx-swap="outerHTML"
+                        hx-trigger="click"
+                        {"Show inactive accounts"}}
+
+                }
+
+              }
+
+          }
+        }
+    }
+}
+
+pub fn render_balances(
+    balances: Vec<crate::accounts::SFAccountBalanceQueryResult>,
+) -> maud::Markup {
+    maud::html!(
               @for balance in &balances {
               tr
                   {
@@ -128,9 +150,5 @@ pub fn sidebar(
                     { (svg_icon::pencil_square())}
               }
               }
-              }
-
-          }
-        }
-    }
+    )
 }
