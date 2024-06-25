@@ -16,6 +16,7 @@ pub struct SFAccount {
     pub currency: String,
     pub name: String,
 }
+
 impl SFAccount {
     #[tracing::instrument]
     pub async fn ensure_in_db(self, pool: &PgPool) -> anyhow::Result<Account> {
@@ -27,7 +28,7 @@ impl SFAccount {
     ON CONFLICT (connection_id, simplefin_id) DO UPDATE set name = EXCLUDED.name
     RETURNING id, connection_id, currency, name, active, custom_name
             "#,
-            self.connection_id,
+            self.connection_id.to_uuid(),
             self.simplefin_id,
             self.name,
             self.currency,

@@ -462,7 +462,7 @@ impl AccountTransactionLabel {
 #[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
     account_id: crate::accounts::AccountID,
-    connection_id: uuid::Uuid,
+    connection_id: crate::ConnectionID,
     id: String,
     posted: chrono::DateTime<chrono::Utc>,
     transacted_at: Option<chrono::DateTime<chrono::Utc>>,
@@ -533,7 +533,7 @@ impl SFAccountTransaction {
     ) -> Self {
         SFAccountTransaction {
             account_id: act.id.clone(),
-            connection_id: act.connection_id,
+            connection_id: act.connection_id.clone(),
             id: tx.id.clone(),
             posted: tx.posted,
             transacted_at: tx.transacted_at,

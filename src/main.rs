@@ -76,7 +76,29 @@ impl AppState {
 use sqlx::postgres::PgPool;
 use sqlx::postgres::PgPoolOptions;
 
-pub type ConnectionID = uuid::Uuid;
+#[derive(Clone, Debug, Copy, PartialEq, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
+pub struct ConnectionID(uuid::Uuid);
+impl std::fmt::Display for ConnectionID {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "ConnectionID: {}", self.0)
+    }
+}
+impl From<uuid::Uuid> for ConnectionID {
+    fn from(item: uuid::Uuid) -> Self {
+        ConnectionID(item)
+    }
+}
+
+impl ConnectionID {
+    fn new() -> Self {
+        ConnectionID(uuid::Uuid::new_v4())
+    }
+
+    fn to_uuid(&self) -> &uuid::Uuid {
+        &self.0
+    }
+}
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Connection {
@@ -99,7 +121,6 @@ impl SFConnectionSyncInfo {
         ret
     }
 }
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct ConnectionSyncError {
     connection_id: ConnectionID,
@@ -116,7 +137,7 @@ impl Connection {
     VALUES ( $1, $2 )
     ON CONFLICT (id) DO NOTHING
             "#,
-            self.id,
+            self.id.0,
             self.access_url,
         )
         .execute(pool)
@@ -148,7 +169,7 @@ impl Connection {
         ORDER BY ts DESC
         LIMIT 1;
             "#,
-            self.id
+            self.id.0
         )
         .fetch_optional(pool)
         .await?;
@@ -163,7 +184,7 @@ impl Connection {
     VALUES ( $1, $2 )
     ON CONFLICT (connection_id, ts) DO NOTHING
             "#,
-            self.id,
+            self.id.0,
             now,
         )
         .execute(pool)
@@ -188,7 +209,7 @@ impl Connection {
     VALUES ( $1, $2, $3 )
     ON CONFLICT (connection_id, ts) DO NOTHING
             "#,
-            self.id,
+            self.id.0,
             now,
             error,
         )
@@ -212,7 +233,7 @@ impl Connection {
         ON scse.connection_id = $1
         AND scse.ts = last_sync.ts
             "#,
-            connection_id
+            connection_id.to_uuid()
         )
         .fetch_all(pool)
         .await?;
@@ -719,7 +740,7 @@ async fn add_simplefin_connection(
 
     tracing::info!("access_url to {}", access_url);
 
-    let id = uuid::Uuid::new_v4();
+    let id = ConnectionID::new();
     let sfc = Connection { id, access_url };
     tracing::info!("saving access_url");
     sfc.ensure_in_db(&app_state.db).await?;
