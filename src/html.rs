@@ -91,18 +91,19 @@ pub fn sidebar(
               thead {
                 tr
                 {
-                    th {}
                     th { "Account"}
                     th { "Balance"}
+                    th {}
                 }
               }
               tbody {
                   (render_balances(balances))
                   tr {
-                      td{p
-
+                      td{
+                        p
                         hx-get={"/balances/f?active=false"}
                         hx-swap="outerHTML"
+                        hx-target="closest tr"
                         hx-trigger="click"
                         {"Show inactive accounts"}}
 
