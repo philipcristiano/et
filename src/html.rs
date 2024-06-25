@@ -91,9 +91,9 @@ pub fn sidebar(
               thead {
                 tr
                 {
-                    th {}
                     th { "Account"}
                     th { "Balance"}
+                    th {}
                 }
               }
               tbody {
