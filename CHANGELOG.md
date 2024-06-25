@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.5.1](https://github.com/philipcristiano/et/compare/v2.5.0...v2.5.1) (2024-06-25)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate reqwest to v0.12.5 ([a9cd258](https://github.com/philipcristiano/et/commit/a9cd258c9c6919eb62ab19566c205900502fa81e))
+* **deps:** update rust crate serde_json to v1.0.118 ([46122fe](https://github.com/philipcristiano/et/commit/46122fead01a3f7e511a7beb2ca5b87b7ce43e66))
+* **deps:** update rust crate url to v2.5.2 ([11bbc65](https://github.com/philipcristiano/et/commit/11bbc6533ce685a2dc32921a7db8c00f2f71637e))
+* **deps:** update rust crate uuid to v1.9.0 ([ce49fce](https://github.com/philipcristiano/et/commit/ce49fce2b6688457424b2fb132671f4302dabec8))
+* **deps:** update rust crate uuid to v1.9.1 ([1863573](https://github.com/philipcristiano/et/commit/186357315846c1268e2a29e2bab31acbe183d675))
+* Heading alignment for balances ([49bef9b](https://github.com/philipcristiano/et/commit/49bef9b8c799ae9e3f6972390054ecddbc4067fb))
+* Replace appropriate element ([fa64fe4](https://github.com/philipcristiano/et/commit/fa64fe4345742087750abeba697a611f9421009d))
+
 ## [2.5.0](https://github.com/philipcristiano/et/compare/v2.4.1...v2.5.0) (2024-06-15)
 
 
