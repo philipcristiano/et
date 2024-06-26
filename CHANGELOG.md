@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.2](https://github.com/philipcristiano/et/compare/v2.5.1...v2.5.2) (2024-06-26)
+
+
+### Bug Fixes
+
+* Update handling of htmx delete ([b7e65c2](https://github.com/philipcristiano/et/commit/b7e65c269e9b906ce67c1ca4b897ab8e92f9c949))
+
 ## [2.5.1](https://github.com/philipcristiano/et/compare/v2.5.0...v2.5.1) (2024-06-25)
 
 
