@@ -1,6 +1,6 @@
 use crate::{TransactionFilter, TransactionFilterComponent};
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::{IntoResponse, Response},
     Form,
 };
@@ -620,11 +620,11 @@ pub async fn handle_tx_delete_label(
     State(app_state): State<crate::AppState>,
     _user: service_conventions::oidc::OIDCUser,
 
-    Form(form): Form<TXAddLabelPostByTXID>,
+    Query(inputs): Query<TXAddLabelPostByTXID>,
 ) -> Result<Response, crate::AppError> {
-    let ftxid = form.transaction_id;
+    let ftxid = inputs.transaction_id;
 
-    let tx_label: AccountTransactionLabel = form.into();
+    let tx_label: AccountTransactionLabel = inputs.into();
     tx_label.delete_in_db(&app_state.db).await?;
 
     let labels = crate::labels::LabelsQuery::for_tx(&ftxid, &app_state.db).await?;
