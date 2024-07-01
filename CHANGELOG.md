@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.5.3](https://github.com/philipcristiano/et/compare/v2.5.2...v2.5.3) (2024-07-01)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate clap to v4.5.8 ([e8f4683](https://github.com/philipcristiano/et/commit/e8f46832d7cff0043a0716124446b1cccb4b9ba1))
+* **deps:** update rust crate serde_json to v1.0.119 ([1e31b2d](https://github.com/philipcristiano/et/commit/1e31b2d3b657869af960c2cf5c2f6070bfe9e227))
+* Use transacted_at for filtering/sort ([748ef00](https://github.com/philipcristiano/et/commit/748ef00e03fbfc743e40859b5c5f623ee79da26f))
+
 ## [2.5.2](https://github.com/philipcristiano/et/compare/v2.5.1...v2.5.2) (2024-06-26)
 
 
