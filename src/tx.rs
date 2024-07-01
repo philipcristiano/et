@@ -126,7 +126,7 @@ impl SFAccountTXQuery {
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
         ORDER BY
-            sat.posted DESC
+            sat.transacted_at DESC
             "#,
         )
         .fetch_all(pool)
@@ -199,7 +199,7 @@ impl SFAccountTXQuery {
         FROM simplefin_account_transactions sat
         WHERE sat.account_id = $1
         ORDER BY
-            sat.posted DESC
+            sat.transacted_at DESC
             "#,
             account_id
         )
@@ -238,8 +238,8 @@ impl SFAccountTXQuery {
         JOIN labels l
             ON tl.label_id = l.id
         WHERE l.label ~ $1
-        AND sat.posted >= $2
-        AND sat.posted < $3
+        AND sat.transacted_at >= $2
+        AND sat.transacted_at < $3
             "#,
             q,
             start_datetime,
@@ -293,10 +293,10 @@ impl SFAccountTXQuery {
         JOIN labels l
             ON tl.label_id = l.id
         WHERE l.label ~ $1
-        AND sat.posted >= $2
-        AND sat.posted < $3
+        AND sat.transacted_at >= $2
+        AND sat.transacted_at < $3
         ORDER BY
-            sat.posted DESC
+            sat.transacted_at DESC
             "#,
             q,
             start_datetime,
@@ -328,10 +328,10 @@ impl SFAccountTXQuery {
         ) AS tl
         ON sat.id = tl.transaction_id
         WHERE tl.transaction_id IS NULL
-        AND sat.posted >= $2
-        AND sat.posted < $3
+        AND sat.transacted_at >= $2
+        AND sat.transacted_at < $3
         ORDER BY
-            sat.posted DESC
+            sat.transacted_at DESC
             "#,
             q,
             start_datetime,
@@ -362,10 +362,10 @@ impl SFAccountTXQuery {
         SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
         WHERE sat.description LIKE $1
-        AND sat.posted >= $2
-        AND sat.posted < $3
+        AND sat.transacted_at >= $2
+        AND sat.transacted_at < $3
         ORDER BY
-            sat.posted DESC
+            sat.transacted_at DESC
             "#,
             query,
             start_datetime,

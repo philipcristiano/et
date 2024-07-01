@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        WHERE sat.description LIKE $1\n        AND sat.posted >= $2\n        AND sat.posted < $3\n        ORDER BY\n            sat.posted DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        LEFT OUTER JOIN (\n            SELECT transaction_id, label_id\n            FROM transaction_labels stl\n            JOIN labels sl\n              ON stl.label_id = sl.id\n            WHERE sl.label ~ $1\n        ) AS tl\n        ON sat.id = tl.transaction_id\n        WHERE tl.transaction_id IS NULL\n        AND sat.transacted_at >= $2\n        AND sat.transacted_at < $3\n        ORDER BY\n            sat.transacted_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -36,7 +36,12 @@
     ],
     "parameters": {
       "Left": [
-        "Text",
+        {
+          "Custom": {
+            "name": "lquery",
+            "kind": "Simple"
+          }
+        },
         "Timestamptz",
         "Timestamptz"
       ]
@@ -50,5 +55,5 @@
       false
     ]
   },
-  "hash": "a675ef55e4b6b6cc361d43222b69ad92bb2fc53b86fbf77029c7b4b408e1e0bb"
+  "hash": "d12179e25d0536f23611f235bdbc51227c0286520e37bdbc91cbb0f63c92306c"
 }

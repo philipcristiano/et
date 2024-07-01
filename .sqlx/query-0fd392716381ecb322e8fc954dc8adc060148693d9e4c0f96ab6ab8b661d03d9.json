@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        WHERE sat.account_id = $1\n        ORDER BY\n            sat.posted DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        WHERE sat.account_id = $1\n        ORDER BY\n            sat.transacted_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "82373f2b27f7f66226bd627966a0ca500b88ed41a4649e1e212399f6d93a9fba"
+  "hash": "0fd392716381ecb322e8fc954dc8adc060148693d9e4c0f96ab6ab8b661d03d9"
 }

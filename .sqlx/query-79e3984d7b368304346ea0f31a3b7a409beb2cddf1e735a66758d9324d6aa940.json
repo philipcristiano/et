@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        JOIN transaction_labels tl\n            ON sat.id = tl.transaction_id\n        JOIN labels l\n            ON tl.label_id = l.id\n        WHERE l.label ~ $1\n        AND sat.posted >= $2\n        AND sat.posted < $3\n        ORDER BY\n            sat.posted DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        JOIN transaction_labels tl\n            ON sat.id = tl.transaction_id\n        JOIN labels l\n            ON tl.label_id = l.id\n        WHERE l.label ~ $1\n        AND sat.transacted_at >= $2\n        AND sat.transacted_at < $3\n        ORDER BY\n            sat.transacted_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -55,5 +55,5 @@
       false
     ]
   },
-  "hash": "a535843611858595d3ecd6d601587079f6621b24b9f316539f06b63ff2ad62ff"
+  "hash": "79e3984d7b368304346ea0f31a3b7a409beb2cddf1e735a66758d9324d6aa940"
 }
