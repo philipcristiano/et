@@ -10,6 +10,9 @@ use sqlx::postgres::types::{PgLQuery, PgLQueryLevel};
 use sqlx::postgres::PgPool;
 use std::str::FromStr;
 
+use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::Decimal;
+
 pub type TransactionID = uuid::Uuid;
 #[derive(sqlx::FromRow)]
 pub struct SFAccountTXQueryResultRow {
@@ -19,6 +22,23 @@ pub struct SFAccountTXQueryResultRow {
     description: String,
     amount: sqlx::postgres::types::PgMoney,
     account_id: crate::accounts::AccountID,
+}
+#[derive(sqlx::FromRow, Clone, Debug)]
+pub struct SFAccountTXGroupedQueryResultRow {
+    pub interval: Option<chrono::DateTime<chrono::Utc>>,
+    pub amount: Option<sqlx::postgres::types::PgMoney>,
+}
+
+impl SFAccountTXGroupedQueryResultRow {
+    pub fn amount(&self) -> Option<Decimal> {
+        Some(self.amount?.to_decimal(2))
+    }
+    pub fn amount_f32(&self) -> Option<f32> {
+        self.amount?.to_decimal(2).to_f32()
+    }
+    pub fn name(&self) -> Option<String> {
+        Some(self.interval?.format("%m/%d/%Y").to_string())
+    }
 }
 
 #[derive(sqlx::FromRow)]
@@ -134,6 +154,32 @@ impl SFAccountTXQuery {
         Ok(res.into())
     }
     #[tracing::instrument]
+    pub async fn all_group_by(
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        let res = sqlx::query_as!(
+            SFAccountTXGroupedQueryResultRow,
+            r#"
+                WITH daily_totals AS (
+                    SELECT
+                        DATE_TRUNC('day', sat.transacted_at) as interval,
+                        SUM(sat.amount) as daily_sum
+                    FROM simplefin_accounts sa
+                    JOIN simplefin_account_transactions sat ON sa.id = sat.account_id
+                    GROUP BY DATE_TRUNC('day', sat.transacted_at)
+                )
+                SELECT
+                    interval,
+                    SUM(daily_sum) OVER (ORDER BY interval) AS amount
+                FROM daily_totals
+                ORDER BY interval ASC;
+            "#,
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(res)
+    }
+    #[tracing::instrument]
     pub async fn one(
         txid: &TransactionID,
         pool: &PgPool,
@@ -171,6 +217,34 @@ impl SFAccountTXQuery {
                     .await
             }
             TransactionFilterComponent::None => Self::all(pool).await,
+        }
+    }
+
+    #[tracing::instrument]
+    pub async fn from_options_group_by(
+        params: TransactionFilter,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        match params.component {
+            TransactionFilterComponent::AccountID(aid) => {
+                crate::accounts::SFAccountBalance::by_date(aid, pool).await
+            }
+            // TransactionFilterComponent::Label(l) => {
+            //     Self::with_label(l, params.start_datetime, params.end_datetime, pool).await
+            // }
+            // TransactionFilterComponent::NotLabel(l) => {
+            //     Self::without_label(l, params.start_datetime, params.end_datetime, pool).await
+            // }
+            // TransactionFilterComponent::TransactionID(tid) => {
+            //     let row = SFAccountTXQuery::one(&tid, pool).await?;
+            //     Ok(SFAccountTXQuery { item: vec![row] })
+            // }
+            // TransactionFilterComponent::DescriptionFragment(df) => {
+            //     Self::with_description_like(df, params.start_datetime, params.end_datetime, pool)
+            //         .await
+            // }
+            TransactionFilterComponent::None => Self::all_group_by(pool).await,
+            _ => Err(anyhow::anyhow!("Not supported")),
         }
     }
 

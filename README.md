@@ -29,6 +29,18 @@ client_id = "CLIENT_ID"
 key = "COOKIE_SESSION_KEY"
 ```
 
+
+#### Features
+
+A `features` block can be used to enable/disable features
+
+`charts` - alpha feature
+
+```
+[features]
+charts = true
+```
+
 ### Migrations
 
 Migrations are handled with `et-migrate` tool included in this package/Docker image

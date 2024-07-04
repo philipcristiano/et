@@ -45,3 +45,4 @@ chronoutil = "0.2.7"
 
 sqlparser = { version="0.46.0", git = "https://github.com/philipcristiano/sqlparser-rs.git", branch = "main"}
 declare_schema = { git = "https://github.com/philipcristiano/declare-schema.git", branch = "main"}
+charts-rs = "0.3.11"
