@@ -19,6 +19,7 @@ use maud::html;
 use tower_cookies::CookieManagerLayer;
 
 mod accounts;
+mod charts;
 mod dates;
 mod html;
 mod labels;
@@ -48,6 +49,20 @@ pub struct Args {
 struct AppConfig {
     database_url: String,
     auth: service_conventions::oidc::OIDCConfig,
+    #[serde(default)]
+    features: AppFeatures,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct AppFeatures {
+    #[serde(default)]
+    charts: bool,
+}
+
+impl Default for AppFeatures {
+    fn default() -> Self {
+        AppFeatures { charts: false }
+    }
 }
 
 #[derive(FromRef, Clone, Debug)]
@@ -56,6 +71,7 @@ struct AppState {
     db: PgPool,
     #[from_ref(skip)]
     db_spike: PgPool,
+    features: AppFeatures,
 }
 
 impl AppState {
@@ -69,6 +85,7 @@ impl AppState {
             auth: auth_config,
             db,
             db_spike,
+            features: item.features,
         }
     }
 }
@@ -340,6 +357,7 @@ async fn main() {
             "/f/accounts/:account_id/delete-transactions",
             post(crate::accounts::handle_delete_transactions),
         )
+        .route("/chart", get(crate::charts::get_chart))
         .route("/accounts/:account_id", get(crate::accounts::get_account))
         .route("/balances/f", get(crate::accounts::get_balances_f))
         .route("/f/transactions", get(get_transactions))
@@ -699,6 +717,14 @@ async fn root(
                       placeholder="Begin typing to search transactions"
                   {}
 
+                }
+
+                @if app_state.features.charts{
+                div
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-get={"/chart?" (qs) "&x_size=720&y_size=240" }
+                        hx-trigger="load" {}
                 }
                 div #transaction-list {
                     (tx::label_search_box(&("root_tx".to_string()), f)?)

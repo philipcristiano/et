@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                DATE_TRUNC('day', ts) as interval,\n                balance as amount\n            FROM simplefin_account_balances\n            WHERE account_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "interval",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "amount",
+        "type_info": "Money"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      false
+    ]
+  },
+  "hash": "26d51787c9075a2cf986a5632b0a5d41fc2ffa77397c788eecdb8d1f0467cb01"
+}

@@ -269,6 +269,27 @@ impl SFAccountBalance {
 
         Ok(())
     }
+
+    pub async fn by_date(
+        aid: AccountID,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<crate::tx::SFAccountTXGroupedQueryResultRow>> {
+        let res = sqlx::query_as!(
+            crate::tx::SFAccountTXGroupedQueryResultRow,
+            r#"
+            SELECT
+                DATE_TRUNC('day', ts) as interval,
+                balance as amount
+            FROM simplefin_account_balances
+            WHERE account_id = $1
+            "#,
+            aid
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res)
+    }
 }
 
 #[derive(serde::Deserialize, Debug, Clone)]
