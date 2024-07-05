@@ -653,7 +653,20 @@ async fn get_transactions(
     let filter_options = tx_filter.deref();
     let transactions =
         tx::SFAccountTXQuery::from_options(filter_options.clone().into(), &app_state.db).await?;
-    Ok(transactions.render().into_response())
+    let f: TransactionFilter = filter_options.clone().into();
+    let qs = f.to_querystring()?;
+
+    Ok(maud::html!(
+                @if app_state.features.charts{
+                div
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-get={"/chart?" (qs) "&x_size=720&y_size=240" }
+                        hx-trigger="load" {}
+                }
+                (transactions.render())
+    )
+    .into_response())
 }
 
 async fn get_transactions_value(
