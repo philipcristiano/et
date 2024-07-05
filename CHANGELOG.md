@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.4](https://github.com/philipcristiano/et/compare/v2.6.3...v2.6.4) (2024-07-05)
+
+
+### Bug Fixes
+
+* Load charts eagerly ([598ad5f](https://github.com/philipcristiano/et/commit/598ad5f789ec1ab3cc050aaee25f13fce70e7c0c))
+
 ## [2.6.3](https://github.com/philipcristiano/et/compare/v2.6.2...v2.6.3) (2024-07-05)
 
 
