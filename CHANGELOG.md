@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.2](https://github.com/philipcristiano/et/compare/v2.6.1...v2.6.2) (2024-07-05)
+
+
+### Bug Fixes
+
+* Adjust chart margins to show numbers ([35610e5](https://github.com/philipcristiano/et/commit/35610e5a07606ea37b5168f77dd43a3de06290dc))
+
 ## [2.6.1](https://github.com/philipcristiano/et/compare/v2.6.0...v2.6.1) (2024-07-05)
 
 
