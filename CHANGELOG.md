@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.3](https://github.com/philipcristiano/et/compare/v2.6.2...v2.6.3) (2024-07-05)
+
+
+### Bug Fixes
+
+* Add charts for labels / not labelled ([d7392a0](https://github.com/philipcristiano/et/commit/d7392a08d64d7192522cb3a9cf9bec47d83f5355))
+
 ## [2.6.2](https://github.com/philipcristiano/et/compare/v2.6.1...v2.6.2) (2024-07-05)
 
 
