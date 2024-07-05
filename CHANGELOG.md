@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.1](https://github.com/philipcristiano/et/compare/v2.6.0...v2.6.1) (2024-07-05)
+
+
+### Bug Fixes
+
+* Connection info loading ([9c7ce38](https://github.com/philipcristiano/et/commit/9c7ce3875a1b6471cc9d22aae8722a9d7fbc0e58))
+
 ## [2.6.0](https://github.com/philipcristiano/et/compare/v2.5.3...v2.6.0) (2024-07-05)
 
 
