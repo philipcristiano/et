@@ -229,12 +229,13 @@ impl SFAccountTXQuery {
             TransactionFilterComponent::AccountID(aid) => {
                 crate::accounts::SFAccountBalance::by_date(aid, pool).await
             }
-            // TransactionFilterComponent::Label(l) => {
-            //     Self::with_label(l, params.start_datetime, params.end_datetime, pool).await
-            // }
-            // TransactionFilterComponent::NotLabel(l) => {
-            //     Self::without_label(l, params.start_datetime, params.end_datetime, pool).await
-            // }
+            TransactionFilterComponent::Label(l) => {
+                Self::with_label_group_by(l, params.start_datetime, params.end_datetime, pool).await
+            }
+            TransactionFilterComponent::NotLabel(l) => {
+                Self::without_label_group_by(l, params.start_datetime, params.end_datetime, pool)
+                    .await
+            }
             // TransactionFilterComponent::TransactionID(tid) => {
             //     let row = SFAccountTXQuery::one(&tid, pool).await?;
             //     Ok(SFAccountTXQuery { item: vec![row] })
@@ -415,6 +416,118 @@ impl SFAccountTXQuery {
         .await?;
 
         Ok(res.into())
+    }
+
+    #[tracing::instrument]
+    pub async fn with_label_group_by(
+        label: crate::Label,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        let query_levels = string_label_to_plquerylevels(label)?;
+        let query = PgLQuery::from(query_levels);
+        Self::tx_label_query_group_by(query, start_datetime, end_datetime, pool).await
+    }
+
+    #[tracing::instrument]
+    async fn tx_label_query_group_by(
+        q: sqlx::postgres::types::PgLQuery,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        let res = sqlx::query_as!(
+            SFAccountTXGroupedQueryResultRow,
+            r#"
+        WITH daily_totals AS (
+            SELECT
+                DATE_TRUNC('day', sat.transacted_at) as interval,
+                SUM(sat.amount) as daily_sum
+
+            FROM simplefin_account_transactions sat
+            JOIN transaction_labels tl
+                ON sat.id = tl.transaction_id
+            JOIN labels l
+                ON tl.label_id = l.id
+            WHERE l.label ~ $1
+            AND sat.transacted_at >= $2
+            AND sat.transacted_at < $3
+            GROUP BY DATE_TRUNC('day', sat.transacted_at)
+
+        )
+        SELECT
+            interval,
+            SUM(daily_sum) OVER (ORDER BY interval) AS amount
+        FROM daily_totals
+        ORDER BY interval ASC;
+            "#,
+            q,
+            start_datetime,
+            end_datetime,
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res)
+    }
+
+    #[tracing::instrument]
+    pub async fn without_label_group_by(
+        label: crate::Label,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        let query_levels = string_label_to_plquerylevels(label)?;
+        let query = PgLQuery::from(query_levels);
+        Self::tx_not_label_query_group_by(query, start_datetime, end_datetime, pool).await
+    }
+
+    #[tracing::instrument]
+    async fn tx_not_label_query_group_by(
+        q: sqlx::postgres::types::PgLQuery,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        let res = sqlx::query_as!(
+            SFAccountTXGroupedQueryResultRow,
+            r#"
+        WITH daily_totals AS (
+            SELECT
+                DATE_TRUNC('day', sat.transacted_at) as interval,
+                SUM(sat.amount) as daily_sum
+
+            FROM simplefin_account_transactions sat
+            LEFT OUTER JOIN (
+                SELECT transaction_id, label_id
+                FROM transaction_labels stl
+                JOIN labels sl
+                  ON stl.label_id = sl.id
+                WHERE sl.label ~ $1
+            ) AS tl
+            ON sat.id = tl.transaction_id
+            WHERE tl.transaction_id IS NULL
+            AND sat.transacted_at >= $2
+            AND sat.transacted_at < $3
+            GROUP BY DATE_TRUNC('day', sat.transacted_at)
+
+        )
+        SELECT
+            interval,
+            SUM(daily_sum) OVER (ORDER BY interval) AS amount
+        FROM daily_totals
+        ORDER BY interval ASC;
+            "#,
+            q,
+            start_datetime,
+            end_datetime,
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res)
     }
 
     #[tracing::instrument]
