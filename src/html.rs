@@ -53,12 +53,12 @@ pub fn sidebar(
           @for sfconn in &user_connections {
           div
 
-              hx-get={"/f/connection/" (sfconn.id) }
+              hx-get={"/f/connection/" (sfconn.id.0) }
               hx-target="this"
               hx-swap="innerHTML"
               hx-trigger="load"
               {
-                (sfconn.id)
+                (sfconn.id.0)
               }
           }
           div {
