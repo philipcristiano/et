@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.id, sat.account_id\n        FROM simplefin_accounts sa\n            JOIN simplefin_account_transactions sat\n            ON sa.id = sat.account_id\n        ORDER BY\n            sat.transacted_at DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.id, sat.account_id\n        FROM simplefin_accounts sa\n            JOIN simplefin_account_transactions sat\n            ON sa.id = sat.account_id\n        WHERE\n            sat.transacted_at >= $1\n        AND sat.transacted_at < $2\n        ORDER BY\n            sat.transacted_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -35,7 +35,10 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
     },
     "nullable": [
       false,
@@ -46,5 +49,5 @@
       false
     ]
   },
-  "hash": "b51b1fac4f74aaf77b72914d34a2c4b1ea90496e1851752bce145f39fd63c1df"
+  "hash": "0f0c1768a96d081926d8f2bd8223c845241119aa073ce3dc5fef0629171817a3"
 }
