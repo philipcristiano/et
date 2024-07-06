@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.5](https://github.com/philipcristiano/et/compare/v2.6.4...v2.6.5) (2024-07-06)
+
+
+### Bug Fixes
+
+* Charts: Remove unneeded margin setting ([7a29c4e](https://github.com/philipcristiano/et/commit/7a29c4e6543b2f0ad46cfc5ed87bc432e278fc64))
+* Filter start/endtime for transactions ([dcc3191](https://github.com/philipcristiano/et/commit/dcc3191a382ac256767d0a8b51b42c7ed61632a0))
+
 ## [2.6.4](https://github.com/philipcristiano/et/compare/v2.6.3...v2.6.4) (2024-07-05)
 
 
