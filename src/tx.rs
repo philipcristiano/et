@@ -137,7 +137,11 @@ impl From<Vec<SFAccountTXQueryResultRow>> for SFAccountTXQuery {
 
 impl SFAccountTXQuery {
     #[tracing::instrument]
-    pub async fn all(pool: &PgPool) -> anyhow::Result<Self> {
+    pub async fn all(
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
@@ -145,9 +149,14 @@ impl SFAccountTXQuery {
         FROM simplefin_accounts sa
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
+        WHERE
+            sat.transacted_at >= $1
+        AND sat.transacted_at < $2
         ORDER BY
             sat.transacted_at DESC
             "#,
+            start_datetime,
+            end_datetime,
         )
         .fetch_all(pool)
         .await?;
@@ -155,6 +164,8 @@ impl SFAccountTXQuery {
     }
     #[tracing::instrument]
     pub async fn all_group_by(
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let res = sqlx::query_as!(
@@ -166,6 +177,9 @@ impl SFAccountTXQuery {
                         SUM(sat.amount) as daily_sum
                     FROM simplefin_accounts sa
                     JOIN simplefin_account_transactions sat ON sa.id = sat.account_id
+                    WHERE
+                        sat.transacted_at >= $1
+                    AND sat.transacted_at < $2
                     GROUP BY DATE_TRUNC('day', sat.transacted_at)
                 )
                 SELECT
@@ -174,6 +188,8 @@ impl SFAccountTXQuery {
                 FROM daily_totals
                 ORDER BY interval ASC;
             "#,
+            start_datetime,
+            end_datetime,
         )
         .fetch_all(pool)
         .await?;
@@ -216,7 +232,9 @@ impl SFAccountTXQuery {
                 Self::with_description_like(df, params.start_datetime, params.end_datetime, pool)
                     .await
             }
-            TransactionFilterComponent::None => Self::all(pool).await,
+            TransactionFilterComponent::None => {
+                Self::all(params.start_datetime, params.end_datetime, pool).await
+            }
         }
     }
 
@@ -244,7 +262,9 @@ impl SFAccountTXQuery {
             //     Self::with_description_like(df, params.start_datetime, params.end_datetime, pool)
             //         .await
             // }
-            TransactionFilterComponent::None => Self::all_group_by(pool).await,
+            TransactionFilterComponent::None => {
+                Self::all_group_by(params.start_datetime, params.end_datetime, pool).await
+            }
             _ => Err(anyhow::anyhow!("Not supported")),
         }
     }
