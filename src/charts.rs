@@ -57,7 +57,6 @@ pub async fn get_chart(
     chart.width = chart_options.x_size.0 as f32;
     chart.height = chart_options.y_size.0 as f32;
     chart.margin.left = 15.0;
-    chart.margin.right = 15.0;
     //bar_chart.title_text = "Mixed Line and Bar".to_string();
     //bar_chart.legend_margin = Some(Box {
     //    top: bar_chart.title_height,
