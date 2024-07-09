@@ -847,7 +847,8 @@ dependencies = [
 [[package]]
 name = "declare_schema"
 version = "0.0.1"
-source = "git+https://github.com/philipcristiano/declare-schema.git?branch=main#faf3464542a912d5db455842e887afd3e70c6b34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ab9ee914e4f75c6dd69b53eee834fc8daadfc39fccc1b1d124f7e3d6df2e552"
 dependencies = [
  "anyhow",
  "clap",
@@ -855,7 +856,7 @@ dependencies = [
  "serde",
  "serde_json",
  "service_conventions",
- "sqlparser 0.47.0",
+ "sqlparser",
  "sqlx",
  "thiserror",
  "tokio",
@@ -1038,7 +1039,6 @@ dependencies = [
  "serde_qs",
  "service_conventions",
  "signal-hook",
- "sqlparser 0.46.0",
  "sqlx",
  "thiserror",
  "tokio",
@@ -3449,16 +3449,9 @@ dependencies = [
 
 [[package]]
 name = "sqlparser"
-version = "0.46.0"
-source = "git+https://github.com/philipcristiano/sqlparser-rs.git?branch=main#d5faf3c54bba16a0b617117a312eb96eee59706a"
-dependencies = [
- "log",
-]
-
-[[package]]
-name = "sqlparser"
-version = "0.47.0"
-source = "git+https://github.com/sqlparser-rs/sqlparser-rs.git?branch=main#0884dd920d2a2bbd5c8c67cbf9ed812ce8a1dd5d"
+version = "0.48.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "749780d15ad1ee15fd74f5f84b0665560b6abb913de744c2b69155770f9601da"
 dependencies = [
  "log",
 ]
