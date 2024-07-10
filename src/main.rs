@@ -304,9 +304,6 @@ impl From<service_conventions::oidc::OIDCUser> for ETUser {
     }
 }
 
-use tower_http::trace::{self, TraceLayer};
-use tracing::Level;
-
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
@@ -386,11 +383,7 @@ async fn main() {
         .with_state(app_state.clone())
         .layer(CookieManagerLayer::new())
         .layer(tower_http::compression::CompressionLayer::new())
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
-        )
+        .layer(service_conventions::tracing_http::trace_layer(tracing::Level::INFO))
         .route("/_health", get(health));
 
     let addr: SocketAddr = args.bind_addr.parse().expect("Expected bind addr");
