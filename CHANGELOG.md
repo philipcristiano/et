@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.6.6](https://github.com/philipcristiano/et/compare/v2.6.5...v2.6.6) (2024-07-10)
+
+
+### Bug Fixes
+
+* Attempt to make spans from a w3c tracecontext ([3db5435](https://github.com/philipcristiano/et/commit/3db54354b90c16e2ab38b9d001974333860266a7))
+* **deps:** update rust crate clap to v4.5.9 ([7e3ebef](https://github.com/philipcristiano/et/commit/7e3ebef69cdd9a8c7f5335dc41f89875576a6e3f))
+* **deps:** update rust crate rust-embed to v8.5.0 ([713cb22](https://github.com/philipcristiano/et/commit/713cb220894706fe192b4d13f17f6a28c3be7aee))
+* **deps:** update rust crate serde to v1.0.204 ([228d8fa](https://github.com/philipcristiano/et/commit/228d8fa657e50a50591acefd6e7ad0202af71daa))
+* **deps:** update rust crate uuid to v1.10.0 ([7a2f924](https://github.com/philipcristiano/et/commit/7a2f924ccda19f997d5af30d799e0e8b4514b45a))
+
 ## [2.6.5](https://github.com/philipcristiano/et/compare/v2.6.4...v2.6.5) (2024-07-06)
 
 
