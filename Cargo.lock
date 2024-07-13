@@ -549,9 +549,9 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "charts-rs"
-version = "0.3.12"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74e090e23fe82a470edbc6ee82bc5523a31bb481f68f18a199e15a7d687b1934"
+checksum = "b3d1cec2d0f663098331f40ca4fd4ffcd91e927e524feec2ffa11cc40801e344"
 dependencies = [
  "charts-rs-derive",
  "fontdue",
@@ -3505,7 +3505,7 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a4812a669da00d17d8266a0439eddcacbc88b17f732f927e52eeb9d196f7fb5"
 dependencies = [
- "heck 0.4.1",
+ "heck 0.5.0",
  "proc-macro2",
  "quote",
  "syn 2.0.69",
