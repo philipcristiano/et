@@ -31,7 +31,8 @@
             ];
             shellHook = ''
               export PGDATA=$PWD/pgdata
-              export DATABASE_URL="postgres://et@localhost/et?sslmode=disable"
+              export PGDATABASE=et
+              export PGUSER=et
             '';
           };
         }
