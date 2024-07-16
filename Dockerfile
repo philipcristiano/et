@@ -3,6 +3,7 @@ WORKDIR /usr/src/app
 
 COPY . .
 COPY --from=d3fk/tailwindcss:stable /tailwindcss /usr/local/bin/tailwindcss
+ENV SQLX_OFFLINE=true
 RUN cargo install --path .
 
 FROM debian:bookworm-slim
