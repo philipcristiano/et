@@ -30,7 +30,7 @@ tracing = "0.1.40"
 url = "2.5.0"
 signal-hook = "0.3.17"
 service_conventions = { version = "0.0.19", features = ["tracing", "oidc", "tracing-http"]}
-sqlx = { version = "0.7.4", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "time", "chrono", "rust_decimal"] }
+sqlx = { version = "0.8.0", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
 base64 = "0.22.1"
 reqwest = { version = "0.12.4", features = ["rustls-tls", "json"] }
 uuid = {version = "1.8.0", features = ["v4", "serde"]}
@@ -43,5 +43,5 @@ http = "1.1.0"
 serde_qs = "0.13.0"
 chronoutil = "0.2.7"
 
-declare_schema = { version = "0.0.1" }
+declare_schema = { version = "0.0.4" }
 charts-rs = "0.3.11"
