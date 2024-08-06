@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO simplefin_account_transactions ( account_id, simplefin_id, posted, amount, transacted_at, pending, description )\n    VALUES ( $1, $2, $3, $4, $5, $6, $7 )\n    ON CONFLICT (account_id, simplefin_id)\n        DO UPDATE\n            SET\n                posted = EXCLUDED.posted,\n                amount = EXCLUDED.amount,\n                transacted_at = EXCLUDED.transacted_at,\n                pending = EXCLUDED.pending,\n                description = EXCLUDED.description\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Timestamptz",
+        "Money",
+        "Timestamptz",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3b15c5009112828c23e72fec61a0101cda1b1e8bf0292a23e0f97582f4475836"
+}

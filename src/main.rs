@@ -383,7 +383,9 @@ async fn main() {
         .with_state(app_state.clone())
         .layer(CookieManagerLayer::new())
         .layer(tower_http::compression::CompressionLayer::new())
-        .layer(service_conventions::tracing_http::trace_layer(tracing::Level::INFO))
+        .layer(service_conventions::tracing_http::trace_layer(
+            tracing::Level::INFO,
+        ))
         .route("/_health", get(health));
 
     let addr: SocketAddr = args.bind_addr.parse().expect("Expected bind addr");
