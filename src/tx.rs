@@ -717,8 +717,14 @@ impl SFAccountTransaction {
             r#"
     INSERT INTO simplefin_account_transactions ( account_id, simplefin_id, posted, amount, transacted_at, pending, description )
     VALUES ( $1, $2, $3, $4, $5, $6, $7 )
-    ON CONFLICT (account_id, simplefin_id) DO UPDATE set pending = EXCLUDED.pending
-    RETURNING id, account_id, posted, amount, transacted_at, pending, description
+    ON CONFLICT (account_id, simplefin_id)
+        DO UPDATE
+            SET
+                posted = EXCLUDED.posted,
+                amount = EXCLUDED.amount,
+                transacted_at = EXCLUDED.transacted_at,
+                pending = EXCLUDED.pending,
+                description = EXCLUDED.description
             "#,
             self.account_id,
             self.id,
@@ -728,7 +734,7 @@ impl SFAccountTransaction {
             self.pending,
             self.description
         )
-        .fetch_one(pool)
+        .execute(pool)
         .await?;
 
         Ok(())
