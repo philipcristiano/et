@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.6.7](https://github.com/philipcristiano/et/compare/v2.6.6...v2.6.7) (2024-08-08)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate charts-rs to v0.3.12 ([4756a56](https://github.com/philipcristiano/et/commit/4756a56cc6005098b34c733aa6e288c125883591))
+* **deps:** update rust crate charts-rs to v0.3.13 ([76f5acb](https://github.com/philipcristiano/et/commit/76f5acbf176fe59271b998b8d1c9255faf078b6c))
+* **deps:** update rust crate charts-rs to v0.3.14 ([26928f0](https://github.com/philipcristiano/et/commit/26928f07554a2fd3959f614cb8ba9dc069233fc8))
+* **deps:** update rust crate charts-rs to v0.3.16 ([a9a3067](https://github.com/philipcristiano/et/commit/a9a3067cdfa1093f8884f65a66ec2fcbce5e63ab))
+* **deps:** update rust crate clap to v4.5.10 ([45f71ee](https://github.com/philipcristiano/et/commit/45f71ee9a3569de9467be21ff56c6f5934bd694f))
+* **deps:** update rust crate clap to v4.5.11 ([7a79d6e](https://github.com/philipcristiano/et/commit/7a79d6e7820025710106e9d2c7140572f4fbf7d0))
+* **deps:** update rust crate clap to v4.5.12 ([21e615a](https://github.com/philipcristiano/et/commit/21e615a70b67b8488b186c17f1ce8f2e2457f4c0))
+* **deps:** update rust crate clap to v4.5.13 ([ae556ed](https://github.com/philipcristiano/et/commit/ae556edc7b44497e37c0190131639f8f98561c57))
+* **deps:** update rust crate clap to v4.5.14 ([0b8d14f](https://github.com/philipcristiano/et/commit/0b8d14f714ae322a8f281524e7dcaa34301610bb))
+* **deps:** update rust crate declare_schema to 0.0.3 ([8b5ca84](https://github.com/philipcristiano/et/commit/8b5ca84e50581a83f62ccdb5e0ec39b0af43c751))
+* **deps:** update rust crate serde to v1.0.205 ([#223](https://github.com/philipcristiano/et/issues/223)) ([ba7b491](https://github.com/philipcristiano/et/commit/ba7b4914e73e29e769dbd7c135b86e129e444d96))
+* **deps:** update rust crate serde_json to v1.0.121 ([0e218bf](https://github.com/philipcristiano/et/commit/0e218bf1a0f49010117b148217163d7a29300026))
+* **deps:** update rust crate serde_json to v1.0.122 ([56ef230](https://github.com/philipcristiano/et/commit/56ef230e603d60e407bbc94a802227820a32c524))
+* **deps:** update rust crate service_conventions to 0.0.18 ([96b4cc7](https://github.com/philipcristiano/et/commit/96b4cc7d087c5a16ff63d5ef163254f279fa2c98))
+* **deps:** update rust crate service_conventions to 0.0.19 ([cb1c90e](https://github.com/philipcristiano/et/commit/cb1c90e427740cec74b6a3feb871d4f4e42beba2))
+* **deps:** update rust crate sqlx to 0.8.0 ([980af6a](https://github.com/philipcristiano/et/commit/980af6a7b9f21ab72557f071571883dd8911baab))
+* **deps:** update rust crate thiserror to v1.0.62 ([179307b](https://github.com/philipcristiano/et/commit/179307b37e9be09c922440d277d1449c33a84c34))
+* **deps:** update rust crate thiserror to v1.0.63 ([c1af936](https://github.com/philipcristiano/et/commit/c1af93640e1a8fd0dd103a0d4b4b952040002cc5))
+* **deps:** update rust crate tokio to v1.38.1 ([63ec242](https://github.com/philipcristiano/et/commit/63ec2429d7307ec2a87c3cc375b16ee52a27e226))
+* **deps:** update rust crate tokio to v1.39.1 ([e6c6429](https://github.com/philipcristiano/et/commit/e6c6429824cbfdb0530d2a81024237f1e2e4dab8))
+* **deps:** update rust crate tokio to v1.39.2 ([430aff9](https://github.com/philipcristiano/et/commit/430aff9ee3b254e4778eafc91f5cad2cd1cbc24e))
+* **deps:** update rust crate toml to v0.8.15 ([43bea38](https://github.com/philipcristiano/et/commit/43bea380578b5dbe6e5f207c591cf0c7d8e7777f))
+* **deps:** update rust crate toml to v0.8.16 ([f4ec94a](https://github.com/philipcristiano/et/commit/f4ec94a2a0b572df1befe91e11e64a6611f84859))
+* **deps:** update rust crate toml to v0.8.17 ([ff16dbf](https://github.com/philipcristiano/et/commit/ff16dbfa2bd17d432dae34075cac4a5d98fa120b))
+* **deps:** update rust crate toml to v0.8.19 ([fe7d311](https://github.com/philipcristiano/et/commit/fe7d311be84d31067e40162cbc9c7c7b5bf152cf))
+* Update all transaction fields on new data ([762faeb](https://github.com/philipcristiano/et/commit/762faeb5bdfed779e85a30fff2f6d1ada8396e8c))
+
 ## [2.6.6](https://github.com/philipcristiano/et/compare/v2.6.5...v2.6.6) (2024-07-10)
 
 
