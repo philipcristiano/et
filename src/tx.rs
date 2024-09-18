@@ -258,10 +258,15 @@ impl SFAccountTXQuery {
             //     let row = SFAccountTXQuery::one(&tid, pool).await?;
             //     Ok(SFAccountTXQuery { item: vec![row] })
             // }
-            // TransactionFilterComponent::DescriptionFragment(df) => {
-            //     Self::with_description_like(df, params.start_datetime, params.end_datetime, pool)
-            //         .await
-            // }
+            TransactionFilterComponent::DescriptionFragment(df) => {
+                Self::with_description_like_group_by(
+                    df,
+                    params.start_datetime,
+                    params.end_datetime,
+                    pool,
+                )
+                .await
+            }
             TransactionFilterComponent::None => {
                 Self::all_group_by(params.start_datetime, params.end_datetime, pool).await
             }
@@ -581,6 +586,50 @@ impl SFAccountTXQuery {
         .fetch_all(pool)
         .await?;
         Ok(res.into())
+    }
+
+    #[tracing::instrument]
+    pub async fn with_description_like_group_by(
+        df: String,
+        start_datetime: chrono::DateTime<chrono::Utc>,
+        end_datetime: chrono::DateTime<chrono::Utc>,
+        pool: &PgPool,
+    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
+        tracing::debug!(
+            "With description like {:?} {:?}",
+            &start_datetime,
+            &end_datetime
+        );
+        let query = format!("%{df}%");
+        let res = sqlx::query_as!(
+            SFAccountTXGroupedQueryResultRow,
+            r#"
+
+        WITH daily_totals AS (
+            SELECT
+                DATE_TRUNC('day', sat.transacted_at) as interval,
+                SUM(sat.amount) as daily_sum
+
+            FROM simplefin_account_transactions sat
+            WHERE sat.description LIKE $1
+            AND sat.transacted_at >= $2
+            AND sat.transacted_at < $3
+                GROUP BY DATE_TRUNC('day', sat.transacted_at)
+
+        )
+        SELECT
+            interval,
+            SUM(daily_sum) OVER (ORDER BY interval) AS amount
+        FROM daily_totals
+        ORDER BY interval ASC;
+            "#,
+            query,
+            start_datetime,
+            end_datetime,
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(res)
     }
 }
 

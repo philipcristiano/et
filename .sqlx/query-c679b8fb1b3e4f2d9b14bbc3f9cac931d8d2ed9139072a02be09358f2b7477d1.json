@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\n        WITH daily_totals AS (\n            SELECT\n                DATE_TRUNC('day', sat.transacted_at) as interval,\n                SUM(sat.amount) as daily_sum\n\n            FROM simplefin_account_transactions sat\n            WHERE sat.description LIKE $1\n            AND sat.transacted_at >= $2\n            AND sat.transacted_at < $3\n                GROUP BY DATE_TRUNC('day', sat.transacted_at)\n\n        )\n        SELECT\n            interval,\n            SUM(daily_sum) OVER (ORDER BY interval) AS amount\n        FROM daily_totals\n        ORDER BY interval ASC;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "interval",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "amount",
+        "type_info": "Money"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c679b8fb1b3e4f2d9b14bbc3f9cac931d8d2ed9139072a02be09358f2b7477d1"
+}
