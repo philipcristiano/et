@@ -302,7 +302,7 @@ impl LabelsQuery {
                         }
                     td
                         hx-get={"/f/transactions/value?" (
-                            label_txf.with_datetimes(start_datetime_30, now).to_querystring()?)
+                            label_txf.with_datetimes(Some(start_datetime_30), Some(now)).to_querystring()?)
                                  }
                         hx-target="this"
                         hx-swap="innerHTML"
@@ -311,7 +311,7 @@ impl LabelsQuery {
                             "Loading..."
                         }
                     @for (s, e) in &start_end_pairs {
-                    @let label_se_txf = label_txf.clone().with_datetimes(s.to_owned(),e.to_owned());
+                    @let label_se_txf = label_txf.clone().with_datetimes(Some(s.to_owned()), Some(e.to_owned()));
                     td
                         hx-get={"/f/transactions/value?" (
                             label_se_txf.to_querystring()?)

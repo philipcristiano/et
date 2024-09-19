@@ -465,10 +465,8 @@ struct TransactionsFilterOptions {
     description_contains: Option<DescriptionFragment>,
     transaction_id: Option<crate::tx::TransactionID>,
 
-    #[serde(default = "early_date")]
-    start_datetime: chrono::DateTime<chrono::Utc>,
-    #[serde(default = "future_date")]
-    end_datetime: chrono::DateTime<chrono::Utc>,
+    start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+    end_datetime: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl From<TransactionFilter> for TransactionsFilterOptions {
@@ -513,16 +511,16 @@ enum TransactionFilterComponent {
 #[derive(Deserialize, Debug, Clone)]
 struct TransactionFilter {
     component: TransactionFilterComponent,
-    start_datetime: chrono::DateTime<chrono::Utc>,
-    end_datetime: chrono::DateTime<chrono::Utc>,
+    start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+    end_datetime: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl Default for TransactionFilter {
     fn default() -> Self {
         Self {
             component: TransactionFilterComponent::None,
-            start_datetime: early_date(),
-            end_datetime: future_date(),
+            start_datetime: None,
+            end_datetime: None,
         }
     }
 }
@@ -589,8 +587,8 @@ impl TransactionFilter {
 
     fn with_datetimes(
         &self,
-        start: chrono::DateTime<chrono::Utc>,
-        end: chrono::DateTime<chrono::Utc>,
+        start: Option<chrono::DateTime<chrono::Utc>>,
+        end: Option<chrono::DateTime<chrono::Utc>>,
     ) -> TransactionFilter {
         TransactionFilter {
             start_datetime: start,
@@ -612,7 +610,9 @@ impl TransactionFilter {
         @if let Some(fragment) = options.description_contains {
             input type="hidden" name="description_contains" value={(fragment)} {}
         }
-            input type="hidden" name="start_datetime" value={(options.start_datetime)} {}
+        @if let Some(start_datetime) = options.start_datetime {
+            input type="hidden" name="start_datetime" value={(start_datetime)} {}
+        }
         }
     }
 }
@@ -713,6 +713,7 @@ async fn root(
               (html::sidebar(user_connections, balances))
               div #main class="main" {
                 // #TODO: add in tx filtering
+                // #TODO: Fix description_contains in qs and separate input field
 
                 form
                       hx-get={"/f/transactions?" (qs)}
@@ -783,11 +784,13 @@ async fn add_simplefin_connection(
 }
 
 // Make our own error that wraps `anyhow::Error`.
+#[derive(Debug)]
 struct AppError(anyhow::Error);
 
 // Tell axum how to convert `AppError` into a response.
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
+        tracing::error!("HTTP Error {:?}", &self);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Something went wrong: {}", self.0),

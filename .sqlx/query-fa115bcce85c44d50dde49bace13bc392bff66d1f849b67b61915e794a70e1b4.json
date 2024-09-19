@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH daily_totals AS (\n            SELECT\n                DATE_TRUNC('day', sat.transacted_at) as interval,\n                SUM(sat.amount) as daily_sum\n\n            FROM simplefin_account_transactions sat\n            LEFT OUTER JOIN (\n                SELECT transaction_id, label_id\n                FROM transaction_labels stl\n                JOIN labels sl\n                  ON stl.label_id = sl.id\n                WHERE sl.label ~ $1\n            ) AS tl\n            ON sat.id = tl.transaction_id\n            WHERE tl.transaction_id IS NULL\n            AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)\n            AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)\n            GROUP BY DATE_TRUNC('day', sat.transacted_at)\n\n        )\n        SELECT\n            interval,\n            SUM(daily_sum) OVER (ORDER BY interval) AS amount\n        FROM daily_totals\n        ORDER BY interval ASC;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "interval",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "amount",
+        "type_info": "Money"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "lquery",
+            "kind": "Simple"
+          }
+        },
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "fa115bcce85c44d50dde49bace13bc392bff66d1f849b67b61915e794a70e1b4"
+}

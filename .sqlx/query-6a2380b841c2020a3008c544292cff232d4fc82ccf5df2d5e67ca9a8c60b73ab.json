@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        LEFT OUTER JOIN (\n            SELECT transaction_id, label_id\n            FROM transaction_labels stl\n            JOIN labels sl\n              ON stl.label_id = sl.id\n            WHERE sl.label ~ $1\n        ) AS tl\n        ON sat.id = tl.transaction_id\n        WHERE tl.transaction_id IS NULL\n        AND sat.transacted_at >= $2\n        AND sat.transacted_at < $3\n        ORDER BY\n            sat.transacted_at DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        LEFT OUTER JOIN (\n            SELECT transaction_id, label_id\n            FROM transaction_labels stl\n            JOIN labels sl\n              ON stl.label_id = sl.id\n            WHERE sl.label ~ $1\n        ) AS tl\n        ON sat.id = tl.transaction_id\n        WHERE tl.transaction_id IS NULL\n        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)\n        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)\n        ORDER BY\n            sat.transacted_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -55,5 +55,5 @@
       false
     ]
   },
-  "hash": "d12179e25d0536f23611f235bdbc51227c0286520e37bdbc91cbb0f63c92306c"
+  "hash": "6a2380b841c2020a3008c544292cff232d4fc82ccf5df2d5e67ca9a8c60b73ab"
 }
