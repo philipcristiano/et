@@ -41,18 +41,31 @@ async fn try_sync_all(app_state: &AppState) -> anyhow::Result<()> {
         .await?;
     if lock.held() {
         tracing::event!(Level::DEBUG, "Holding PG Advisory lock");
-        for conn in Connection::connections(&app_state.db_spike).await? {
-            tracing::event!(
-                Level::INFO,
-                connection_id = conn.id.to_string(),
-                "Syncing connection"
-            );
-            sync_connection(&app_state, &conn).await?;
-        }
+        let sync_result = sync_all_connections(app_state).await;
+        let res = sqlx::query!("SELECT  pg_advisory_unlock($1)", k)
+            .fetch_one(c.as_mut())
+            .await?;
+        tracing::event!(Level::DEBUG, result=?res, "pg_advisory_unlock");
+        sync_result?
     } else {
         tracing::event!(Level::INFO, "Could not get PG Advisory lock");
     }
     c.rollback().await?;
+    Ok(())
+}
+
+async fn sync_all_connections(app_state: &AppState) -> anyhow::Result<()> {
+    for conn in Connection::connections(&app_state.db_spike).await? {
+        tracing::event!(
+            Level::INFO,
+            connection_id = conn.id.to_string(),
+            "Syncing connection"
+        );
+        let sync_result = sync_connection(&app_state, &conn).await;
+        if let Err(e) = sync_result {
+            tracing::error!(error= ?e, "Sync error")
+        }
+    }
     Ok(())
 }
 
