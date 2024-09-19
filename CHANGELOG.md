@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.9](https://github.com/philipcristiano/et/compare/v2.6.8...v2.6.9) (2024-09-19)
+
+
+### Bug Fixes
+
+* Deduplicate transactions when listing ([0056e19](https://github.com/philipcristiano/et/commit/0056e192dc36ab439efb8646413ce5d4d2ce1000))
+
 ## [2.6.8](https://github.com/philipcristiano/et/compare/v2.6.7...v2.6.8) (2024-09-19)
 
 
