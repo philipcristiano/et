@@ -445,28 +445,19 @@ async fn get_account_f(
     Ok(resp.into_response())
 }
 
-fn early_date() -> chrono::DateTime<chrono::Utc> {
-    chrono::DateTime::from_timestamp(0, 0).expect("Could not construct date")
-}
-fn future_date() -> chrono::DateTime<chrono::Utc> {
-    let now = chrono::Utc::now();
-    let from_now = chrono::Duration::days(30);
-    now + from_now
-}
-
 pub type Label = String;
 pub type DescriptionFragment = String;
 
 #[derive(Deserialize, Debug, Clone, Default, Serialize)]
 struct TransactionsFilterOptions {
-    account_id: Option<crate::accounts::AccountID>,
-    labeled: Option<Label>,
-    not_labeled: Option<Label>,
-    description_contains: Option<DescriptionFragment>,
-    transaction_id: Option<crate::tx::TransactionID>,
+    pub account_id: Option<crate::accounts::AccountID>,
+    pub labeled: Option<Label>,
+    pub not_labeled: Option<Label>,
+    pub description_contains: Option<DescriptionFragment>,
+    pub transaction_id: Option<crate::tx::TransactionID>,
 
-    start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-    end_datetime: Option<chrono::DateTime<chrono::Utc>>,
+    pub start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+    pub end_datetime: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl From<TransactionFilter> for TransactionsFilterOptions {
@@ -646,8 +637,11 @@ async fn get_transactions(
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
     let filter_options = tx_filter.deref();
+    //let transactions =
+    //tx::SFAccountTXQuery::from_options(filter_options.clone().into(), &app_state.db).await?;
+
     let transactions =
-        tx::SFAccountTXQuery::from_options(filter_options.clone().into(), &app_state.db).await?;
+        tx::SFAccountTXQuery::from_filter_options(filter_options, &app_state.db).await?;
     let f: TransactionFilter = filter_options.clone().into();
     let qs = f.to_querystring()?;
 
@@ -701,8 +695,11 @@ async fn root(
         );
         let user_connections_f = Connection::connections(&app_state.db);
         let balances_f = accounts::SFAccountBalanceQueryResult::get_active_balances(&app_state.db);
+        //let transactions_f =
+        //   tx::SFAccountTXQuery::from_options(filter_options.into(), &app_state.db);
+
         let transactions_f =
-            tx::SFAccountTXQuery::from_options(filter_options.into(), &app_state.db);
+            tx::SFAccountTXQuery::from_filter_options(&filter_options, &app_state.db);
 
         let (user_connections, balances, transactions) =
             try_join!(user_connections_f, balances_f, transactions_f)?;
