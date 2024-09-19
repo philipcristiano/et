@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.11](https://github.com/philipcristiano/et/compare/v2.6.10...v2.6.11) (2024-09-19)
+
+
+### Bug Fixes
+
+* Enable TLS for GRPC otel ([96a8f7f](https://github.com/philipcristiano/et/commit/96a8f7fefaa175f6c410fb1ab9502271d36e763c))
+* Unlock sync / handle per-connection sync failure ([9dee6b4](https://github.com/philipcristiano/et/commit/9dee6b4d814078c9cb3de23152abe2af1273e648))
+
 ## [2.6.10](https://github.com/philipcristiano/et/compare/v2.6.9...v2.6.10) (2024-09-19)
 
 
