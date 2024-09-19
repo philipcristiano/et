@@ -247,15 +247,11 @@ impl SFAccountTXQuery {
         let res = sqlx::query_as!(
             SFAccountTXQueryResultRow,
             r#"
-        SELECT DISTINCT ON (sat.transacted_at, sat.id) sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
+        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
-        JOIN transaction_labels tl
-            ON sat.id = tl.transaction_id
-        JOIN labels l
-            ON tl.label_id = l.id
 
-        WHERE ($1::lquery IS NULL OR EXISTS (
-            SELECT 1 FROM transaction_labels tl_inner
+        WHERE ($1::lquery IS NULL OR sat.id IN (
+            SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
             JOIN labels l_inner ON tl_inner.label_id = l_inner.id
             WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
         ))
