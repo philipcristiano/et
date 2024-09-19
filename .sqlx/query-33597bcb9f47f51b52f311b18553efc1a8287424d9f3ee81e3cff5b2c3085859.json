@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT ON (sat.transacted_at, sat.id) sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        JOIN transaction_labels tl\n            ON sat.id = tl.transaction_id\n        JOIN labels l\n            ON tl.label_id = l.id\n\n        WHERE ($1::lquery IS NULL OR EXISTS (\n            SELECT 1 FROM transaction_labels tl_inner\n            JOIN labels l_inner ON tl_inner.label_id = l_inner.id\n            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1\n        ))\n        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)\n        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)\n        AND ($4::uuid IS NULL OR sat.account_id = $4)\n        AND ($5::uuid IS NULL OR sat.id = $5)\n        AND ($6::text IS NULL or sat.description LIKE $6)\n        AND NOT EXISTS (\n            SELECT 1\n            FROM transaction_labels tl2\n            JOIN labels l2 ON tl2.label_id = l2.id\n            WHERE tl2.transaction_id = sat.id\n            AND ($7::lquery IS NOT NULL AND l2.label ~ $7)\n        )\n        ORDER BY\n            sat.transacted_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "posted",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "transacted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount",
+        "type_info": "Money"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "account_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "lquery",
+            "kind": "Simple"
+          }
+        },
+        "Timestamptz",
+        "Timestamptz",
+        "Uuid",
+        "Uuid",
+        "Text",
+        {
+          "Custom": {
+            "name": "lquery",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "33597bcb9f47f51b52f311b18553efc1a8287424d9f3ee81e3cff5b2c3085859"
+}
