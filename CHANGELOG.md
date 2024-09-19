@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.8](https://github.com/philipcristiano/et/compare/v2.6.7...v2.6.8) (2024-09-19)
+
+
+### Bug Fixes
+
+* Allow combining query options ([16fe65c](https://github.com/philipcristiano/et/commit/16fe65ccdecb206dbe05d8f4be0e99946e65aa26))
+
 ## [2.6.7](https://github.com/philipcristiano/et/compare/v2.6.6...v2.6.7) (2024-09-18)
 
 
