@@ -89,6 +89,7 @@ async fn sync_connection(app_state: &AppState, sfc: &Connection) -> anyhow::Resu
 
             let txs_f = account.transactions.iter().map(|src_tx| {
                 let tx = SFAccountTransaction::from_transaction(&et_account, &src_tx);
+                tracing::debug!(simplefine_tx= ?src_tx, et_tx= ?tx, "Account transaction");
                 SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
             });
 

@@ -138,8 +138,8 @@ impl From<Vec<SFAccountTXQueryResultRow>> for SFAccountTXQuery {
 impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn all(
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
@@ -150,8 +150,8 @@ impl SFAccountTXQuery {
             JOIN simplefin_account_transactions sat
             ON sa.id = sat.account_id
         WHERE
-            sat.transacted_at >= $1
-        AND sat.transacted_at < $2
+        ($1::timestamptz IS NULL OR sat.transacted_at >= $1)
+        AND ($2::timestamptz IS NULL OR sat.transacted_at < $2)
         ORDER BY
             sat.transacted_at DESC
             "#,
@@ -164,8 +164,8 @@ impl SFAccountTXQuery {
     }
     #[tracing::instrument]
     pub async fn all_group_by(
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let res = sqlx::query_as!(
@@ -178,8 +178,8 @@ impl SFAccountTXQuery {
                     FROM simplefin_accounts sa
                     JOIN simplefin_account_transactions sat ON sa.id = sat.account_id
                     WHERE
-                        sat.transacted_at >= $1
-                    AND sat.transacted_at < $2
+                        ($1::timestamptz IS NULL OR sat.transacted_at >= $1)
+                        AND ($2::timestamptz IS NULL OR sat.transacted_at < $2)
                     GROUP BY DATE_TRUNC('day', sat.transacted_at)
                 )
                 SELECT
@@ -312,8 +312,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn amount_with_label(
         label: String,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         let query_levels = string_label_to_plquerylevels(label)?;
@@ -324,8 +324,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     async fn tx_label_amount_query(
         q: sqlx::postgres::types::PgLQuery,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
         let res = sqlx::query_as!(
@@ -338,8 +338,8 @@ impl SFAccountTXQuery {
         JOIN labels l
             ON tl.label_id = l.id
         WHERE l.label ~ $1
-        AND sat.transacted_at >= $2
-        AND sat.transacted_at < $3
+        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
             "#,
             q,
             start_datetime,
@@ -354,8 +354,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn with_label(
         label: crate::Label,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let query_levels = string_label_to_plquerylevels(label)?;
@@ -367,8 +367,8 @@ impl SFAccountTXQuery {
     pub async fn without_label(
         label: crate::Label,
 
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let query_levels = string_label_to_plquerylevels(label)?;
@@ -379,8 +379,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     async fn tx_label_query(
         q: sqlx::postgres::types::PgLQuery,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
@@ -393,8 +393,8 @@ impl SFAccountTXQuery {
         JOIN labels l
             ON tl.label_id = l.id
         WHERE l.label ~ $1
-        AND sat.transacted_at >= $2
-        AND sat.transacted_at < $3
+        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
         ORDER BY
             sat.transacted_at DESC
             "#,
@@ -410,8 +410,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     async fn tx_not_label_query(
         q: sqlx::postgres::types::PgLQuery,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         let res = sqlx::query_as!(
@@ -428,8 +428,8 @@ impl SFAccountTXQuery {
         ) AS tl
         ON sat.id = tl.transaction_id
         WHERE tl.transaction_id IS NULL
-        AND sat.transacted_at >= $2
-        AND sat.transacted_at < $3
+        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
         ORDER BY
             sat.transacted_at DESC
             "#,
@@ -446,8 +446,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn with_label_group_by(
         label: crate::Label,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let query_levels = string_label_to_plquerylevels(label)?;
@@ -458,8 +458,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     async fn tx_label_query_group_by(
         q: sqlx::postgres::types::PgLQuery,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let res = sqlx::query_as!(
@@ -476,8 +476,8 @@ impl SFAccountTXQuery {
             JOIN labels l
                 ON tl.label_id = l.id
             WHERE l.label ~ $1
-            AND sat.transacted_at >= $2
-            AND sat.transacted_at < $3
+            AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+            AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
             GROUP BY DATE_TRUNC('day', sat.transacted_at)
 
         )
@@ -500,8 +500,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn without_label_group_by(
         label: crate::Label,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let query_levels = string_label_to_plquerylevels(label)?;
@@ -512,8 +512,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     async fn tx_not_label_query_group_by(
         q: sqlx::postgres::types::PgLQuery,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let res = sqlx::query_as!(
@@ -534,8 +534,8 @@ impl SFAccountTXQuery {
             ) AS tl
             ON sat.id = tl.transaction_id
             WHERE tl.transaction_id IS NULL
-            AND sat.transacted_at >= $2
-            AND sat.transacted_at < $3
+            AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+            AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
             GROUP BY DATE_TRUNC('day', sat.transacted_at)
 
         )
@@ -558,8 +558,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn with_description_like(
         df: String,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
         tracing::debug!(
@@ -574,8 +574,8 @@ impl SFAccountTXQuery {
         SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
         WHERE sat.description LIKE $1
-        AND sat.transacted_at >= $2
-        AND sat.transacted_at < $3
+        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
         ORDER BY
             sat.transacted_at DESC
             "#,
@@ -591,8 +591,8 @@ impl SFAccountTXQuery {
     #[tracing::instrument]
     pub async fn with_description_like_group_by(
         df: String,
-        start_datetime: chrono::DateTime<chrono::Utc>,
-        end_datetime: chrono::DateTime<chrono::Utc>,
+        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
+        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         tracing::debug!(
@@ -612,8 +612,8 @@ impl SFAccountTXQuery {
 
             FROM simplefin_account_transactions sat
             WHERE sat.description LIKE $1
-            AND sat.transacted_at >= $2
-            AND sat.transacted_at < $3
+        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
+        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
                 GROUP BY DATE_TRUNC('day', sat.transacted_at)
 
         )

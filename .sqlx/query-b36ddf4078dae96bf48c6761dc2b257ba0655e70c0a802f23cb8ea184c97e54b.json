@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.id, sat.account_id\n        FROM simplefin_accounts sa\n            JOIN simplefin_account_transactions sat\n            ON sa.id = sat.account_id\n        WHERE\n            sat.transacted_at >= $1\n        AND sat.transacted_at < $2\n        ORDER BY\n            sat.transacted_at DESC\n            ",
+  "query": "\n        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id\n        FROM simplefin_account_transactions sat\n        JOIN transaction_labels tl\n            ON sat.id = tl.transaction_id\n        JOIN labels l\n            ON tl.label_id = l.id\n        WHERE l.label ~ $1\n        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)\n        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)\n        ORDER BY\n            sat.transacted_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -25,17 +25,23 @@
       },
       {
         "ordinal": 4,
-        "name": "id",
+        "name": "account_id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 5,
-        "name": "account_id",
+        "name": "id",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
+        {
+          "Custom": {
+            "name": "lquery",
+            "kind": "Simple"
+          }
+        },
         "Timestamptz",
         "Timestamptz"
       ]
@@ -49,5 +55,5 @@
       false
     ]
   },
-  "hash": "0f0c1768a96d081926d8f2bd8223c845241119aa073ce3dc5fef0629171817a3"
+  "hash": "b36ddf4078dae96bf48c6761dc2b257ba0655e70c0a802f23cb8ea184c97e54b"
 }
