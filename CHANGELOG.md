@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.10](https://github.com/philipcristiano/et/compare/v2.6.9...v2.6.10) (2024-09-19)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate tower-http to 0.6.0 ([91d5612](https://github.com/philipcristiano/et/commit/91d56120da62a1b1aec73ea5c336ae119e454900))
+* Reduce query time for lable queries ([1919fb9](https://github.com/philipcristiano/et/commit/1919fb9a480de16c7abce3770f1df3e2e216eec0))
+
 ## [2.6.9](https://github.com/philipcristiano/et/compare/v2.6.8...v2.6.9) (2024-09-19)
 
 
