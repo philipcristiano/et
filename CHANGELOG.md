@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.12](https://github.com/philipcristiano/et/compare/v2.6.11...v2.6.12) (2024-09-20)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate service_conventions to 0.0.21 ([1dd9195](https://github.com/philipcristiano/et/commit/1dd9195b7327e238b7c1c9b547bde39bd380377f))
+
 ## [2.6.11](https://github.com/philipcristiano/et/compare/v2.6.10...v2.6.11) (2024-09-19)
 
 
