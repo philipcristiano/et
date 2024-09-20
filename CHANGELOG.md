@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.15](https://github.com/philipcristiano/et/compare/v2.6.14...v2.6.15) (2024-09-20)
+
+
+### Bug Fixes
+
+* Include account name on TX ([340a1c5](https://github.com/philipcristiano/et/commit/340a1c5b63cf9e75df5ee75ddc91fb049677462f))
+
 ## [2.6.14](https://github.com/philipcristiano/et/compare/v2.6.13...v2.6.14) (2024-09-20)
 
 

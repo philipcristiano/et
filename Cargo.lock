@@ -980,7 +980,7 @@ dependencies = [
 
 [[package]]
 name = "et"
-version = "2.6.14"
+version = "2.6.15"
 dependencies = [
  "anyhow",
  "axum",
