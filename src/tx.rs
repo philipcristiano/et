@@ -80,7 +80,11 @@ pub fn label_search_box(
     }})
 }
 impl SFAccountTXQueryResultRow {
-    fn render_edit(&self, labels_markup: maud::Markup) -> anyhow::Result<maud::Markup> {
+    fn render_edit(
+        &self,
+        labels_markup: maud::Markup,
+        account: crate::accounts::Account,
+    ) -> anyhow::Result<maud::Markup> {
         let f = crate::TransactionFilter::default().with_transaction_id(self.id)?;
         Ok(maud::html! {
          tr hx-target="this"
@@ -101,7 +105,13 @@ impl SFAccountTXQueryResultRow {
             div {
                 span {"Current labels:"}
                 (labels_markup)}
-        }})
+        }
+        td {
+            div {
+                (account.preffered_name())
+             }
+        }
+        })
     }
 }
 
@@ -257,8 +267,7 @@ impl SFAccountTXQuery {
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         if let Some(aid) = tfo.account_id {
-            return crate::accounts::SFAccountBalance::by_date(aid, pool).await
-
+            return crate::accounts::SFAccountBalance::by_date(aid, pool).await;
         }
         let q = if let Some(label) = tfo.labeled.clone() {
             let query_levels = string_label_to_plquerylevels(label)?;
@@ -589,11 +598,16 @@ pub async fn handle_tx_edit_get(
 
     let row_f = SFAccountTXQuery::one(&tx_id, &app_state.db);
     let labels_f = crate::labels::LabelsQuery::for_tx(&tx_id, &app_state.db);
+    let account_f = crate::accounts::Account::get_for_tx_id(&tx_id, &app_state.db);
 
-    let (row, labels) = try_join!(row_f, labels_f)?;
+    let (row, labels, account_option) = try_join!(row_f, labels_f, account_f)?;
 
-    let r = row.render_edit(labels.render_as_table_for_tx(tx_id))?;
-    Ok(r.into_response())
+    if let Some(account) = account_option {
+        let r = row.render_edit(labels.render_as_table_for_tx(tx_id), account)?;
+        return Ok(r.into_response());
+    } else {
+        return Err(crate::AppError(anyhow::anyhow!("Account not found")));
+    }
 }
 pub async fn handle_tx_edit_post(
     State(app_state): State<crate::AppState>,

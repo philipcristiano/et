@@ -127,6 +127,13 @@ impl SFAccountBalanceQueryResult {
 }
 
 impl Account {
+    pub fn preffered_name(&self) -> String {
+        if let Some(n) = self.custom_name.clone() {
+            n
+        } else {
+            self.name.clone()
+        }
+    }
     #[tracing::instrument]
     pub async fn get_all(pool: &PgPool) -> anyhow::Result<Vec<Self>> {
         let res = sqlx::query_as!(
@@ -153,6 +160,29 @@ impl Account {
             COALESCE(custom_name, name)
             "#,
             account_id
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        Ok(res)
+    }
+
+    #[tracing::instrument]
+    pub async fn get_for_tx_id(
+        tx_id: &crate::tx::AccountTransactionID,
+        pool: &PgPool,
+    ) -> anyhow::Result<Option<Self>> {
+        let res = sqlx::query_as!(
+            Self,
+            r#"
+        SELECT sa.id, sa.connection_id, sa.currency, sa.name, sa.active, sa.custom_name
+        FROM simplefin_accounts AS sa
+        JOIN simplefin_account_transactions AS sat
+        ON sat.account_id = sa.id
+        WHERE sat.id = $1
+        LIMIT 1
+            "#,
+            tx_id
         )
         .fetch_optional(pool)
         .await?;
