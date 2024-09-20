@@ -321,42 +321,38 @@ impl SFAccountTXQuery {
     }
 
     #[tracing::instrument]
-    pub async fn amount_from_options(
-        params: crate::TransactionFilter,
+    pub async fn amount_from_filter_options(
+        tfo: &TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        match params.component {
-            TransactionFilterComponent::Label(l) => {
-                Self::amount_with_label(l, params.start_datetime, params.end_datetime, pool).await
-            }
-            _ => return Err(anyhow::anyhow!("Not implemented")),
-        }
-    }
+        let q = if let Some(label) = tfo.labeled.clone() {
+            let query_levels = string_label_to_plquerylevels(label)?;
+            Some(PgLQuery::from(query_levels))
+        } else {
+            None
+        };
+        let not_label_q: Option<PgLQuery> = if let Some(label) = tfo.not_labeled.clone() {
+            let query_levels = string_label_to_plquerylevels(label)?;
+            Some(PgLQuery::from(query_levels))
+            //return Err(anyhow::anyhow!("Not-labeled not supported"))
+        } else {
+            None
+        };
 
-    #[tracing::instrument]
-    pub async fn amount_with_label(
-        label: String,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        let query_levels = string_label_to_plquerylevels(label)?;
-        let query = PgLQuery::from(query_levels);
-        Self::tx_label_amount_query(query, start_datetime, end_datetime, pool).await
-    }
+        let description_q = if let Some(df) = tfo.description_contains.clone() {
+            Some(format!("%{df}%"))
+        } else {
+            None
+        };
 
-    #[tracing::instrument]
-    async fn tx_label_amount_query(
-        q: sqlx::postgres::types::PgLQuery,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
+        tracing::info!(lquery=?q, not_lquery=?not_label_q, description_q=?description_q, "Query Filter Options");
+
         let res = sqlx::query_as!(
             SFAccountTXAmountQueryResultRow,
             r#"
         SELECT sum(sat.amount) as amount
         FROM simplefin_account_transactions sat
+
         WHERE ($1::lquery IS NULL OR sat.id IN (
             SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
             JOIN labels l_inner ON tl_inner.label_id = l_inner.id
@@ -364,14 +360,27 @@ impl SFAccountTXQuery {
         ))
         AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
         AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
+        AND ($4::uuid IS NULL OR sat.account_id = $4)
+        AND ($5::uuid IS NULL OR sat.id = $5)
+        AND ($6::text IS NULL or sat.description LIKE $6)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM transaction_labels tl2
+            JOIN labels l2 ON tl2.label_id = l2.id
+            WHERE tl2.transaction_id = sat.id
+            AND ($7::lquery IS NOT NULL AND l2.label ~ $7)
+        )
             "#,
             q,
-            start_datetime,
-            end_datetime,
+            tfo.start_datetime,
+            tfo.end_datetime,
+            tfo.account_id,
+            tfo.transaction_id,
+            description_q,
+            not_label_q,
         )
         .fetch_one(pool)
         .await?;
-
         Ok(res)
     }
 
