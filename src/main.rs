@@ -665,7 +665,8 @@ async fn get_transactions_value(
 ) -> Result<Response, AppError> {
     let filter_options = tx_filter.deref();
     let f: TransactionFilter = filter_options.clone().into();
-    let value = tx::SFAccountTXQuery::amount_from_options(f.clone(), &app_state.db).await?;
+    let value =
+        tx::SFAccountTXQuery::amount_from_filter_options(&filter_options, &app_state.db).await?;
 
     let r = maud::html! {
         a

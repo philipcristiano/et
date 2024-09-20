@@ -163,39 +163,6 @@ impl SFAccountTXQuery {
         Ok(res.into())
     }
     #[tracing::instrument]
-    pub async fn all_group_by(
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
-        let res = sqlx::query_as!(
-            SFAccountTXGroupedQueryResultRow,
-            r#"
-                WITH daily_totals AS (
-                    SELECT
-                        DATE_TRUNC('day', sat.transacted_at) as interval,
-                        SUM(sat.amount) as daily_sum
-                    FROM simplefin_accounts sa
-                    JOIN simplefin_account_transactions sat ON sa.id = sat.account_id
-                    WHERE
-                        ($1::timestamptz IS NULL OR sat.transacted_at >= $1)
-                        AND ($2::timestamptz IS NULL OR sat.transacted_at < $2)
-                    GROUP BY DATE_TRUNC('day', sat.transacted_at)
-                )
-                SELECT
-                    interval,
-                    SUM(daily_sum) OVER (ORDER BY interval) AS amount
-                FROM daily_totals
-                ORDER BY interval ASC;
-            "#,
-            start_datetime,
-            end_datetime,
-        )
-        .fetch_all(pool)
-        .await?;
-        Ok(res)
-    }
-    #[tracing::instrument]
     pub async fn one(
         txid: &TransactionID,
         pool: &PgPool,
@@ -286,123 +253,48 @@ impl SFAccountTXQuery {
 
     #[tracing::instrument]
     pub async fn from_options_group_by(
-        params: TransactionFilter,
+        tfo: &TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
-        match params.component {
-            TransactionFilterComponent::AccountID(aid) => {
-                crate::accounts::SFAccountBalance::by_date(aid, pool).await
-            }
-            TransactionFilterComponent::Label(l) => {
-                Self::with_label_group_by(l, params.start_datetime, params.end_datetime, pool).await
-            }
-            TransactionFilterComponent::NotLabel(l) => {
-                Self::without_label_group_by(l, params.start_datetime, params.end_datetime, pool)
-                    .await
-            }
-            // TransactionFilterComponent::TransactionID(tid) => {
-            //     let row = SFAccountTXQuery::one(&tid, pool).await?;
-            //     Ok(SFAccountTXQuery { item: vec![row] })
-            // }
-            TransactionFilterComponent::DescriptionFragment(df) => {
-                Self::with_description_like_group_by(
-                    df,
-                    params.start_datetime,
-                    params.end_datetime,
-                    pool,
-                )
-                .await
-            }
-            TransactionFilterComponent::None => {
-                Self::all_group_by(params.start_datetime, params.end_datetime, pool).await
-            }
-            _ => Err(anyhow::anyhow!("Not supported")),
+        if let Some(aid) = tfo.account_id {
+            return crate::accounts::SFAccountBalance::by_date(aid, pool).await
+
         }
-    }
+        let q = if let Some(label) = tfo.labeled.clone() {
+            let query_levels = string_label_to_plquerylevels(label)?;
+            Some(PgLQuery::from(query_levels))
+        } else {
+            None
+        };
+        let not_label_q: Option<PgLQuery> = if let Some(label) = tfo.not_labeled.clone() {
+            let query_levels = string_label_to_plquerylevels(label)?;
+            Some(PgLQuery::from(query_levels))
+            //return Err(anyhow::anyhow!("Not-labeled not supported"))
+        } else {
+            None
+        };
 
-    #[tracing::instrument]
-    pub async fn amount_from_options(
-        params: crate::TransactionFilter,
-        pool: &PgPool,
-    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        match params.component {
-            TransactionFilterComponent::Label(l) => {
-                Self::amount_with_label(l, params.start_datetime, params.end_datetime, pool).await
-            }
-            _ => return Err(anyhow::anyhow!("Not implemented")),
-        }
-    }
+        let description_q = if let Some(df) = tfo.description_contains.clone() {
+            Some(format!("%{df}%"))
+        } else {
+            None
+        };
 
-    #[tracing::instrument]
-    pub async fn amount_with_label(
-        label: String,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        let query_levels = string_label_to_plquerylevels(label)?;
-        let query = PgLQuery::from(query_levels);
-        Self::tx_label_amount_query(query, start_datetime, end_datetime, pool).await
-    }
+        //if let Some(_) = tfo.not_labeled.clone() {
+        //    return Err(anyhow::anyhow!("not-labeled is not yet supported"))
+        //}
+        tracing::info!(lquery=?q, not_lquery=?not_label_q, description_q=?description_q, "Query Filter Options");
 
-    #[tracing::instrument]
-    async fn tx_label_amount_query(
-        q: sqlx::postgres::types::PgLQuery,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        let res = sqlx::query_as!(
-            SFAccountTXAmountQueryResultRow,
-            r#"
-        SELECT sum(sat.amount) as amount
-        FROM simplefin_account_transactions sat
-        WHERE ($1::lquery IS NULL OR sat.id IN (
-            SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
-            JOIN labels l_inner ON tl_inner.label_id = l_inner.id
-            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
-        ))
-        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
-        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
-            "#,
-            q,
-            start_datetime,
-            end_datetime,
-        )
-        .fetch_one(pool)
-        .await?;
-
-        Ok(res)
-    }
-
-    #[tracing::instrument]
-    pub async fn with_label_group_by(
-        label: crate::Label,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
-        let query_levels = string_label_to_plquerylevels(label)?;
-        let query = PgLQuery::from(query_levels);
-        Self::tx_label_query_group_by(query, start_datetime, end_datetime, pool).await
-    }
-
-    #[tracing::instrument]
-    async fn tx_label_query_group_by(
-        q: sqlx::postgres::types::PgLQuery,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         let res = sqlx::query_as!(
             SFAccountTXGroupedQueryResultRow,
             r#"
+
         WITH daily_totals AS (
             SELECT
                 DATE_TRUNC('day', sat.transacted_at) as interval,
                 SUM(sat.amount) as daily_sum
-
             FROM simplefin_account_transactions sat
+
             WHERE ($1::lquery IS NULL OR sat.id IN (
                 SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
                 JOIN labels l_inner ON tl_inner.label_id = l_inner.id
@@ -410,6 +302,17 @@ impl SFAccountTXQuery {
             ))
             AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
             AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
+            AND ($4::uuid IS NULL OR sat.account_id = $4)
+            AND ($5::uuid IS NULL OR sat.id = $5)
+            AND ($6::text IS NULL or sat.description LIKE $6)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM transaction_labels tl2
+                JOIN labels l2 ON tl2.label_id = l2.id
+                WHERE tl2.transaction_id = sat.id
+                AND ($7::lquery IS NOT NULL AND l2.label ~ $7)
+            )
+
             GROUP BY DATE_TRUNC('day', sat.transacted_at)
 
         )
@@ -420,146 +323,79 @@ impl SFAccountTXQuery {
         ORDER BY interval ASC;
             "#,
             q,
-            start_datetime,
-            end_datetime,
+            tfo.start_datetime,
+            tfo.end_datetime,
+            tfo.account_id,
+            tfo.transaction_id,
+            description_q,
+            not_label_q,
         )
         .fetch_all(pool)
         .await?;
 
-        Ok(res)
-    }
-
-    #[tracing::instrument]
-    pub async fn without_label_group_by(
-        label: crate::Label,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
-        let query_levels = string_label_to_plquerylevels(label)?;
-        let query = PgLQuery::from(query_levels);
-        Self::tx_not_label_query_group_by(query, start_datetime, end_datetime, pool).await
-    }
-
-    #[tracing::instrument]
-    async fn tx_not_label_query_group_by(
-        q: sqlx::postgres::types::PgLQuery,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
-        let res = sqlx::query_as!(
-            SFAccountTXGroupedQueryResultRow,
-            r#"
-        WITH daily_totals AS (
-            SELECT
-                DATE_TRUNC('day', sat.transacted_at) as interval,
-                SUM(sat.amount) as daily_sum
-
-            FROM simplefin_account_transactions sat
-            LEFT OUTER JOIN (
-                SELECT transaction_id, label_id
-                FROM transaction_labels stl
-                JOIN labels sl
-                  ON stl.label_id = sl.id
-                WHERE sl.label ~ $1
-            ) AS tl
-            ON sat.id = tl.transaction_id
-            WHERE tl.transaction_id IS NULL
-            AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
-            AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
-            GROUP BY DATE_TRUNC('day', sat.transacted_at)
-
-        )
-        SELECT
-            interval,
-            SUM(daily_sum) OVER (ORDER BY interval) AS amount
-        FROM daily_totals
-        ORDER BY interval ASC;
-            "#,
-            q,
-            start_datetime,
-            end_datetime,
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(res)
-    }
-
-    #[tracing::instrument]
-    pub async fn with_description_like(
-        df: String,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        pool: &PgPool,
-    ) -> anyhow::Result<Self> {
-        tracing::debug!(
-            "With description like {:?} {:?}",
-            &start_datetime,
-            &end_datetime
-        );
-        let query = format!("%{df}%");
-        let res = sqlx::query_as!(
-            SFAccountTXQueryResultRow,
-            r#"
-        SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
-        FROM simplefin_account_transactions sat
-        WHERE sat.description LIKE $1
-        AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
-        AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
-        ORDER BY
-            sat.transacted_at DESC
-            "#,
-            query,
-            start_datetime,
-            end_datetime,
-        )
-        .fetch_all(pool)
-        .await?;
         Ok(res.into())
     }
 
     #[tracing::instrument]
-    pub async fn with_description_like_group_by(
-        df: String,
-        start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-        end_datetime: Option<chrono::DateTime<chrono::Utc>>,
+    pub async fn amount_from_filter_options(
+        tfo: &TransactionsFilterOptions,
         pool: &PgPool,
-    ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
-        tracing::debug!(
-            "With description like {:?} {:?}",
-            &start_datetime,
-            &end_datetime
-        );
-        let query = format!("%{df}%");
+    ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
+        let q = if let Some(label) = tfo.labeled.clone() {
+            let query_levels = string_label_to_plquerylevels(label)?;
+            Some(PgLQuery::from(query_levels))
+        } else {
+            None
+        };
+        let not_label_q: Option<PgLQuery> = if let Some(label) = tfo.not_labeled.clone() {
+            let query_levels = string_label_to_plquerylevels(label)?;
+            Some(PgLQuery::from(query_levels))
+            //return Err(anyhow::anyhow!("Not-labeled not supported"))
+        } else {
+            None
+        };
+
+        let description_q = if let Some(df) = tfo.description_contains.clone() {
+            Some(format!("%{df}%"))
+        } else {
+            None
+        };
+
+        tracing::info!(lquery=?q, not_lquery=?not_label_q, description_q=?description_q, "Query Filter Options");
+
         let res = sqlx::query_as!(
-            SFAccountTXGroupedQueryResultRow,
+            SFAccountTXAmountQueryResultRow,
             r#"
+        SELECT sum(sat.amount) as amount
+        FROM simplefin_account_transactions sat
 
-        WITH daily_totals AS (
-            SELECT
-                DATE_TRUNC('day', sat.transacted_at) as interval,
-                SUM(sat.amount) as daily_sum
-
-            FROM simplefin_account_transactions sat
-            WHERE sat.description LIKE $1
+        WHERE ($1::lquery IS NULL OR sat.id IN (
+            SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
+            JOIN labels l_inner ON tl_inner.label_id = l_inner.id
+            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
+        ))
         AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
         AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
-                GROUP BY DATE_TRUNC('day', sat.transacted_at)
-
+        AND ($4::uuid IS NULL OR sat.account_id = $4)
+        AND ($5::uuid IS NULL OR sat.id = $5)
+        AND ($6::text IS NULL or sat.description LIKE $6)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM transaction_labels tl2
+            JOIN labels l2 ON tl2.label_id = l2.id
+            WHERE tl2.transaction_id = sat.id
+            AND ($7::lquery IS NOT NULL AND l2.label ~ $7)
         )
-        SELECT
-            interval,
-            SUM(daily_sum) OVER (ORDER BY interval) AS amount
-        FROM daily_totals
-        ORDER BY interval ASC;
             "#,
-            query,
-            start_datetime,
-            end_datetime,
+            q,
+            tfo.start_datetime,
+            tfo.end_datetime,
+            tfo.account_id,
+            tfo.transaction_id,
+            description_q,
+            not_label_q,
         )
-        .fetch_all(pool)
+        .fetch_one(pool)
         .await?;
         Ok(res)
     }
