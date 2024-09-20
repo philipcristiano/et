@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.14](https://github.com/philipcristiano/et/compare/v2.6.13...v2.6.14) (2024-09-20)
+
+
+### Bug Fixes
+
+* Support all filters for amount queries ([f93ef06](https://github.com/philipcristiano/et/commit/f93ef066dd36705118e3878de3fd284dd7c60cb9))
+* Support all filters for graphing ([7379748](https://github.com/philipcristiano/et/commit/73797487119870422ff5655360f826f10c022765))
+
 ## [2.6.13](https://github.com/philipcristiano/et/compare/v2.6.12...v2.6.13) (2024-09-20)
 
 
