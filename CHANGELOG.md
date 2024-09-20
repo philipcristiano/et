@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.13](https://github.com/philipcristiano/et/compare/v2.6.12...v2.6.13) (2024-09-20)
+
+
+### Bug Fixes
+
+* Reduce duplicate rows in amount queries ([4cbe8f3](https://github.com/philipcristiano/et/commit/4cbe8f34a4139a56961a7205b5377d1e5aa617d7))
+
 ## [2.6.12](https://github.com/philipcristiano/et/compare/v2.6.11...v2.6.12) (2024-09-20)
 
 
