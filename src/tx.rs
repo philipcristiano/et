@@ -357,11 +357,11 @@ impl SFAccountTXQuery {
             r#"
         SELECT sum(sat.amount) as amount
         FROM simplefin_account_transactions sat
-        JOIN transaction_labels tl
-            ON sat.id = tl.transaction_id
-        JOIN labels l
-            ON tl.label_id = l.id
-        WHERE l.label ~ $1
+        WHERE ($1::lquery IS NULL OR sat.id IN (
+            SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
+            JOIN labels l_inner ON tl_inner.label_id = l_inner.id
+            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
+        ))
         AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
         AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
             "#,
@@ -403,11 +403,11 @@ impl SFAccountTXQuery {
                 SUM(sat.amount) as daily_sum
 
             FROM simplefin_account_transactions sat
-            JOIN transaction_labels tl
-                ON sat.id = tl.transaction_id
-            JOIN labels l
-                ON tl.label_id = l.id
-            WHERE l.label ~ $1
+            WHERE ($1::lquery IS NULL OR sat.id IN (
+                SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
+                JOIN labels l_inner ON tl_inner.label_id = l_inner.id
+                WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
+            ))
             AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
             AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
             GROUP BY DATE_TRUNC('day', sat.transacted_at)
