@@ -275,6 +275,10 @@ impl Account {
     }
 }
 
+pub struct TotalBalance {
+    pub balance: Option<sqlx::postgres::types::PgMoney>,
+}
+
 #[derive(Debug)]
 pub struct SFAccountBalance {
     pub account_id: AccountID,
@@ -325,6 +329,30 @@ impl SFAccountBalance {
 
         Ok(res)
     }
+
+    pub async fn active_sum(pool: &PgPool) -> anyhow::Result<TotalBalance> {
+        let res = sqlx::query_as!(
+            TotalBalance,
+            r#"
+        SELECT SUM(balance) balance
+        FROM simplefin_accounts sa
+        JOIN (
+                SELECT account_id, max(ts) as ts
+                FROM simplefin_account_balances
+                GROUP BY (account_id)
+            ) as last_ts
+            ON sa.id = last_ts.account_id
+        LEFT JOIN simplefin_account_balances sab
+            ON last_ts.account_id = sab.account_id
+            AND last_ts.ts = sab.ts
+        WHERE sa.active = true
+            "#,
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(res)
+    }
 }
 
 #[derive(serde::Deserialize, Debug, Clone)]
@@ -345,6 +373,23 @@ pub async fn get_balances_f(
     let resp = maud::html! {
         (crate::html::render_balances(balances))
 
+    };
+    Ok(resp.into_response())
+}
+
+pub async fn get_balance_total_f(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+) -> Result<Response, AppError> {
+    let maybe_balance = SFAccountBalance::active_sum(&app_state.db).await?;
+    let resp = if let Some(balance) = maybe_balance.balance {
+        maud::html! {
+            (balance.to_decimal(2))
+        }
+    } else {
+        maud::html! {
+            "Cannot get balance"
+        }
     };
     Ok(resp.into_response())
 }

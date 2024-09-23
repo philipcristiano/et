@@ -85,6 +85,15 @@ pub fn sidebar(
                   hx-trigger="click"
           { "Labels Page"}
 
+          p { "Net Value: "
+
+            span hx-get={"/balances/f/total"}
+                hx-target="this"
+                hx-swap="innerHTML"
+                hx-trigger="load"
+                { }
+          }
+
           h2 { "Accounts:" }
 
           table class="table-auto"{

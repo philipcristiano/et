@@ -357,6 +357,10 @@ async fn main() {
         .route("/chart", get(crate::charts::get_chart))
         .route("/accounts/:account_id", get(crate::accounts::get_account))
         .route("/balances/f", get(crate::accounts::get_balances_f))
+        .route(
+            "/balances/f/total",
+            get(crate::accounts::get_balance_total_f),
+        )
         .route("/f/transactions", get(get_transactions))
         .route("/f/transactions/value", get(get_transactions_value))
         .route(
