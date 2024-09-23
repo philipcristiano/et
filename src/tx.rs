@@ -267,7 +267,7 @@ impl SFAccountTXQuery {
         pool: &PgPool,
     ) -> anyhow::Result<Vec<SFAccountTXGroupedQueryResultRow>> {
         if let Some(aid) = tfo.account_id {
-            return crate::accounts::SFAccountBalance::by_date(aid, pool).await;
+            return crate::accounts::SFAccountBalance::by_date(aid, tfo, pool).await;
         }
         let q = if let Some(label) = tfo.labeled.clone() {
             let query_levels = string_label_to_plquerylevels(label)?;

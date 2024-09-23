@@ -302,6 +302,7 @@ impl SFAccountBalance {
 
     pub async fn by_date(
         aid: AccountID,
+        tfo: &crate::TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<Vec<crate::tx::SFAccountTXGroupedQueryResultRow>> {
         let res = sqlx::query_as!(
@@ -310,10 +311,14 @@ impl SFAccountBalance {
             SELECT
                 DATE_TRUNC('day', ts) as interval,
                 balance as amount
-            FROM simplefin_account_balances
+            FROM simplefin_account_balances sab
             WHERE account_id = $1
+            AND ($2::timestamptz IS NULL OR sab.ts >= $2)
+            AND ($3::timestamptz IS NULL OR sab.ts < $3)
             "#,
-            aid
+            aid,
+            tfo.start_datetime,
+            tfo.end_datetime,
         )
         .fetch_all(pool)
         .await?;
