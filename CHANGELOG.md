@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.16](https://github.com/philipcristiano/et/compare/v2.6.15...v2.6.16) (2024-09-23)
+
+
+### Bug Fixes
+
+* charts: Include date filters ([8445b88](https://github.com/philipcristiano/et/commit/8445b88bed4328c8db23e957d9efc748826719ab))
+* **deps:** update rust crate axum to v0.7.6 ([245ce25](https://github.com/philipcristiano/et/commit/245ce25c36bd81320481565b42ddc1134577d314))
+* **deps:** update rust crate axum-extra to v0.9.4 ([eb906d2](https://github.com/philipcristiano/et/commit/eb906d2c17741294e54784a5f91b041f58f054a2))
+* **deps:** update rust crate clap to v4.5.18 ([d273052](https://github.com/philipcristiano/et/commit/d2730525629a72773710c762b9fa8f1c84fac995))
+* **deps:** update rust crate thiserror to v1.0.64 ([5b0b71c](https://github.com/philipcristiano/et/commit/5b0b71c09b38ef2b3ed35304d2aae13ea4dfbeff))
+* Display net value ([c41d2fc](https://github.com/philipcristiano/et/commit/c41d2fca2a8cf364d8210b8b468c593312c57f40))
+
 ## [2.6.15](https://github.com/philipcristiano/et/compare/v2.6.14...v2.6.15) (2024-09-20)
 
 
