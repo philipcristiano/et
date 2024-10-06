@@ -44,5 +44,5 @@ http = "1.1.0"
 serde_qs = "0.13.0"
 chronoutil = "0.2.7"
 
-declare_schema = { version = "0.0.4" }
+declare_schema = { version = "0.0.5" }
 charts-rs = "0.3.11"
