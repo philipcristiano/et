@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.6.17](https://github.com/philipcristiano/et/compare/v2.6.16...v2.6.17) (2024-10-07)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate axum to v0.7.7 ([ab45cf8](https://github.com/philipcristiano/et/commit/ab45cf8c4da76ad3d48a9f81a0665ae9efd86d29))
+* **deps:** update rust crate charts-rs to v0.3.18 ([58dd7bc](https://github.com/philipcristiano/et/commit/58dd7bcc7cf5ecdd5d84b44de40c3937e6062faa))
+* **deps:** update rust crate clap to v4.5.19 ([a3eacb4](https://github.com/philipcristiano/et/commit/a3eacb4eb91d058bfd4d9b686221bcda047491bb))
+* **deps:** update rust crate declare_schema to 0.0.5 ([7b767e4](https://github.com/philipcristiano/et/commit/7b767e4c423ce65da85d96d4883b46da552cb532))
+* **deps:** update rust crate futures to v0.3.31 ([e961c99](https://github.com/philipcristiano/et/commit/e961c99d6dc4c5da45ce601e4206b8a9b2c49114))
+* **deps:** update rust crate once_cell to v1.20.1 ([c45fabe](https://github.com/philipcristiano/et/commit/c45fabe74186432561d36d4196c971061b134635))
+* **deps:** update rust crate once_cell to v1.20.2 ([3eee4a5](https://github.com/philipcristiano/et/commit/3eee4a592858afc74e1c17abc21eecc94d185c78))
+* **deps:** update rust crate reqwest to v0.12.8 ([6a90266](https://github.com/philipcristiano/et/commit/6a90266009db6746434b4dd3dd60d4312b59ed06))
+* **deps:** update rust crate service_conventions to 0.0.22 ([bc23fdb](https://github.com/philipcristiano/et/commit/bc23fdb9f58ae5c80e82ee048a9ffeaed53ef1cc))
+* **deps:** update rust crate tonic to v0.12.3 ([1599001](https://github.com/philipcristiano/et/commit/15990019dd90004772357d195d08192030b3f5e7))
+* **deps:** update rust crate tower-http to v0.6.1 ([337b342](https://github.com/philipcristiano/et/commit/337b342cf8c017e7b53d93d65d356c46bca0012b))
+
 ## [2.6.16](https://github.com/philipcristiano/et/compare/v2.6.15...v2.6.16) (2024-09-23)
 
 
