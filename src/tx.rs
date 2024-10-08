@@ -1,4 +1,4 @@
-use crate::{TransactionFilter, TransactionFilterComponent, TransactionsFilterOptions};
+use crate::TransactionsFilterOptions;
 use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Response},
@@ -60,7 +60,7 @@ impl maud::Render for SFAccountTXAmountQueryResultRow {
 
 pub fn label_search_box(
     id: &String,
-    txf: crate::TransactionFilter,
+    txf: crate::TransactionsFilterOptions,
 ) -> anyhow::Result<maud::Markup> {
     let _qs = txf.clone();
     //TODO: use txf to construct input fields
@@ -85,7 +85,7 @@ impl SFAccountTXQueryResultRow {
         labels_markup: maud::Markup,
         account: crate::accounts::Account,
     ) -> anyhow::Result<maud::Markup> {
-        let f = crate::TransactionFilter::default().with_transaction_id(self.id)?;
+        let f = crate::TransactionsFilterOptions::default().with_transaction_id(self.id)?;
         Ok(maud::html! {
          tr hx-target="this"
             hx-swap="outerHTML"
@@ -639,7 +639,7 @@ pub async fn handle_tx_add_label(
 
     Form(form): Form<TXAddLabelPost>,
 ) -> Result<Response, crate::AppError> {
-    let filters: crate::TransactionFilter = form.transaction_filter.into();
+    let filters: crate::TransactionsFilterOptions = form.transaction_filter.into();
     //let transactions = SFAccountTXQuery::from_options(filters, &app_state.db).await?;
     let transactions =
         SFAccountTXQuery::from_filter_options(&filters.into(), &app_state.db).await?;

@@ -464,132 +464,74 @@ struct TransactionsFilterOptions {
     pub end_datetime: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-impl From<TransactionFilter> for TransactionsFilterOptions {
-    fn from(item: TransactionFilter) -> Self {
-        let mut account_id = None;
-        let mut labeled = None;
-        let mut not_labeled = None;
-        let mut description_contains = None;
-        let mut transaction_id = None;
-        let mut _pass: Option<String> = None;
-        match item.component {
-            TransactionFilterComponent::AccountID(aid) => account_id = Some(aid),
-            TransactionFilterComponent::Label(l) => labeled = Some(l),
-            TransactionFilterComponent::NotLabel(l) => not_labeled = Some(l),
-            TransactionFilterComponent::DescriptionFragment(df) => description_contains = Some(df),
-            TransactionFilterComponent::TransactionID(tid) => transaction_id = Some(tid),
-            TransactionFilterComponent::None => _pass = None,
-        }
-        TransactionsFilterOptions {
-            account_id,
-            labeled,
-            not_labeled,
-            description_contains,
-            transaction_id,
-            start_datetime: item.start_datetime,
-            end_datetime: item.end_datetime,
-        }
-    }
-}
-
-#[derive(Deserialize, Debug, Clone, Default)]
-enum TransactionFilterComponent {
-    #[default]
-    None,
-    AccountID(crate::accounts::AccountID),
-    Label(String),
-    NotLabel(String),
-    DescriptionFragment(String),
-    TransactionID(crate::tx::TransactionID),
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct TransactionFilter {
-    component: TransactionFilterComponent,
-    start_datetime: Option<chrono::DateTime<chrono::Utc>>,
-    end_datetime: Option<chrono::DateTime<chrono::Utc>>,
-}
-
-impl Default for TransactionFilter {
-    fn default() -> Self {
-        Self {
-            component: TransactionFilterComponent::None,
-            start_datetime: None,
-            end_datetime: None,
-        }
-    }
-}
-
-impl TransactionFilter {
-    fn to_querystring(self) -> Result<String, serde_qs::Error> {
-        let tfo: TransactionsFilterOptions = self.into();
-        let qs = serde_qs::to_string(&tfo)?;
-        tracing::debug!(qs = qs, "To querystring");
+impl TransactionsFilterOptions {
+    fn to_querystring(&self) -> Result<String, serde_qs::Error> {
+        let qs = serde_qs::to_string(&self)?;
+        tracing::debug!(qs = qs, tfo= ?self, "To querystring");
         Ok(qs)
     }
 
     fn with_transaction_id(
         &self,
         t: crate::tx::TransactionID,
-    ) -> anyhow::Result<TransactionFilter> {
-        let new_tf = Ok(TransactionFilter {
-            component: TransactionFilterComponent::TransactionID(t),
+    ) -> anyhow::Result<TransactionsFilterOptions> {
+        let new = TransactionsFilterOptions {
+            transaction_id: Some(t),
             ..self.clone()
-        });
-        match self.component.clone() {
-            TransactionFilterComponent::TransactionID(_) => new_tf,
-            TransactionFilterComponent::None => new_tf,
-            _ => Err(anyhow::anyhow!(
-                "Invalid filter options to set transaction id"
-            )),
-        }
+        };
+
+        Ok(new)
     }
 
-    fn with_pltree(&self, t: sqlx::postgres::types::PgLTree) -> anyhow::Result<TransactionFilter> {
-        self.with_label(t.to_string())
+    fn with_pltree(
+        &self,
+        t: sqlx::postgres::types::PgLTree,
+    ) -> anyhow::Result<TransactionsFilterOptions> {
+        let new = TransactionsFilterOptions {
+            labeled: Some(t.to_string()),
+            ..self.clone()
+        };
+
+        Ok(new)
     }
 
     fn without_pltree(
         &self,
         t: sqlx::postgres::types::PgLTree,
-    ) -> anyhow::Result<TransactionFilter> {
+    ) -> anyhow::Result<TransactionsFilterOptions> {
         self.without_label(t.to_string())
     }
 
-    fn with_label(&self, label: String) -> anyhow::Result<TransactionFilter> {
-        let new_tf = Ok(TransactionFilter {
-            component: TransactionFilterComponent::Label(label),
+    fn with_label(&self, label: String) -> anyhow::Result<TransactionsFilterOptions> {
+        let new = TransactionsFilterOptions {
+            labeled: Some(label),
             ..self.clone()
-        });
-        match self.component.clone() {
-            TransactionFilterComponent::Label(_l) => new_tf,
-            TransactionFilterComponent::None => new_tf,
-            _ => Err(anyhow::anyhow!("Invalid filter options to set label")),
-        }
+        };
+
+        Ok(new)
     }
 
-    fn without_label(&self, label: String) -> anyhow::Result<TransactionFilter> {
-        let new_tf = Ok(TransactionFilter {
-            component: TransactionFilterComponent::NotLabel(label),
+    fn without_label(&self, label: String) -> anyhow::Result<TransactionsFilterOptions> {
+        let new = TransactionsFilterOptions {
+            not_labeled: Some(label),
             ..self.clone()
-        });
-        match self.component.clone() {
-            TransactionFilterComponent::NotLabel(_l) => new_tf,
-            TransactionFilterComponent::None => new_tf,
-            _ => Err(anyhow::anyhow!("Invalid filter options to set label")),
-        }
+        };
+
+        Ok(new)
     }
 
     fn with_datetimes(
         &self,
         start: Option<chrono::DateTime<chrono::Utc>>,
         end: Option<chrono::DateTime<chrono::Utc>>,
-    ) -> TransactionFilter {
-        TransactionFilter {
+    ) -> TransactionsFilterOptions {
+        let new = TransactionsFilterOptions {
             start_datetime: start,
             end_datetime: end,
-            component: self.component.clone(),
-        }
+            ..self.clone()
+        };
+
+        new
     }
 
     pub fn render_to_hidden_input_fields(self) -> maud::Markup {
@@ -612,28 +554,6 @@ impl TransactionFilter {
     }
 }
 
-impl From<TransactionsFilterOptions> for TransactionFilter {
-    fn from(item: TransactionsFilterOptions) -> Self {
-        let mut component = TransactionFilterComponent::None;
-        if let Some(account_id) = item.account_id {
-            component = TransactionFilterComponent::AccountID(account_id);
-        } else if let Some(label) = item.labeled {
-            component = TransactionFilterComponent::Label(label);
-        } else if let Some(label) = item.not_labeled {
-            component = TransactionFilterComponent::NotLabel(label);
-        } else if let Some(desc) = item.description_contains {
-            component = TransactionFilterComponent::DescriptionFragment(desc);
-        } else if let Some(tid) = item.transaction_id {
-            component = TransactionFilterComponent::TransactionID(tid);
-        };
-        TransactionFilter {
-            component,
-            start_datetime: item.start_datetime,
-            end_datetime: item.end_datetime,
-        }
-    }
-}
-
 use maud::Render;
 async fn get_transactions(
     State(app_state): State<AppState>,
@@ -646,8 +566,7 @@ async fn get_transactions(
 
     let transactions =
         tx::SFAccountTXQuery::from_filter_options(filter_options, &app_state.db).await?;
-    let f: TransactionFilter = filter_options.clone().into();
-    let qs = f.to_querystring()?;
+    let qs = filter_options.to_querystring()?;
 
     Ok(maud::html!(
                 @if app_state.features.charts{
@@ -668,13 +587,12 @@ async fn get_transactions_value(
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
     let filter_options = tx_filter.deref();
-    let f: TransactionFilter = filter_options.clone().into();
     let value =
         tx::SFAccountTXQuery::amount_from_filter_options(&filter_options, &app_state.db).await?;
 
     let r = maud::html! {
         a
-            href={"/?" (f.to_querystring()?) }
+            href={"/?" (filter_options.to_querystring()?) }
             {(value.render())}
     };
     Ok(r.into_response())
@@ -691,13 +609,6 @@ async fn root(
             "Transaction Filter Options {:?}",
             &filter_options.description_contains
         );
-        let f: TransactionFilter = filter_options.clone().into();
-        tracing::debug!(
-            "Transaction Filter {:?} {:?} {:?}",
-            &f.component,
-            &f.start_datetime,
-            &f.end_datetime
-        );
         let user_connections_f = Connection::connections(&app_state.db);
         let balances_f = accounts::SFAccountBalanceQueryResult::get_active_balances(&app_state.db);
         //let transactions_f =
@@ -709,7 +620,7 @@ async fn root(
         let (user_connections, balances, transactions) =
             try_join!(user_connections_f, balances_f, transactions_f)?;
 
-        let qs = f.clone().to_querystring()?;
+        let qs = filter_options.to_querystring()?;
         Ok(html::maud_page(html! {
               div class="flex flex-col lg:flex-row"{
               (html::sidebar(user_connections, balances))
@@ -738,7 +649,7 @@ async fn root(
                         hx-trigger="load" {}
                 }
                 div #transaction-list {
-                    (tx::label_search_box(&("root_tx".to_string()), f)?)
+                    (tx::label_search_box(&("root_tx".to_string()), filter_options)?)
                     (&transactions)}
               }}
 

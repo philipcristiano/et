@@ -21,7 +21,7 @@ pub async fn handle_labels(
 
     let (user_connections, balances, labels_result) =
         try_join!(user_connections_f, balances_f, labels_fut)?;
-    let f = crate::TransactionFilter::default();
+    let f = crate::TransactionsFilterOptions::default();
 
     Ok(html::maud_page(html! {
           div class="flex flex-col lg:flex-row"{
@@ -46,7 +46,7 @@ pub async fn handle_labels_fragment(
     _user: service_conventions::oidc::OIDCUser,
 ) -> Result<Response, crate::AppError> {
     let labels_result = LabelsQuery::all(&app_state.db).await?;
-    let f = crate::TransactionFilter::default();
+    let f = crate::TransactionsFilterOptions::default();
     Ok(html! {
         div {
           h3 { "Add a label"}
@@ -74,7 +74,7 @@ pub async fn handle_labels_search_fragment(
     Form(form): Form<LabelSearch>,
 ) -> Result<Response, crate::AppError> {
     let results = LabelsQuery::search(form.search, &app_state.db).await?;
-    let tx_filter: crate::TransactionFilter = form.transaction_filter.into();
+    let tx_filter: crate::TransactionsFilterOptions = form.transaction_filter.into();
     Ok(html! {(results.render_add_labels_for_tx(tx_filter))}.into_response())
 }
 
@@ -217,11 +217,11 @@ impl LabelsQuery {
         }
     }
 
-    fn render_add_labels_for_tx(&self, txf: crate::TransactionFilter) -> maud::Markup {
+    fn render_add_labels_for_tx(&self, txf: crate::TransactionsFilterOptions) -> maud::Markup {
         let options = txf.clone().render_to_hidden_input_fields();
 
         let mut hx_target = String::new();
-        if let crate::TransactionFilterComponent::TransactionID(tid) = txf.component {
+        if let Some(tid) = txf.transaction_id {
             hx_target = format!("#transaction-labels-{}", tid);
         };
         maud::html! {
@@ -256,7 +256,10 @@ impl LabelsQuery {
         }
     }
 
-    fn render_with_tx_filter(&self, txf: crate::TransactionFilter) -> anyhow::Result<maud::Markup> {
+    fn render_with_tx_filter(
+        &self,
+        txf: crate::TransactionsFilterOptions,
+    ) -> anyhow::Result<maud::Markup> {
         let now = chrono::Utc::now();
         let ago_30 = now - chrono::Duration::days(30);
         let midnight = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
