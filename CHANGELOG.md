@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.18](https://github.com/philipcristiano/et/compare/v2.6.17...v2.6.18) (2024-10-08)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate clap to v4.5.20 ([e6a85b1](https://github.com/philipcristiano/et/commit/e6a85b12697677528dabe1e6cba9904dae96aae7))
+* Include filters for charts ([ee4a6e0](https://github.com/philipcristiano/et/commit/ee4a6e03fe78040e1581bb7694f17b7644926473))
+
 ## [2.6.17](https://github.com/philipcristiano/et/compare/v2.6.16...v2.6.17) (2024-10-07)
 
 
