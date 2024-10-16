@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.19](https://github.com/philipcristiano/et/compare/v2.6.18...v2.6.19) (2024-10-16)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate service_conventions to 0.0.23 ([4dc6152](https://github.com/philipcristiano/et/commit/4dc6152a05b72d6b8dc2740c44a794792bfa5894))
+* **deps:** update rust crate uuid to v1.11.0 ([b60de93](https://github.com/philipcristiano/et/commit/b60de938caab350f728dc75390a387b44b287df0))
+
 ## [2.6.18](https://github.com/philipcristiano/et/compare/v2.6.17...v2.6.18) (2024-10-08)
 
 
