@@ -43,7 +43,7 @@ CREATE TABLE simplefin_accounts (
     CONSTRAINT simplefin_connection FOREIGN KEY (connection_id) REFERENCES simplefin_connections (id)
 );
 
-CREATE INDEX idx_connection_source_id ON simplefin_accounts (connection_id, simplefin_id);
+CREATE UNIQUE INDEX idx_connection_source_id ON simplefin_accounts (connection_id, simplefin_id);
 
 CREATE TABLE simplefin_account_balances (
     account_id uuid NOT NULL,

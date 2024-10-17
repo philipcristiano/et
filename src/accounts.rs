@@ -593,3 +593,35 @@ pub async fn get_account(
         Ok((http::StatusCode::NOT_FOUND, format!("Not Found")).into_response())
     }
 }
+
+
+#[sqlx::test]
+async fn basic_test(pool: PgPool) -> sqlx::Result<()> {
+
+    let target_schema = include_str!("../schema/schema.sql").to_string();
+    println!("{pool:?}");
+    let opt = pool.connect_options();
+    println!("{opt:?}");
+    declare_schema::migrate_from_string(&target_schema, &pool).await.expect("Migrate");
+
+    let conn = crate::Connection {
+        id: crate::ConnectionID::new(),
+        access_url: "http://example.com".to_string(),
+    };
+    conn.ensure_in_db(&pool).await.expect("Write connection");
+    let sfa = SFAccount {
+        simplefin_id: "ID".to_string(),
+        connection_id: conn.id,
+        currency: "USD".to_string(),
+        name: "Account Name".to_string(),
+    };
+
+    let accounts = Account::get_all(&pool).await.expect("Get accounts");
+    assert_eq!(0, accounts.len());
+    sfa.ensure_in_db(&pool).await.expect("Write to db");
+
+    let accounts = Account::get_all(&pool).await.expect("Get accounts");
+    assert_eq!(1, accounts.len());
+
+    Ok(())
+}
