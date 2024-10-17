@@ -594,15 +594,12 @@ pub async fn get_account(
     }
 }
 
-
 #[sqlx::test]
 async fn basic_test(pool: PgPool) -> sqlx::Result<()> {
-
     let target_schema = include_str!("../schema/schema.sql").to_string();
-    println!("{pool:?}");
-    let opt = pool.connect_options();
-    println!("{opt:?}");
-    declare_schema::migrate_from_string(&target_schema, &pool).await.expect("Migrate");
+    declare_schema::migrate_from_string(&target_schema, &pool)
+        .await
+        .expect("Migrate");
 
     let conn = crate::Connection {
         id: crate::ConnectionID::new(),
@@ -622,6 +619,61 @@ async fn basic_test(pool: PgPool) -> sqlx::Result<()> {
 
     let accounts = Account::get_all(&pool).await.expect("Get accounts");
     assert_eq!(1, accounts.len());
+
+    Ok(())
+}
+
+#[sqlx::test]
+async fn sab_test(pool: PgPool) -> sqlx::Result<()> {
+    let target_schema = include_str!("../schema/schema.sql").to_string();
+    declare_schema::migrate_from_string(&target_schema, &pool)
+        .await
+        .expect("Migrate");
+
+    let conn = crate::Connection {
+        id: crate::ConnectionID::new(),
+        access_url: "http://example.com".to_string(),
+    };
+    conn.ensure_in_db(&pool).await.expect("Write connection");
+
+    let sfa = SFAccount {
+        simplefin_id: "ID".to_string(),
+        connection_id: conn.id,
+        currency: "USD".to_string(),
+        name: "Account Name".to_string(),
+    };
+    sfa.ensure_in_db(&pool).await.expect("Write to db");
+    let accounts = Account::get_all(&pool).await.expect("Get accounts");
+    assert_eq!(1, accounts.len());
+    let account = accounts.get(0).expect("Should be at least one");
+
+    let now = chrono::Utc::now();
+
+    let sfab1 = SFAccountBalance {
+        account_id: account.id,
+        timestamp: now,
+        balance: rust_decimal::Decimal::ZERO,
+    };
+    sfab1.ensure_in_db(&pool).await.expect("Write to db");
+    let bal1 = SFAccountBalance::active_sum(&pool)
+        .await
+        .expect("Query")
+        .balance
+        .expect("balance");
+    assert_eq!(rust_decimal::Decimal::ZERO, bal1.to_decimal(2));
+
+    let sfab2 = SFAccountBalance {
+        account_id: account.id,
+        timestamp: now,
+        balance: rust_decimal::Decimal::new(10000, 2),
+    };
+    sfab2.ensure_in_db(&pool).await.expect("Write to db");
+    let bal2 = SFAccountBalance::active_sum(&pool)
+        .await
+        .expect("Query")
+        .balance
+        .expect("balance");
+    assert_eq!(rust_decimal::Decimal::new(10000, 2), bal2.to_decimal(2));
 
     Ok(())
 }
