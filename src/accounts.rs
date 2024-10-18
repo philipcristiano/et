@@ -664,7 +664,7 @@ async fn sab_test(pool: PgPool) -> sqlx::Result<()> {
 
     let sfab2 = SFAccountBalance {
         account_id: account.id,
-        timestamp: now,
+        timestamp: now + chrono::Duration::days(1),
         balance: rust_decimal::Decimal::new(10000, 2),
     };
     sfab2.ensure_in_db(&pool).await.expect("Write to db");
