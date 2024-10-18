@@ -677,3 +677,71 @@ pub async fn handle_tx_delete_label(
 
     Ok(labels.render_as_table_for_tx(ftxid).into_response())
 }
+
+mod tx_test {
+
+    use super::*;
+    use crate::accounts::{Account, SFAccount};
+
+    #[sqlx::test]
+    async fn tx_daily_test(pool: PgPool) -> sqlx::Result<()> {
+        let target_schema = include_str!("../schema/schema.sql").to_string();
+        declare_schema::migrate_from_string(&target_schema, &pool)
+            .await
+            .expect("Migrate");
+
+        let conn = crate::Connection {
+            id: crate::ConnectionID::new(),
+            access_url: "http://example.com".to_string(),
+        };
+        conn.ensure_in_db(&pool).await.expect("Write connection");
+
+        let sfa = SFAccount {
+            simplefin_id: "ID".to_string(),
+            connection_id: conn.id,
+            currency: "USD".to_string(),
+            name: "Account Name".to_string(),
+        };
+        sfa.ensure_in_db(&pool).await.expect("Write to db");
+        let accounts = Account::get_all(&pool).await.expect("Get accounts");
+        assert_eq!(1, accounts.len());
+        let account = accounts.get(0).expect("Should be at least one");
+
+        let sftx1 = SFAccountTransaction {
+            id: "SFAT1".to_string(),
+            account_id: account.id,
+            connection_id: conn.id,
+            posted: chrono::Utc::now(),
+            transacted_at: Some(chrono::Utc::now()),
+            amount: rust_decimal::Decimal::new(10000, 2),
+            pending: Some(false),
+            description: "Test TX".to_string(),
+        };
+        sftx1.ensure_in_db(&pool).await.expect("write to db");
+        let sftx2 = SFAccountTransaction {
+            id: "SFAT2".to_string(),
+            account_id: account.id,
+            connection_id: conn.id,
+            posted: chrono::Utc::now(),
+            transacted_at: Some(chrono::Utc::now()),
+            amount: rust_decimal::Decimal::new(20000, 2),
+            pending: Some(false),
+            description: "Test TX".to_string(),
+        };
+        sftx2.ensure_in_db(&pool).await.expect("write to db");
+
+        let q = crate::TransactionsFilterOptions::default();
+
+        let res = SFAccountTXQuery::from_options_group_by(&q, &pool)
+            .await
+            .expect("Query");
+
+        let expected = rust_decimal::Decimal::new(30000, 2);
+
+        assert_eq!(1, res.len());
+        let row = &res[0];
+        assert_eq!(row.amount.unwrap().to_decimal(2), expected);
+
+        Ok(())
+    }
+}

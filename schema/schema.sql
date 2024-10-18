@@ -66,6 +66,7 @@ CREATE TABLE simplefin_account_transactions (
     transacted_at timestamptz,
     pending bool,
     description varchar NOT NULL,
+    UNIQUE (account_id, simplefin_id),
 
     CONSTRAINT simplefin_account_transactions_pkey PRIMARY KEY (id),
     CONSTRAINT simplefin_account FOREIGN KEY (account_id) REFERENCES simplefin_accounts (id)
