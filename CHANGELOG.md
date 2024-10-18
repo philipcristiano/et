@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.6.20](https://github.com/philipcristiano/et/compare/v2.6.19...v2.6.20) (2024-10-18)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.90 ([445a6bb](https://github.com/philipcristiano/et/commit/445a6bb3748e397e902368c8c3dd95285b884747))
+* **deps:** update rust crate serde_json to v1.0.129 ([38f9a19](https://github.com/philipcristiano/et/commit/38f9a19780be252986df945d5ab188deb6a1c239))
+* **deps:** update rust crate tokio to v1.40.0 ([27eafb5](https://github.com/philipcristiano/et/commit/27eafb557ff59135892762c40d54d63b16222129))
+* Include uniq constraint ([7dce0d2](https://github.com/philipcristiano/et/commit/7dce0d26d61fb57d93142b2f406ff033c6fb9ed6))
+* Require a unique index for updating the name ([710042f](https://github.com/philipcristiano/et/commit/710042fc44a5ebc1dc33b1b631dbd47a31624196))
+
 ## [2.6.19](https://github.com/philipcristiano/et/compare/v2.6.18...v2.6.19) (2024-10-16)
 
 
