@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.21](https://github.com/philipcristiano/et/compare/v2.6.20...v2.6.21) (2024-10-18)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate serde_json to v1.0.130 ([1345fb2](https://github.com/philipcristiano/et/commit/1345fb205f3531ade55f870445d7bf79dc004f39))
+
 ## [2.6.20](https://github.com/philipcristiano/et/compare/v2.6.19...v2.6.20) (2024-10-18)
 
 
