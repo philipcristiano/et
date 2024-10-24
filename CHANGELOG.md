@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.22](https://github.com/philipcristiano/et/compare/v2.6.21...v2.6.22) (2024-10-24)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate declare_schema to 0.0.7 ([d57c0ec](https://github.com/philipcristiano/et/commit/d57c0ecd55ba3a5354d0bf9d3ed8a684edd4664a))
+
 ## [2.6.21](https://github.com/philipcristiano/et/compare/v2.6.20...v2.6.21) (2024-10-24)
 
 
