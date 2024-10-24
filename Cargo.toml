@@ -33,7 +33,7 @@ signal-hook = "0.3.17"
 service_conventions = { version = "0.0.23", features = ["tracing", "oidc", "tracing-http"]}
 sqlx = { version = "0.8.0", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
 base64 = "0.22.1"
-reqwest = { version = "0.12.4", features = ["rustls-tls", "json"] }
+reqwest = { version = "0.12.4", features = ["rustls-tls", "json"], default-features = false }
 uuid = {version = "1.8.0", features = ["v4", "serde"]}
 thiserror = "1.0.59"
 rust_decimal = { version = "1.35.0", features = ["db-postgres", "serde-float"] }
