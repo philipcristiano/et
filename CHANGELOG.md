@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.6.22](https://github.com/philipcristiano/et/compare/v2.6.21...v2.6.22) (2024-10-28)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate charts-rs to v0.3.19 ([d5202d6](https://github.com/philipcristiano/et/commit/d5202d63222467036f73388381809ae73a575d23))
+* **deps:** update rust crate declare_schema to 0.0.7 ([d57c0ec](https://github.com/philipcristiano/et/commit/d57c0ecd55ba3a5354d0bf9d3ed8a684edd4664a))
+* **deps:** update rust crate declare_schema to 0.0.9 ([d0ec05a](https://github.com/philipcristiano/et/commit/d0ec05a1b50382461ca32ebedee7db2741e68416))
+* Schema ([01c354c](https://github.com/philipcristiano/et/commit/01c354cfd61d68fb7f5dfde8e87c92a794be9df1))
+
 ## [2.6.21](https://github.com/philipcristiano/et/compare/v2.6.20...v2.6.21) (2024-10-24)
 
 
