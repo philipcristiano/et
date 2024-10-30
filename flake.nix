@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
@@ -19,7 +19,7 @@
             buildInputs = [
                 rust-bin.stable.latest.default
                 rust-analyzer
-                pkgs.postgresql_16
+                pkgs.postgresql_17
                 pkgs.foreman
                 pkgs.tailwindcss
                 pkgs.opentelemetry-collector
