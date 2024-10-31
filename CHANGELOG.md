@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.7.0](https://github.com/philipcristiano/et/compare/v2.6.22...v2.7.0) (2024-10-31)
+
+
+### Features
+
+* Support queries with multiple labels or not-labels ([8af2156](https://github.com/philipcristiano/et/commit/8af2156e0c1235137425a28b932832750ebacecd))
+
+
+### Bug Fixes
+
+* **deps:** update rust crate reqwest to v0.12.9 ([9e023c7](https://github.com/philipcristiano/et/commit/9e023c7e3be5da2bd72d0e8bdab46efe84fcc85e))
+* **deps:** update rust crate serde to v1.0.214 ([8fde199](https://github.com/philipcristiano/et/commit/8fde19961bdb0b53aaf633556b162ee04dced77f))
+
 ## [2.6.22](https://github.com/philipcristiano/et/compare/v2.6.21...v2.6.22) (2024-10-28)
 
 
