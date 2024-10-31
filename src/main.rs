@@ -455,8 +455,10 @@ pub type DescriptionFragment = String;
 #[derive(Deserialize, Debug, Clone, Default, Serialize)]
 struct TransactionsFilterOptions {
     pub account_id: Option<crate::accounts::AccountID>,
-    pub labeled: Option<Label>,
-    pub not_labeled: Option<Label>,
+    #[serde(default)]
+    pub labeled: Vec<Label>,
+    #[serde(default)]
+    pub not_labeled: Vec<Label>,
     pub description_contains: Option<DescriptionFragment>,
     pub transaction_id: Option<crate::tx::TransactionID>,
 
@@ -487,8 +489,10 @@ impl TransactionsFilterOptions {
         &self,
         t: sqlx::postgres::types::PgLTree,
     ) -> anyhow::Result<TransactionsFilterOptions> {
+        let mut new_labeled = self.labeled.clone();
+        new_labeled.push(t.to_string());
         let new = TransactionsFilterOptions {
-            labeled: Some(t.to_string()),
+            labeled: new_labeled,
             ..self.clone()
         };
 
@@ -503,8 +507,10 @@ impl TransactionsFilterOptions {
     }
 
     fn with_label(&self, label: String) -> anyhow::Result<TransactionsFilterOptions> {
+        let mut new_labeled = self.labeled.clone();
+        new_labeled.push(label);
         let new = TransactionsFilterOptions {
-            labeled: Some(label),
+            labeled: new_labeled,
             ..self.clone()
         };
 
@@ -512,8 +518,10 @@ impl TransactionsFilterOptions {
     }
 
     fn without_label(&self, label: String) -> anyhow::Result<TransactionsFilterOptions> {
+        let mut new_not_labeled = self.not_labeled.clone();
+        new_not_labeled.push(label);
         let new = TransactionsFilterOptions {
-            not_labeled: Some(label),
+            not_labeled: new_not_labeled,
             ..self.clone()
         };
 

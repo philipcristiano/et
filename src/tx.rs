@@ -196,29 +196,16 @@ impl SFAccountTXQuery {
         tfo: &TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
-        let q = if let Some(label) = tfo.labeled.clone() {
-            let query_levels = string_label_to_plquerylevels(label)?;
-            Some(PgLQuery::from(query_levels))
-        } else {
-            None
-        };
-        let not_label_q: Option<PgLQuery> = if let Some(label) = tfo.not_labeled.clone() {
-            let query_levels = string_label_to_plquerylevels(label)?;
-            Some(PgLQuery::from(query_levels))
-            //return Err(anyhow::anyhow!("Not-labeled not supported"))
-        } else {
-            None
-        };
-
+        let q: anyhow::Result<Vec<_>> = tfo.labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let q = q?;
+        let not_label_q: anyhow::Result<Vec<_>, _> =  tfo.not_labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let not_label_q = not_label_q?;
         let description_q = if let Some(df) = tfo.description_contains.clone() {
             Some(format!("%{df}%"))
         } else {
             None
         };
 
-        //if let Some(_) = tfo.not_labeled.clone() {
-        //    return Err(anyhow::anyhow!("not-labeled is not yet supported"))
-        //}
         tracing::info!(lquery=?q, not_lquery=?not_label_q, description_q=?description_q, "Query Filter Options");
 
         let res = sqlx::query_as!(
@@ -227,10 +214,10 @@ impl SFAccountTXQuery {
         SELECT sat.posted, sat.transacted_at, sat.amount, sat.description, sat.account_id, sat.id
         FROM simplefin_account_transactions sat
 
-        WHERE ($1::lquery IS NULL OR sat.id IN (
+        WHERE (array_length($1::lquery[], 1) IS NULL OR sat.id IN (
             SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
             JOIN labels l_inner ON tl_inner.label_id = l_inner.id
-            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
+            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ? $1
         ))
         AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
         AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
@@ -242,18 +229,18 @@ impl SFAccountTXQuery {
             FROM transaction_labels tl2
             JOIN labels l2 ON tl2.label_id = l2.id
             WHERE tl2.transaction_id = sat.id
-            AND ($7::lquery IS NOT NULL AND l2.label ~ $7)
+            AND ($7::lquery[] IS NOT NULL AND l2.label ? $7)
         )
         ORDER BY
             sat.transacted_at DESC
             "#,
-            q,
+            q as _,
             tfo.start_datetime,
             tfo.end_datetime,
             tfo.account_id,
             tfo.transaction_id,
             description_q,
-            not_label_q,
+            not_label_q as _,
         )
         .fetch_all(pool)
         .await?;
@@ -269,19 +256,10 @@ impl SFAccountTXQuery {
         if let Some(aid) = tfo.account_id {
             return crate::accounts::SFAccountBalance::by_date(aid, tfo, pool).await;
         }
-        let q = if let Some(label) = tfo.labeled.clone() {
-            let query_levels = string_label_to_plquerylevels(label)?;
-            Some(PgLQuery::from(query_levels))
-        } else {
-            None
-        };
-        let not_label_q: Option<PgLQuery> = if let Some(label) = tfo.not_labeled.clone() {
-            let query_levels = string_label_to_plquerylevels(label)?;
-            Some(PgLQuery::from(query_levels))
-            //return Err(anyhow::anyhow!("Not-labeled not supported"))
-        } else {
-            None
-        };
+        let q: anyhow::Result<Vec<_>> = tfo.labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let q = q?;
+        let not_label_q: anyhow::Result<Vec<_>, _> =  tfo.not_labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let not_label_q = not_label_q?;
 
         let description_q = if let Some(df) = tfo.description_contains.clone() {
             Some(format!("%{df}%"))
@@ -304,10 +282,10 @@ impl SFAccountTXQuery {
                 SUM(sat.amount) as daily_sum
             FROM simplefin_account_transactions sat
 
-            WHERE ($1::lquery IS NULL OR sat.id IN (
+            WHERE (array_length($1::lquery[], 1) IS NULL OR sat.id IN (
                 SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
                 JOIN labels l_inner ON tl_inner.label_id = l_inner.id
-                WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
+                WHERE tl_inner.transaction_id = sat.id AND l_inner.label ? $1
             ))
             AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
             AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
@@ -319,7 +297,7 @@ impl SFAccountTXQuery {
                 FROM transaction_labels tl2
                 JOIN labels l2 ON tl2.label_id = l2.id
                 WHERE tl2.transaction_id = sat.id
-                AND ($7::lquery IS NOT NULL AND l2.label ~ $7)
+                AND ($7::lquery[] IS NOT NULL AND l2.label ? $7)
             )
 
             GROUP BY DATE_TRUNC('day', sat.transacted_at)
@@ -331,13 +309,13 @@ impl SFAccountTXQuery {
         FROM daily_totals
         ORDER BY interval ASC;
             "#,
-            q,
+            q as _,
             tfo.start_datetime,
             tfo.end_datetime,
             tfo.account_id,
             tfo.transaction_id,
             description_q,
-            not_label_q,
+            not_label_q as _,
         )
         .fetch_all(pool)
         .await?;
@@ -350,19 +328,10 @@ impl SFAccountTXQuery {
         tfo: &TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        let q = if let Some(label) = tfo.labeled.clone() {
-            let query_levels = string_label_to_plquerylevels(label)?;
-            Some(PgLQuery::from(query_levels))
-        } else {
-            None
-        };
-        let not_label_q: Option<PgLQuery> = if let Some(label) = tfo.not_labeled.clone() {
-            let query_levels = string_label_to_plquerylevels(label)?;
-            Some(PgLQuery::from(query_levels))
-            //return Err(anyhow::anyhow!("Not-labeled not supported"))
-        } else {
-            None
-        };
+        let q: anyhow::Result<Vec<_>> = tfo.labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let q = q?;
+        let not_label_q: anyhow::Result<Vec<_>, _> =  tfo.not_labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let not_label_q = not_label_q?;
 
         let description_q = if let Some(df) = tfo.description_contains.clone() {
             Some(format!("%{df}%"))
@@ -378,10 +347,10 @@ impl SFAccountTXQuery {
         SELECT sum(sat.amount) as amount
         FROM simplefin_account_transactions sat
 
-        WHERE ($1::lquery IS NULL OR sat.id IN (
+        WHERE (array_length($1::lquery[], 1) IS NULL OR sat.id IN (
             SELECT tl_inner.transaction_id FROM transaction_labels tl_inner
             JOIN labels l_inner ON tl_inner.label_id = l_inner.id
-            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ~ $1
+            WHERE tl_inner.transaction_id = sat.id AND l_inner.label ? $1
         ))
         AND ($2::timestamptz IS NULL OR sat.transacted_at >= $2)
         AND ($3::timestamptz IS NULL OR sat.transacted_at < $3)
@@ -393,16 +362,16 @@ impl SFAccountTXQuery {
             FROM transaction_labels tl2
             JOIN labels l2 ON tl2.label_id = l2.id
             WHERE tl2.transaction_id = sat.id
-            AND ($7::lquery IS NOT NULL AND l2.label ~ $7)
+            AND ($7::lquery[] IS NOT NULL AND l2.label ? $7)
         )
             "#,
-            q,
+            q as _,
             tfo.start_datetime,
             tfo.end_datetime,
             tfo.account_id,
             tfo.transaction_id,
             description_q,
-            not_label_q,
+            not_label_q as _,
         )
         .fetch_one(pool)
         .await?;
@@ -431,6 +400,11 @@ impl maud::Render for SFAccountTXQuery {
            }
         }
     }
+}
+
+
+fn string_label_to_plquery(label: crate::Label) -> anyhow::Result<PgLQuery> {
+    Ok(PgLQuery::from(string_label_to_plquerylevels(label)?))
 }
 
 fn string_label_to_plquerylevels(label: crate::Label) -> anyhow::Result<Vec<PgLQueryLevel>> {
