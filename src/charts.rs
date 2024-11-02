@@ -40,6 +40,7 @@ pub async fn get_chart(
     chart_options: Query<ChartOptions>,
     tx_filter: Query<crate::TransactionsFilterOptions>,
 ) -> Result<Response, crate::AppError> {
+    tracing::debug!("Chart Transaction Filter Options {:?}", &tx_filter);
     let d = crate::tx::SFAccountTXQuery::from_options_group_by(&tx_filter.deref(), &app_state.db)
         .await?;
     let vals_opt: Option<Vec<f32>> = d.clone().into_iter().map(|i| i.amount_f32()).collect();

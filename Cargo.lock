@@ -999,6 +999,7 @@ dependencies = [
  "rust-embed",
  "rust_decimal",
  "serde",
+ "serde_html_form",
  "serde_json",
  "serde_qs",
  "service_conventions",

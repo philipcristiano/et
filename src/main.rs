@@ -467,8 +467,8 @@ struct TransactionsFilterOptions {
 }
 
 impl TransactionsFilterOptions {
-    fn to_querystring(&self) -> Result<String, serde_qs::Error> {
-        let qs = serde_qs::to_string(&self)?;
+    fn to_querystring(&self) -> Result<String, serde_html_form::ser::Error> {
+        let qs = serde_html_form::to_string(&self)?;
         tracing::debug!(qs = qs, tfo= ?self, "To querystring");
         Ok(qs)
     }
@@ -728,5 +728,23 @@ where
 {
     fn from(err: E) -> Self {
         Self(err.into())
+    }
+}
+
+#[cfg(test)]
+mod test_transactions_filter_options {
+    use super::*;
+
+    #[test]
+    fn test_query_string() {
+        let tfo = TransactionsFilterOptions::default();
+        assert_eq!(tfo.to_querystring().unwrap(), "")
+    }
+    #[test]
+    fn test_query_string_label_list() {
+        let tfo = TransactionsFilterOptions::default()
+            .with_label("label1".to_string())
+            .unwrap();
+        assert_eq!(tfo.to_querystring().unwrap(), "labeled=label1")
     }
 }
