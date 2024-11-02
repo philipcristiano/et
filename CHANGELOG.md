@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.7.1](https://github.com/philipcristiano/et/compare/v2.7.0...v2.7.1) (2024-11-02)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.92 ([2f14117](https://github.com/philipcristiano/et/commit/2f141170813e4b57317157dd2894864a93bec21c))
+* **deps:** update rust crate thiserror to v1.0.66 ([8205a81](https://github.com/philipcristiano/et/commit/8205a8119de547e316d3b322538662bbdae08a02))
+* Generate querystrings that can be parsed ([2195c23](https://github.com/philipcristiano/et/commit/2195c238ac193677cfb57a6286f4fb9204ea62ae))
+
 ## [2.7.0](https://github.com/philipcristiano/et/compare/v2.6.22...v2.7.0) (2024-10-31)
 
 
