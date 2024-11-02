@@ -18,12 +18,12 @@ pub async fn sync_all(app_state: AppState) -> () {
 }
 
 struct Lock {
-    pg_try_advisory_lock: Option<bool>,
+    pg_try_advisory_xact_lock: Option<bool>,
 }
 
 impl Lock {
     fn held(&self) -> bool {
-        if let Some(b) = self.pg_try_advisory_lock {
+        if let Some(b) = self.pg_try_advisory_xact_lock {
             return b;
         }
         return false;
@@ -36,17 +36,12 @@ async fn try_sync_all(app_state: &AppState) -> anyhow::Result<()> {
         .key()
         .as_bigint();
     let mut c = app_state.db_spike.begin().await?;
-    let lock = sqlx::query_as!(Lock, "SELECT  pg_try_advisory_lock($1)", k)
+    let lock = sqlx::query_as!(Lock, "SELECT pg_try_advisory_xact_lock($1)", k)
         .fetch_one(c.as_mut())
         .await?;
     if lock.held() {
-        tracing::event!(Level::DEBUG, "Holding PG Advisory lock");
-        let sync_result = sync_all_connections(app_state).await;
-        let res = sqlx::query!("SELECT  pg_advisory_unlock($1)", k)
-            .fetch_one(c.as_mut())
-            .await?;
-        tracing::event!(Level::DEBUG, result=?res, "pg_advisory_unlock");
-        sync_result?
+        tracing::event!(Level::DEBUG, "Holding PG Advisory xact lock");
+        sync_all_connections(app_state).await?
     } else {
         tracing::event!(Level::INFO, "Could not get PG Advisory lock");
     }
