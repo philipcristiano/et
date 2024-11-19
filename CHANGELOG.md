@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.7.2](https://github.com/philipcristiano/et/compare/v2.7.1...v2.7.2) (2024-11-19)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.93 ([584f481](https://github.com/philipcristiano/et/commit/584f481aca001f8ade9e5f0490b2013ccae981d5))
+* **deps:** update rust crate axum to v0.7.8 ([#361](https://github.com/philipcristiano/et/issues/361)) ([a7304e4](https://github.com/philipcristiano/et/commit/a7304e44b07a79d1848e66a02a7f930d40deb6a0))
+* **deps:** update rust crate axum to v0.7.9 ([#363](https://github.com/philipcristiano/et/issues/363)) ([b25739f](https://github.com/philipcristiano/et/commit/b25739fb1f01facc80e09cd1575ff527e29ace66))
+* **deps:** update rust crate axum-extra to v0.9.5 ([#362](https://github.com/philipcristiano/et/issues/362)) ([171a043](https://github.com/philipcristiano/et/commit/171a0436226bc9b32af70ff652153efc67a23019))
+* **deps:** update rust crate axum-extra to v0.9.6 ([#364](https://github.com/philipcristiano/et/issues/364)) ([b886845](https://github.com/philipcristiano/et/commit/b8868459ce3452f22d873e8eab003dafe57c3f89))
+* **deps:** update rust crate clap to v4.5.21 ([#360](https://github.com/philipcristiano/et/issues/360)) ([b10c85e](https://github.com/philipcristiano/et/commit/b10c85e3e8e785d8408cf0a561747f80fd1b8ebf))
+* **deps:** update rust crate serde to v1.0.215 ([#359](https://github.com/philipcristiano/et/issues/359)) ([38e088c](https://github.com/philipcristiano/et/commit/38e088c1b1c2964b85ac6cb6d2496791690ac65a))
+* **deps:** update rust crate serde_json to v1.0.133 ([#365](https://github.com/philipcristiano/et/issues/365)) ([8e1ff65](https://github.com/philipcristiano/et/commit/8e1ff65f6e9f592dd8256a3995051a74f160b52a))
+* **deps:** update rust crate thiserror to v1.0.67 ([44c871b](https://github.com/philipcristiano/et/commit/44c871ba68f5964b1378b66853e0e6e69a9d5d58))
+* **deps:** update rust crate thiserror to v1.0.68 ([a350fde](https://github.com/philipcristiano/et/commit/a350fde7c742a2957a8904394edc8a7f2be6ab97))
+* **deps:** update rust crate thiserror to v1.0.69 ([#356](https://github.com/philipcristiano/et/issues/356)) ([75a684b](https://github.com/philipcristiano/et/commit/75a684b45e58dbef7d7d70f8dc9adace4472c933))
+* **deps:** update rust crate tokio to v1.41.1 ([#355](https://github.com/philipcristiano/et/issues/355)) ([08f4f42](https://github.com/philipcristiano/et/commit/08f4f4229339d2cbb89b669550aff4d564c112d5))
+* **deps:** update rust crate tower-http to v0.6.2 ([#367](https://github.com/philipcristiano/et/issues/367)) ([c9cdaeb](https://github.com/philipcristiano/et/commit/c9cdaebc75acf93e98fa891947a120b139208ca3))
+* **deps:** update rust crate url to v2.5.3 ([cc9dbbb](https://github.com/philipcristiano/et/commit/cc9dbbb825e774750bc498d1890f25a18290ea9e))
+* Display connection error if sync fails ([af37c6f](https://github.com/philipcristiano/et/commit/af37c6f9452f910abb95317dd1f86efed4384317))
+* Use tx lock instead of session ([0fe340d](https://github.com/philipcristiano/et/commit/0fe340da12912a5080c97bc227f573fb4e34e458))
+
 ## [2.7.1](https://github.com/philipcristiano/et/compare/v2.7.0...v2.7.1) (2024-11-02)
 
 
