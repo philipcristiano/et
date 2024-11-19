@@ -77,40 +77,54 @@ async fn sync_connection(app_state: &AppState, sfc: &Connection) -> anyhow::Resu
         }
     }
 
-    let account_set = crate::simplefin_api::accounts(&sfc.access_url).await?;
-    for account in account_set.accounts {
-        tracing::debug!(account_id = account.id, "Proccessing accout");
-        let sfa = SFAccount {
-            simplefin_id: account.id,
-            connection_id: sfc.id,
-            name: account.name,
-            currency: account.currency,
-        };
-        let et_account = sfa.ensure_in_db(&app_state.db).await?;
-        if et_account.active {
-            let sfab = SFAccountBalance {
-                account_id: et_account.id,
-                timestamp: account.balance_date,
-                balance: account.balance,
-            };
-            sfab.ensure_in_db(&app_state.db).await?;
+    let account_set_result = crate::simplefin_api::accounts(&sfc.access_url).await;
+    match account_set_result {
+        Err(e) => {
+            sfc.mark_synced(&vec![e.to_string()], &app_state.db_spike)
+                .await?;
+            Err(e)?;
+            Ok(())
+        }
+        Ok(account_set) => {
+            for account in account_set.accounts {
+                tracing::debug!(
+                    account_id = account.id,
+                    name = account.name,
+                    "Proccessing accout"
+                );
+                let sfa = SFAccount {
+                    simplefin_id: account.id,
+                    connection_id: sfc.id,
+                    name: account.name,
+                    currency: account.currency,
+                };
+                let et_account = sfa.ensure_in_db(&app_state.db).await?;
+                if et_account.active {
+                    let sfab = SFAccountBalance {
+                        account_id: et_account.id,
+                        timestamp: account.balance_date,
+                        balance: account.balance,
+                    };
+                    sfab.ensure_in_db(&app_state.db).await?;
 
-            let txs_f = account.transactions.iter().map(|src_tx| {
-                let tx = SFAccountTransaction::from_transaction(&et_account, &src_tx);
-                tracing::debug!(simplefine_tx= ?src_tx, et_tx= ?tx, "Account transaction");
-                SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
-            });
+                    let txs_f = account.transactions.iter().map(|src_tx| {
+                        let tx = SFAccountTransaction::from_transaction(&et_account, &src_tx);
+                        tracing::debug!(simplefine_tx= ?src_tx, et_tx= ?tx, "Account transaction");
+                        SFAccountTransaction::ensure_in_db(tx, &app_state.db_spike)
+                    });
 
-            futures::future::try_join_all(txs_f).await?;
-            ()
-        } else {
-            tracing::debug!(
-                account_id = et_account.id.clone().to_string(),
-                "Account inactive, not saving transactions"
-            );
+                    futures::future::try_join_all(txs_f).await?;
+                    ()
+                } else {
+                    tracing::debug!(
+                        account_id = et_account.id.clone().to_string(),
+                        "Account inactive, not saving transactions"
+                    );
+                }
+            }
+            sfc.mark_synced(&account_set.errors, &app_state.db_spike)
+                .await?;
+            Ok(())
         }
     }
-    sfc.mark_synced(&account_set.errors, &app_state.db_spike)
-        .await?;
-    Ok(())
 }
