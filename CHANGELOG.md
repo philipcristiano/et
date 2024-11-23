@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.7.3](https://github.com/philipcristiano/et/compare/v2.7.2...v2.7.3) (2024-11-23)
+
+
+### Bug Fixes
+
+* Build with compatible image ([85e1841](https://github.com/philipcristiano/et/commit/85e18416f292b5282a3b479390a9b019691bbffc))
+* **deps:** update rust crate declare_schema to 0.0.10 ([#369](https://github.com/philipcristiano/et/issues/369)) ([fc04373](https://github.com/philipcristiano/et/commit/fc04373fecc978dbef907df7e2fbf63f2359d0a2))
+* **deps:** update rust crate url to v2.5.4 ([#370](https://github.com/philipcristiano/et/issues/370)) ([bc754e3](https://github.com/philipcristiano/et/commit/bc754e304bc67fc88e13ca027b55212e27ed9bc3))
+
 ## [2.7.2](https://github.com/philipcristiano/et/compare/v2.7.1...v2.7.2) (2024-11-19)
 
 
