@@ -19,6 +19,8 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 WORKDIR /app
 
+RUN apt-get update && apt-get install openssl ca-certificates -y && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/target/release/et-migrate /usr/local/bin/et-migrate
 COPY --from=builder /app/target/release/et /usr/local/bin/et
 
