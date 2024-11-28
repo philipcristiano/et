@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.4](https://github.com/philipcristiano/et/compare/v2.7.3...v2.7.4) (2024-11-28)
+
+
+### Bug Fixes
+
+* Add in native cert chains ([6955b1d](https://github.com/philipcristiano/et/commit/6955b1db3f10820d5e4ec0950dba10ac59691f3e))
+* **deps:** update rust crate tracing to v0.1.41 ([#375](https://github.com/philipcristiano/et/issues/375)) ([bf08001](https://github.com/philipcristiano/et/commit/bf08001e01cb0cad4c3ab5979389ee84690da4c7))
+
 ## [2.7.3](https://github.com/philipcristiano/et/compare/v2.7.2...v2.7.3) (2024-11-23)
 
 
