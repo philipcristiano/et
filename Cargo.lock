@@ -3452,7 +3452,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -3464,7 +3464,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "bytes",
  "chrono",
@@ -3490,7 +3490,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "smallvec",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -3502,7 +3502,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3514,7 +3514,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros-core"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "dotenvy",
  "either",
@@ -3539,7 +3539,7 @@ dependencies = [
 [[package]]
 name = "sqlx-mysql"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -3574,7 +3574,7 @@ dependencies = [
  "smallvec",
  "sqlx-core",
  "stringprep",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tracing",
  "uuid",
  "whoami",
@@ -3583,7 +3583,7 @@ dependencies = [
 [[package]]
 name = "sqlx-postgres"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -3613,7 +3613,7 @@ dependencies = [
  "smallvec",
  "sqlx-core",
  "stringprep",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tracing",
  "uuid",
  "whoami",
@@ -3622,7 +3622,7 @@ dependencies = [
 [[package]]
 name = "sqlx-sqlite"
 version = "0.8.2"
-source = "git+https://github.com/philipcristiano/sqlx.git?branch=pglquery-hasarraytype#9a222d501543879762eeae315f8837a5f8a4d4b3"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "atoi",
  "chrono",

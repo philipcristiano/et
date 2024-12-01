@@ -32,8 +32,8 @@ url = "2.5.0"
 signal-hook = "0.3.17"
 service_conventions = { version = "0.0.23", features = ["tracing", "oidc", "tracing-http"]}
 
-# https://github.com/launchbadge/sqlx/pull/3553
-sqlx = { git = "https://github.com/philipcristiano/sqlx.git", branch="pglquery-hasarraytype", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
+# Waiting on sqlx > v0.8.2
+sqlx = { git = "https://github.com/launchbadge/sqlx.git", branch="main", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
 # sqlx = { version = "0.8.0", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
 base64 = "0.22.1"
 reqwest = { version = "0.12.4", features = ["rustls-tls", "json"], default-features = false }
@@ -53,4 +53,4 @@ serde_html_form = "0.2.6"
 
 [patch.crates-io]
 # https://github.com/launchbadge/sqlx/pull/3553
-sqlx = { git = "https://github.com/philipcristiano/sqlx.git", branch="pglquery-hasarraytype", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
+sqlx = { git = "https://github.com/launchbadge/sqlx.git", branch="main", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
