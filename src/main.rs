@@ -336,26 +336,26 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        .route("/f/connection/:connection_id", get(get_connection_f))
+        .route("/f/connection/{connection_id}", get(get_connection_f))
         .route("/accounts", get(crate::accounts::get_accounts_f))
         .route(
-            "/f/accounts/:account_id",
+            "/f/accounts/{account_id}",
             get(crate::accounts::get_account_f),
         )
         .route(
-            "/f/accounts/:account_id/active",
+            "/f/accounts/{account_id}/active",
             post(crate::accounts::handle_active_post).delete(crate::accounts::handle_active_delete),
         )
         .route(
-            "/f/accounts/:account_id/name",
+            "/f/accounts/{account_id}/name",
             get(crate::accounts::handle_name).post(crate::accounts::handle_name_post),
         )
         .route(
-            "/f/accounts/:account_id/delete-transactions",
+            "/f/accounts/{account_id}/delete-transactions",
             post(crate::accounts::handle_delete_transactions),
         )
         .route("/chart", get(crate::charts::get_chart))
-        .route("/accounts/:account_id", get(crate::accounts::get_account))
+        .route("/accounts/{account_id}", get(crate::accounts::get_account))
         .route("/balances/f", get(crate::accounts::get_balances_f))
         .route(
             "/balances/f/total",
@@ -364,7 +364,7 @@ async fn main() {
         .route("/f/transactions", get(get_transactions))
         .route("/f/transactions/value", get(get_transactions_value))
         .route(
-            "/f/transactions/:transaction_id/edit",
+            "/f/transactions/{transaction_id}/edit",
             get(crate::tx::handle_tx_edit_get).post(crate::tx::handle_tx_edit_post),
         )
         .route(
