@@ -30,7 +30,7 @@ tracing = "0.1.40"
 tonic = { version = "0.12.0", features = ["tls", "tls-roots"] }
 url = "2.5.0"
 signal-hook = "0.3.17"
-service_conventions = { version = "0.0.24", features = ["tracing", "oidc", "tracing-http"]}
+service_conventions = { version = "0.0.26", features = ["tracing", "oidc", "tracing-http"]}
 
 # Waiting on sqlx > v0.8.2
 sqlx = { git = "https://github.com/launchbadge/sqlx.git", branch="main", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
