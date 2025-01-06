@@ -336,7 +336,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
-        .route("/f/connection/:connection_id", get(get_connection_f))
+        .route("/f/connection/{connection_id}", get(get_connection_f))
         .route("/accounts", get(crate::accounts::get_accounts_f))
         .route(
             "/f/accounts/:account_id",
@@ -355,7 +355,7 @@ async fn main() {
             post(crate::accounts::handle_delete_transactions),
         )
         .route("/chart", get(crate::charts::get_chart))
-        .route("/accounts/:account_id", get(crate::accounts::get_account))
+        .route("/accounts/{account_id}", get(crate::accounts::get_account))
         .route("/balances/f", get(crate::accounts::get_balances_f))
         .route(
             "/balances/f/total",
