@@ -16,7 +16,9 @@ anyhow = "1.0.82"
 axum = { version = "0.8.0", features = ["macros"]}
 chrono = "0.4.38"
 clap = { version = "4.5.4", features = ["derive", "env"]}
-maud = { version = "0.26.0", features = ["axum"] }
+
+# Waiting for maud > 0.26.0
+maud = { git = "https://github.com/lambda-fairy/maud.git", ref = "3eaa6e8f60fca34273f5be25dc5227829c1995b1", version = "0.26.0", features = ["axum"] }
 futures = "0.3.30"
 tower-cookies = { version = "0.11.0", features = ["signed", "private"]}
 tower-http = { version = "0.6.0", features = ["tracing", "trace", "compression-gzip"] }
@@ -30,7 +32,7 @@ tracing = "0.1.40"
 tonic = { version = "0.12.0", features = ["tls", "tls-roots"] }
 url = "2.5.0"
 signal-hook = "0.3.17"
-service_conventions = { version = "0.0.24", features = ["tracing", "oidc", "tracing-http"]}
+service_conventions = { version = "0.0.26", features = ["tracing", "oidc", "tracing-http"]}
 
 # Waiting on sqlx > v0.8.2
 sqlx = { git = "https://github.com/launchbadge/sqlx.git", branch="main", features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "uuid", "chrono", "rust_decimal"] }
@@ -41,7 +43,9 @@ uuid = {version = "1.8.0", features = ["v4", "serde"]}
 thiserror = "1.0.59"
 rust_decimal = { version = "1.35.0", features = ["db-postgres", "serde-float"] }
 rust-embed = { version = "8.3.0", features = ["axum", "mime-guess", "mime_guess"] }
-axum-embed = "0.1.0"
+
+# Waiting on axum-embed > 0.1.0
+axum-embed = { git = "https://github.com/informationsea/axum-embed.git", ref = "f43a1c284fe41c5969bfcb9eae8fb85d8be0d3ff", version = "0.2.0"}
 axum-extra = { version = "0.10.0", features = ["query"] }
 http = "1.1.0"
 serde_qs = "0.13.0"
