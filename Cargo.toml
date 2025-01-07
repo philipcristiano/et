@@ -40,7 +40,7 @@ sqlx = { git = "https://github.com/launchbadge/sqlx.git", branch="main", feature
 base64 = "0.22.1"
 reqwest = { version = "0.12.4", features = ["rustls-tls", "json"], default-features = false }
 uuid = {version = "1.8.0", features = ["v4", "serde"]}
-thiserror = "1.0.59"
+thiserror = "2.0.0"
 rust_decimal = { version = "1.35.0", features = ["db-postgres", "serde-float"] }
 rust-embed = { version = "8.3.0", features = ["axum", "mime-guess", "mime_guess"] }
 
