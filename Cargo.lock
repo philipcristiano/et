@@ -248,7 +248,6 @@ checksum = "edca88bc138befd0323b20752846e6587272d3b03b0343c8ea28a6f819e6e71f"
 dependencies = [
  "async-trait",
  "axum-core 0.4.5",
- "axum-macros",
  "bytes",
  "futures-util",
  "http 1.2.0",
@@ -264,15 +263,11 @@ dependencies = [
  "pin-project-lite",
  "rustversion",
  "serde",
- "serde_json",
- "serde_path_to_error",
- "serde_urlencoded",
  "sync_wrapper 1.0.2",
  "tokio",
  "tower 0.5.2",
  "tower-layer",
  "tower-service",
- "tracing",
 ]
 
 [[package]]
@@ -282,11 +277,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d6fd624c75e18b3b4c6b9caf42b1afe24437daaee904069137d8bab077be8b8"
 dependencies = [
  "axum-core 0.5.0",
+ "axum-macros",
  "bytes",
+ "form_urlencoded",
  "futures-util",
  "http 1.2.0",
  "http-body 1.0.1",
  "http-body-util",
+ "hyper 1.5.2",
+ "hyper-util",
  "itoa",
  "matchit 0.8.4",
  "memchr",
@@ -295,7 +294,11 @@ dependencies = [
  "pin-project-lite",
  "rustversion",
  "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_urlencoded",
  "sync_wrapper 1.0.2",
+ "tokio",
  "tower 0.5.2",
  "tower-layer",
  "tower-service",
@@ -320,7 +323,6 @@ dependencies = [
  "sync_wrapper 1.0.2",
  "tower-layer",
  "tower-service",
- "tracing",
 ]
 
 [[package]]
@@ -345,13 +347,14 @@ dependencies = [
 
 [[package]]
 name = "axum-embed"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "077959a7f8cf438676af90b483304528eb7e16eadadb7f44e9ada4f9dceb9e62"
+version = "0.2.0"
+source = "git+https://github.com/informationsea/axum-embed.git#f43a1c284fe41c5969bfcb9eae8fb85d8be0d3ff"
 dependencies = [
- "axum-core 0.4.5",
+ "bytes",
  "chrono",
  "http 1.2.0",
+ "http-body 1.0.1",
+ "http-body-util",
  "mime_guess",
  "rust-embed",
  "tower-service",
@@ -383,9 +386,9 @@ dependencies = [
 
 [[package]]
 name = "axum-macros"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57d123550fa8d071b7255cb0cc04dc302baa6c8c4a79f55701552684d8399bce"
+checksum = "604fde5e028fea851ce1d8570bbdc034bec850d157f7569d10f347d06808c05c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1050,7 +1053,7 @@ name = "et"
 version = "2.7.4"
 dependencies = [
  "anyhow",
- "axum 0.7.9",
+ "axum 0.8.1",
  "axum-embed",
  "axum-extra",
  "base64 0.22.1",
@@ -1061,7 +1064,7 @@ dependencies = [
  "declare_schema",
  "futures",
  "http 1.2.0",
- "maud",
+ "maud 0.26.0 (git+https://github.com/lambda-fairy/maud.git)",
  "once_cell",
  "reqwest 0.12.12",
  "rust-embed",
@@ -1077,7 +1080,7 @@ dependencies = [
  "tokio",
  "toml",
  "tonic",
- "tower-cookies 0.11.0",
+ "tower-cookies",
  "tower-http",
  "tracing",
  "url",
@@ -1977,7 +1980,18 @@ dependencies = [
  "axum-core 0.4.5",
  "http 1.2.0",
  "itoa",
- "maud_macros",
+ "maud_macros 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "maud"
+version = "0.26.0"
+source = "git+https://github.com/lambda-fairy/maud.git#3eaa6e8f60fca34273f5be25dc5227829c1995b1"
+dependencies = [
+ "axum-core 0.5.0",
+ "http 1.2.0",
+ "itoa",
+ "maud_macros 0.26.0 (git+https://github.com/lambda-fairy/maud.git)",
 ]
 
 [[package]]
@@ -1988,6 +2002,17 @@ checksum = "fa453238ec218da0af6b11fc5978d3b5c3a45ed97b722391a2a11f3306274e18"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
+ "quote",
+ "syn 2.0.95",
+]
+
+[[package]]
+name = "maud_macros"
+version = "0.26.0"
+source = "git+https://github.com/lambda-fairy/maud.git#3eaa6e8f60fca34273f5be25dc5227829c1995b1"
+dependencies = [
+ "proc-macro2",
+ "proc-macro2-diagnostics",
  "quote",
  "syn 2.0.95",
 ]
@@ -2519,6 +2544,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "proc-macro2-diagnostics"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af066a9c399a26e020ada66a034357a868728e72cd426f3adcd35f80d88d88c8"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.95",
+ "version_check",
 ]
 
 [[package]]
@@ -3219,9 +3256,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.134"
+version = "1.0.135"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d00f4175c42ee48b15416f6193a959ba3a0d67fc699a0db9ad12df9f83991c7d"
+checksum = "2b0d7ba2887406110130a978386c4e1befb98c674b4fba677954e4db976630d9"
 dependencies = [
  "itoa",
  "memchr",
@@ -3312,18 +3349,18 @@ dependencies = [
 
 [[package]]
 name = "service_conventions"
-version = "0.0.24"
+version = "0.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea0a0bd7c22f7ccb1e291cecbbf67b9b185d8f1ee6f33be227ee148b9ffd0ff8"
+checksum = "6cb26d85159c9ce1dc16c32b19181dd9403e16a4531cf5490ed4d8827488f0fe"
 dependencies = [
  "anyhow",
  "async-trait",
- "axum 0.7.9",
- "axum-core 0.4.5",
+ "axum 0.8.1",
+ "axum-core 0.5.0",
  "chrono",
  "email_address",
  "http 1.2.0",
- "maud",
+ "maud 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "openidconnect",
  "opentelemetry",
@@ -3335,7 +3372,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.9",
  "tonic",
- "tower-cookies 0.10.0",
+ "tower-cookies",
  "tower-http",
  "tracing",
  "tracing-opentelemetry",
@@ -3495,7 +3532,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -3507,7 +3544,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "bytes",
  "chrono",
@@ -3545,7 +3582,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3557,7 +3594,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros-core"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "dotenvy",
  "either",
@@ -3582,7 +3619,7 @@ dependencies = [
 [[package]]
 name = "sqlx-mysql"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -3626,7 +3663,7 @@ dependencies = [
 [[package]]
 name = "sqlx-postgres"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -3665,7 +3702,7 @@ dependencies = [
 [[package]]
 name = "sqlx-sqlite"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#9d74aeae5253a5bcdf07c5e3f581a6282e609eac"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#6b337668dedfed5a40f08df75e45121ec3a947e2"
 dependencies = [
  "atoi",
  "chrono",
@@ -4093,23 +4130,6 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
-]
-
-[[package]]
-name = "tower-cookies"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fd0118512cf0b3768f7fcccf0bef1ae41d68f2b45edc1e77432b36c97c56c6d"
-dependencies = [
- "async-trait",
- "axum-core 0.4.5",
- "cookie",
- "futures-util",
- "http 1.2.0",
- "parking_lot",
- "pin-project-lite",
- "tower-layer",
- "tower-service",
 ]
 
 [[package]]
