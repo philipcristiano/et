@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.7.5](https://github.com/philipcristiano/et/compare/v2.7.4...v2.7.5) (2025-01-07)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.94 ([#384](https://github.com/philipcristiano/et/issues/384)) ([a3c54e5](https://github.com/philipcristiano/et/commit/a3c54e5a5eba36c6e955558a4cecae226cf518c9))
+* **deps:** update rust crate anyhow to v1.0.95 ([#393](https://github.com/philipcristiano/et/issues/393)) ([1322802](https://github.com/philipcristiano/et/commit/1322802a9015a09709dd95e47fd11093981a9fb6))
+* **deps:** update rust crate axum to 0.8.0 ([a31e4c8](https://github.com/philipcristiano/et/commit/a31e4c8d9d0a9b9dba148dacc3f139f22798ba3b))
+* **deps:** update rust crate axum-extra to 0.10.0 ([63748bc](https://github.com/philipcristiano/et/commit/63748bc4700617baf2b966cef36900ddd091cbb3))
+* **deps:** update rust crate chrono to v0.4.39 ([#387](https://github.com/philipcristiano/et/issues/387)) ([ac49457](https://github.com/philipcristiano/et/commit/ac494575d4aea467ca13abfc2a6fded097ac33ac))
+* **deps:** update rust crate clap to v4.5.23 ([#385](https://github.com/philipcristiano/et/issues/385)) ([ff34794](https://github.com/philipcristiano/et/commit/ff34794a266d45328854c031f16010bd9bc16be0))
+* **deps:** update rust crate http to v1.2.0 ([#383](https://github.com/philipcristiano/et/issues/383)) ([43aeda9](https://github.com/philipcristiano/et/commit/43aeda9ecd29a670fa59945b29e0701f0356035c))
+* **deps:** update rust crate reqwest to v0.12.10 ([#395](https://github.com/philipcristiano/et/issues/395)) ([fbae913](https://github.com/philipcristiano/et/commit/fbae91315f6e45c1756511c0697df271f62e4e3c))
+* **deps:** update rust crate reqwest to v0.12.11 ([#396](https://github.com/philipcristiano/et/issues/396)) ([097ff43](https://github.com/philipcristiano/et/commit/097ff43878f0e51e5478e91e653ae8f839c13d29))
+* **deps:** update rust crate reqwest to v0.12.12 ([#399](https://github.com/philipcristiano/et/issues/399)) ([c287f64](https://github.com/philipcristiano/et/commit/c287f64c40f0f6afca9c5cb1acd574e27f4dd2f6))
+* **deps:** update rust crate serde to v1.0.216 ([#388](https://github.com/philipcristiano/et/issues/388)) ([a12e538](https://github.com/philipcristiano/et/commit/a12e538407e1ecdda7c728849b84a29dfcf1419f))
+* **deps:** update rust crate serde to v1.0.217 ([#397](https://github.com/philipcristiano/et/issues/397)) ([04b0b2a](https://github.com/philipcristiano/et/commit/04b0b2a7abb36d4b4ac2944572f97972cf7074a2))
+* **deps:** update rust crate serde_html_form to v0.2.7 ([#391](https://github.com/philipcristiano/et/issues/391)) ([5547dfd](https://github.com/philipcristiano/et/commit/5547dfdc3eb41d19eee371845a9f43b9cf1431a1))
+* **deps:** update rust crate serde_json to v1.0.134 ([#392](https://github.com/philipcristiano/et/issues/392)) ([ed37681](https://github.com/philipcristiano/et/commit/ed376810e5a60671fd2787aa3504c5d07c0959c1))
+* **deps:** update rust crate serde_json to v1.0.135 ([#406](https://github.com/philipcristiano/et/issues/406)) ([c2620ae](https://github.com/philipcristiano/et/commit/c2620ae97a03f2e5c72dbeb47033ddea086ebdb0))
+* **deps:** update rust crate service_conventions to 0.0.24 ([#379](https://github.com/philipcristiano/et/issues/379)) ([559a8d4](https://github.com/philipcristiano/et/commit/559a8d4de37ddeb0447717850d712f132292295e))
+* **deps:** update rust crate thiserror to v2 ([883d217](https://github.com/philipcristiano/et/commit/883d217562f1a7719507a89c7a9aaec084a2768a))
+* **deps:** update rust crate tokio to v1.42.0 ([#382](https://github.com/philipcristiano/et/issues/382)) ([83307da](https://github.com/philipcristiano/et/commit/83307dabbc23eee4a3b1b92796cd774c3934af41))
+* **deps:** update rust crate tower-cookies to 0.11.0 ([#402](https://github.com/philipcristiano/et/issues/402)) ([2fa813c](https://github.com/philipcristiano/et/commit/2fa813cd1e5ef2b63bdced47859b36527a01827f))
+
 ## [2.7.4](https://github.com/philipcristiano/et/compare/v2.7.3...v2.7.4) (2024-11-28)
 
 
