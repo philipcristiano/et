@@ -46,7 +46,7 @@ rust-embed = { version = "8.3.0", features = ["axum", "mime-guess", "mime_guess"
 
 # Waiting on axum-embed > 0.1.0
 axum-embed = { git = "https://github.com/informationsea/axum-embed.git", ref = "f43a1c284fe41c5969bfcb9eae8fb85d8be0d3ff", version = "0.2.0"}
-axum-extra = { version = "0.10.0", features = ["query"] }
+axum-extra = { version = "0.11.0", features = ["query"] }
 http = "1.1.0"
 serde_qs = "0.13.0"
 chronoutil = "0.2.7"
