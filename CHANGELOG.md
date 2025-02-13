@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.7.6](https://github.com/philipcristiano/et/compare/v2.7.5...v2.7.6) (2025-02-11)
+
+
+### Bug Fixes
+
+* **deps:** update axum monorepo ([#421](https://github.com/philipcristiano/et/issues/421)) ([7d04346](https://github.com/philipcristiano/et/commit/7d043465b550001d0bd6e7a0e748b8571f809a6c))
+* **deps:** update rust crate clap to v4.5.24 ([#407](https://github.com/philipcristiano/et/issues/407)) ([391691a](https://github.com/philipcristiano/et/commit/391691a3dc95cf3cf5ffd937d87e71a62bb1c020))
+* **deps:** update rust crate clap to v4.5.26 ([#411](https://github.com/philipcristiano/et/issues/411)) ([9f68102](https://github.com/philipcristiano/et/commit/9f681023a9ac56e7acd462cf8eacd926c423fc58))
+* **deps:** update rust crate clap to v4.5.27 ([#419](https://github.com/philipcristiano/et/issues/419)) ([e812a45](https://github.com/philipcristiano/et/commit/e812a45998a019761de2c0620f852fa5b3233919))
+* **deps:** update rust crate clap to v4.5.28 ([#425](https://github.com/philipcristiano/et/issues/425)) ([09f80c6](https://github.com/philipcristiano/et/commit/09f80c6d9fe25301c7ade54512c0b9b458397c83))
+* **deps:** update rust crate clap to v4.5.29 ([#431](https://github.com/philipcristiano/et/issues/431)) ([1ff983c](https://github.com/philipcristiano/et/commit/1ff983c09b6c494e49a451f18f5acdbb1443377d))
+* **deps:** update rust crate once_cell to v1.20.3 ([#429](https://github.com/philipcristiano/et/issues/429)) ([561d95a](https://github.com/philipcristiano/et/commit/561d95a8a33d3fb649abe08e439eaea9c8e8fcb2))
+* **deps:** update rust crate serde_json to v1.0.136 ([#416](https://github.com/philipcristiano/et/issues/416)) ([2e62e44](https://github.com/philipcristiano/et/commit/2e62e442e4859ea6369874800bdd4ddf24ec2ae7))
+* **deps:** update rust crate serde_json to v1.0.137 ([#417](https://github.com/philipcristiano/et/issues/417)) ([16a4706](https://github.com/philipcristiano/et/commit/16a4706ccac1e2c91ca62ae33e2959e70c487145))
+* **deps:** update rust crate serde_json to v1.0.138 ([#423](https://github.com/philipcristiano/et/issues/423)) ([a51252f](https://github.com/philipcristiano/et/commit/a51252f9f50351f8bd5e5dd8b023064da7d2fd6e))
+* **deps:** update rust crate thiserror to v2.0.10 ([#410](https://github.com/philipcristiano/et/issues/410)) ([c05e891](https://github.com/philipcristiano/et/commit/c05e891310f012a76ed961fb15afbbd1de016281))
+* **deps:** update rust crate thiserror to v2.0.11 ([#413](https://github.com/philipcristiano/et/issues/413)) ([c9426eb](https://github.com/philipcristiano/et/commit/c9426ebc8556b13817f23cd10bc8c1131e18fa42))
+* **deps:** update rust crate tokio to v1.43.0 ([#409](https://github.com/philipcristiano/et/issues/409)) ([1c68973](https://github.com/philipcristiano/et/commit/1c689738e176caa18988a885aa60ee3063138945))
+* **deps:** update rust crate toml to v0.8.20 ([#428](https://github.com/philipcristiano/et/issues/428)) ([22d2226](https://github.com/philipcristiano/et/commit/22d222689c14c17657f1c3b8f4ee86975081e012))
+* **deps:** update rust crate uuid to v1.11.1 ([#412](https://github.com/philipcristiano/et/issues/412)) ([0d88ae3](https://github.com/philipcristiano/et/commit/0d88ae3fcd1b7f9617c1afa6b6d98d09e1afa69a))
+* **deps:** update rust crate uuid to v1.12.0 ([#415](https://github.com/philipcristiano/et/issues/415)) ([b76d2bf](https://github.com/philipcristiano/et/commit/b76d2bfaf02c657177a01873c172b87f9795ae20))
+* **deps:** update rust crate uuid to v1.12.1 ([#420](https://github.com/philipcristiano/et/issues/420)) ([8a0f83d](https://github.com/philipcristiano/et/commit/8a0f83d28332eb0f538bf2c53f0a9274bc019a41))
+* **deps:** update rust crate uuid to v1.13.0 ([#426](https://github.com/philipcristiano/et/issues/426)) ([8184dd7](https://github.com/philipcristiano/et/commit/8184dd790e6f74b3e7f606df77b99b0898b0a4a4))
+* **deps:** update rust crate uuid to v1.13.1 ([#427](https://github.com/philipcristiano/et/issues/427)) ([6c3a539](https://github.com/philipcristiano/et/commit/6c3a53932fb56453b6449a80adeafd8a85df0448))
+
 ## [2.7.5](https://github.com/philipcristiano/et/compare/v2.7.4...v2.7.5) (2025-01-07)
 
 
