@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.7.7](https://github.com/philipcristiano/et/compare/v2.7.6...v2.7.7) (2025-02-20)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.96 ([#436](https://github.com/philipcristiano/et/issues/436)) ([c437cbd](https://github.com/philipcristiano/et/commit/c437cbd18a11baf41bc1062b34779bd7d202788c))
+* **deps:** update rust crate clap to v4.5.30 ([#433](https://github.com/philipcristiano/et/issues/433)) ([f74340f](https://github.com/philipcristiano/et/commit/f74340f0994ba1bd6363209ab9946b4d59aafa39))
+* **deps:** update rust crate serde to v1.0.218 ([#437](https://github.com/philipcristiano/et/issues/437)) ([72ee187](https://github.com/philipcristiano/et/commit/72ee1875356e544b58d229af36297a9068107b46))
+* **deps:** update rust crate serde_json to v1.0.139 ([#438](https://github.com/philipcristiano/et/issues/438)) ([65b8fe8](https://github.com/philipcristiano/et/commit/65b8fe83ec78992788400885369c0a553e89c7b6))
+* **deps:** update rust crate uuid to v1.13.2 ([#435](https://github.com/philipcristiano/et/issues/435)) ([9ad891f](https://github.com/philipcristiano/et/commit/9ad891f3b4f91b7c9ac0f8eab317065e09b3b57a))
+
 ## [2.7.6](https://github.com/philipcristiano/et/compare/v2.7.5...v2.7.6) (2025-02-11)
 
 
