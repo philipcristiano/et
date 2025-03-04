@@ -3290,13 +3290,13 @@ dependencies = [
 
 [[package]]
 name = "serde_qs"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd34f36fe4c5ba9654417139a9b3a20d2e1de6012ee678ad14d240c22c78d8d6"
+checksum = "8b417bedc008acbdf6d6b4bc482d29859924114bbe2650b7921fb68a261d0aa6"
 dependencies = [
  "percent-encoding",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -3535,7 +3535,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -3547,8 +3547,9 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
+ "base64 0.22.1",
  "bytes",
  "chrono",
  "crc",
@@ -3568,7 +3569,6 @@ dependencies = [
  "percent-encoding",
  "rust_decimal",
  "rustls 0.23.21",
- "rustls-pemfile 2.2.0",
  "serde",
  "serde_json",
  "sha2",
@@ -3585,7 +3585,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3597,7 +3597,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros-core"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
  "dotenvy",
  "either",
@@ -3622,7 +3622,7 @@ dependencies = [
 [[package]]
 name = "sqlx-mysql"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -3666,7 +3666,7 @@ dependencies = [
 [[package]]
 name = "sqlx-postgres"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -3705,7 +3705,7 @@ dependencies = [
 [[package]]
 name = "sqlx-sqlite"
 version = "0.8.3"
-source = "git+https://github.com/launchbadge/sqlx.git?branch=main#f6d2fa3a3de1d888f4e36096dd56a3f5e0c95771"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#7af998c2abda9901c361bad85f124bbed9dde05e"
 dependencies = [
  "atoi",
  "chrono",
@@ -3721,6 +3721,7 @@ dependencies = [
  "serde",
  "serde_urlencoded",
  "sqlx-core",
+ "thiserror 2.0.12",
  "tracing",
  "url",
  "uuid",
