@@ -608,10 +608,10 @@ async fn get_transactions_value(
 
 async fn root(
     State(app_state): State<AppState>,
-    user: Option<service_conventions::oidc::OIDCUser>,
+    user: Result<Option<service_conventions::oidc::OIDCUser>, service_conventions::oidc::OIDCUserError>,
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
-    if let Some(_user) = user {
+    if let Ok(Some(_user)) = user {
         let filter_options = tx_filter.deref().clone();
         tracing::debug!(
             "Transaction Filter Options {:?}",
