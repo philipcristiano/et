@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.7.7](https://github.com/philipcristiano/et/compare/v2.7.6...v2.7.7) (2025-03-04)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate anyhow to v1.0.96 ([#436](https://github.com/philipcristiano/et/issues/436)) ([c437cbd](https://github.com/philipcristiano/et/commit/c437cbd18a11baf41bc1062b34779bd7d202788c))
+* **deps:** update rust crate anyhow to v1.0.97 ([#448](https://github.com/philipcristiano/et/issues/448)) ([0bc2243](https://github.com/philipcristiano/et/commit/0bc22434badeb48fe1ff94ca5f2761a303eabd9d))
+* **deps:** update rust crate charts-rs to v0.3.20 ([#446](https://github.com/philipcristiano/et/issues/446)) ([e636551](https://github.com/philipcristiano/et/commit/e63655172392a668212c001e7aba7fc1a205b80e))
+* **deps:** update rust crate chrono to v0.4.40 ([#444](https://github.com/philipcristiano/et/issues/444)) ([66888f2](https://github.com/philipcristiano/et/commit/66888f25aa309df94b5bcccae5b0cd7a6a6ccb21))
+* **deps:** update rust crate clap to v4.5.30 ([#433](https://github.com/philipcristiano/et/issues/433)) ([f74340f](https://github.com/philipcristiano/et/commit/f74340f0994ba1bd6363209ab9946b4d59aafa39))
+* **deps:** update rust crate clap to v4.5.31 ([#441](https://github.com/philipcristiano/et/issues/441)) ([870bd21](https://github.com/philipcristiano/et/commit/870bd21f4e98091069357cb561a9705a8a3fdcd9))
+* **deps:** update rust crate rust-embed to v8.6.0 ([#442](https://github.com/philipcristiano/et/issues/442)) ([fd17c62](https://github.com/philipcristiano/et/commit/fd17c6257b73c2b2bc7cf5ef4cfaae99317563ac))
+* **deps:** update rust crate serde to v1.0.218 ([#437](https://github.com/philipcristiano/et/issues/437)) ([72ee187](https://github.com/philipcristiano/et/commit/72ee1875356e544b58d229af36297a9068107b46))
+* **deps:** update rust crate serde_json to v1.0.139 ([#438](https://github.com/philipcristiano/et/issues/438)) ([65b8fe8](https://github.com/philipcristiano/et/commit/65b8fe83ec78992788400885369c0a553e89c7b6))
+* **deps:** update rust crate serde_json to v1.0.140 ([#450](https://github.com/philipcristiano/et/issues/450)) ([2bfdb67](https://github.com/philipcristiano/et/commit/2bfdb67543597e3fc4a0f5fed78608529b58e652))
+* **deps:** update rust crate thiserror to v2.0.12 ([#449](https://github.com/philipcristiano/et/issues/449)) ([f911b78](https://github.com/philipcristiano/et/commit/f911b7816c7d3165dd99fcba2095796bc0bbaba5))
+* **deps:** update rust crate uuid to v1.13.2 ([#435](https://github.com/philipcristiano/et/issues/435)) ([9ad891f](https://github.com/philipcristiano/et/commit/9ad891f3b4f91b7c9ac0f8eab317065e09b3b57a))
+* **deps:** update rust crate uuid to v1.14.0 ([#439](https://github.com/philipcristiano/et/issues/439)) ([4e93f53](https://github.com/philipcristiano/et/commit/4e93f53b2f0b46cff3d0cdf727b653e546a74a5a))
+* **deps:** update rust crate uuid to v1.15.0 ([#443](https://github.com/philipcristiano/et/issues/443)) ([07fea95](https://github.com/philipcristiano/et/commit/07fea95132610ac017bf512833c9b4859400ac9b))
+* **deps:** update rust crate uuid to v1.15.1 ([#445](https://github.com/philipcristiano/et/issues/445)) ([de5da9b](https://github.com/philipcristiano/et/commit/de5da9b1aeef30d499ff9c3f1037b0243c74cc45))
+* Failure to refresh user will let user login ([c9bdbe1](https://github.com/philipcristiano/et/commit/c9bdbe1c00d38426314a9cb8275d10f9b2d956a0))
+
 ## [2.7.6](https://github.com/philipcristiano/et/compare/v2.7.5...v2.7.6) (2025-02-11)
 
 
