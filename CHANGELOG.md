@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.7.8](https://github.com/philipcristiano/et/compare/v2.7.7...v2.7.8) (2025-03-10)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate serde to v1.0.219 ([#455](https://github.com/philipcristiano/et/issues/455)) ([f9f2dca](https://github.com/philipcristiano/et/commit/f9f2dcaf8d753444115203a76b1a07011d990666))
+* **deps:** update rust crate serde_qs to 0.14.0 ([#452](https://github.com/philipcristiano/et/issues/452)) ([999265b](https://github.com/philipcristiano/et/commit/999265b7f0331602d5633d47cede2e006fe528de))
+* **deps:** update rust crate tokio to v1.44.0 ([#454](https://github.com/philipcristiano/et/issues/454)) ([0e1d9a0](https://github.com/philipcristiano/et/commit/0e1d9a085ece810d8c5b6fd2cf63880e5ee8fb28))
+
 ## [2.7.7](https://github.com/philipcristiano/et/compare/v2.7.6...v2.7.7) (2025-03-04)
 
 
