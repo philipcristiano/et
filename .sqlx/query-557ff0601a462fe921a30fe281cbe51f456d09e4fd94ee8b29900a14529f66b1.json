@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    MERGE INTO simplefin_accounts AS sa\n    USING (\n        VALUES (\n            $1::uuid,\n            $2,\n            $3,\n            $4\n        )) AS source (\n            connection_id,\n            simplefin_id,\n            name,\n            currency\n        )\n    ON  sa.connection_id = source.connection_id AND\n        sa.simplefin_id = source.simplefin_id\n    WHEN MATCHED THEN\n        UPDATE SET\n            name = source.name\n    WHEN NOT MATCHED THEN\n        INSERT\n            (connection_id, simplefin_id, currency, name )\n        VALUES (\n            source.connection_id,\n            source.simplefin_id,\n            source.currency,\n            source.name\n            )\n    RETURNING\n        id,\n        sa.connection_id,\n        sa.currency,\n        sa.name,\n        sa.active,\n        sa.custom_name\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "connection_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "currency",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "custom_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "557ff0601a462fe921a30fe281cbe51f456d09e4fd94ee8b29900a14529f66b1"
+}
