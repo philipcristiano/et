@@ -9,6 +9,9 @@
       (system:
         let
           overlays = [ (import rust-overlay) ];
+          supportedSystems = [ "x86_64-linux" ];
+          forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+          pkgsFor = nixpkgs.legacyPackages;
           pkgs = import nixpkgs {
             inherit system overlays;
           };
@@ -34,6 +37,10 @@
               export PGUSER=et
             '';
           };
+
+          packages = forAllSystems (system: {
+          default = pkgsFor.${system}.callPackage ./. { };
+        });
         }
       );
 }
