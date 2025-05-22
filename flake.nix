@@ -9,8 +9,6 @@
       (system:
         let
           overlays = [ (import rust-overlay) ];
-          supportedSystems = [ "x86_64-linux" ];
-          forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
           pkgsFor = nixpkgs.legacyPackages;
           pkgs = import nixpkgs {
             inherit system overlays;
@@ -38,9 +36,7 @@
             '';
           };
 
-          packages = forAllSystems (system: {
-          default = pkgsFor.${system}.callPackage ./. { };
-        });
+        packages.default = nixpkgs.legacyPackages.${system}.callPackage ./default.nix {};
         }
       );
 }
