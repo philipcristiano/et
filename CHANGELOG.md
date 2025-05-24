@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.9](https://github.com/philipcristiano/et/compare/v2.7.8...v2.7.9) (2025-05-24)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate tokio to v1.45.1 ([#511](https://github.com/philipcristiano/et/issues/511)) ([b4fc1c7](https://github.com/philipcristiano/et/commit/b4fc1c7cc2be1f24deb38a79619458a6a0fd2c93))
+* **deps:** update rust crate uuid to v1.17.0 ([#509](https://github.com/philipcristiano/et/issues/509)) ([0f73e7f](https://github.com/philipcristiano/et/commit/0f73e7f97b42908d0f1e1c10954f239abbcb30f2))
+
 ## [2.7.8](https://github.com/philipcristiano/et/compare/v2.7.7...v2.7.8) (2025-05-22)
 
 
