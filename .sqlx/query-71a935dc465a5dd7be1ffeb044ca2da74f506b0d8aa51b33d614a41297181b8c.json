@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    DELETE FROM rules_labels\n    WHERE\n       rule_id = $1\n    AND\n       label_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "71a935dc465a5dd7be1ffeb044ca2da74f506b0d8aa51b33d614a41297181b8c"
+}

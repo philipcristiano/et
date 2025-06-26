@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, label\n        FROM labels l\n        JOIN rules_labels rl\n            ON l.id = rl.label_id\n        WHERE rl.rule_id = $1\n        ORDER BY\n            l.label ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "label",
+        "type_info": {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "28c5ccc9ce8a0a9a4596ce529acb58d6af783aab9b66725185bf7a644dfe9f9e"
+}

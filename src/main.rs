@@ -9,7 +9,7 @@ use axum::{
     extract::{FromRef, Path, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
-    routing::{get, post},
+    routing::{delete, get, post},
     Form, Router,
 };
 use axum_extra::extract::Query;
@@ -23,6 +23,7 @@ mod charts;
 mod dates;
 mod html;
 mod labels;
+mod rules;
 mod simplefin_api;
 mod svg_icon;
 mod sync_manager;
@@ -57,11 +58,16 @@ struct AppConfig {
 struct AppFeatures {
     #[serde(default)]
     charts: bool,
+    #[serde(default)]
+    apply_rules: bool,
 }
 
 impl Default for AppFeatures {
     fn default() -> Self {
-        AppFeatures { charts: false }
+        AppFeatures {
+            charts: false,
+            apply_rules: false,
+        }
     }
 }
 
@@ -382,6 +388,19 @@ async fn main() {
         )
         .route("/logged_in", get(handle_logged_in))
         .route("/simplefin-connection/add", post(add_simplefin_connection))
+        .route("/rules", get(rules::handle_rules))
+        .route("/f/rules", get(rules::handle_rules_fragment))
+        .route("/f/rules/new", post(rules::handle_new_rule_fragment))
+        .route("/rules/{rule_id}", get(rules::handle_rule))
+        .route(
+            "/f/rules/{rule_id}/labels/search",
+            get(rules::handle_labels_search_fragment),
+        )
+        .route("/f/rules/{rule_id}/labels", post(rules::handle_label_add))
+        .route(
+            "/f/rules/{rule_id}/labels/{label_id}",
+            delete(rules::handle_label_delete),
+        )
         .nest("/oidc", oidc_router.with_state(app_state.auth.clone()))
         .nest_service("/static", serve_assets)
         .with_state(app_state.clone())
@@ -483,6 +502,11 @@ impl TransactionsFilterOptions {
         };
 
         Ok(new)
+    }
+
+    pub fn from_querystring(qs: &str) -> anyhow::Result<Self> {
+        let tfo: Self = serde_html_form::from_str(qs)?;
+        Ok(tfo)
     }
 
     fn with_pltree(
@@ -608,7 +632,10 @@ async fn get_transactions_value(
 
 async fn root(
     State(app_state): State<AppState>,
-    user: Result<Option<service_conventions::oidc::OIDCUser>, service_conventions::oidc::OIDCUserError>,
+    user: Result<
+        Option<service_conventions::oidc::OIDCUser>,
+        service_conventions::oidc::OIDCUserError,
+    >,
     tx_filter: Query<TransactionsFilterOptions>,
 ) -> Result<Response, AppError> {
     if let Ok(Some(_user)) = user {
@@ -656,8 +683,11 @@ async fn root(
                         hx-get={"/chart?" (qs) "&x_size=720&y_size=240" }
                         hx-trigger="load" {}
                 }
+                div #save-as-rule {
+                    (rules::new_from_filter_options_html_box(filter_options.clone())?)
+                    (&transactions)}
                 div #transaction-list {
-                    (tx::label_search_box(&("root_tx".to_string()), filter_options)?)
+                    (tx::label_search_box(&("root_tx".to_string()), filter_options.clone())?)
                     (&transactions)}
               }}
 

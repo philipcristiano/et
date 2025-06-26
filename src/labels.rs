@@ -63,7 +63,7 @@ pub async fn handle_labels_fragment(
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct LabelSearch {
-    search: String,
+    pub search: String,
     #[serde(flatten)]
     transaction_filter: crate::TransactionsFilterOptions,
 }
@@ -79,10 +79,10 @@ pub async fn handle_labels_search_fragment(
 }
 
 pub type LabelID = uuid::Uuid;
-#[derive(sqlx::FromRow, Debug)]
-struct Label {
-    id: LabelID,
-    label: sqlx::postgres::types::PgLTree,
+#[derive(sqlx::FromRow, Debug, Clone)]
+pub struct Label {
+    pub id: LabelID,
+    pub label: sqlx::postgres::types::PgLTree,
 }
 
 use std::str::FromStr;
@@ -112,7 +112,7 @@ impl Label {
 }
 
 pub struct LabelsQuery {
-    item: Vec<Label>,
+    pub item: Vec<Label>,
 }
 
 impl From<Vec<Label>> for LabelsQuery {
@@ -186,6 +186,27 @@ impl LabelsQuery {
         Ok(res.into())
     }
 
+    #[tracing::instrument]
+    pub async fn for_rule(rule_id: &crate::rules::RuleID, pool: &PgPool) -> anyhow::Result<Self> {
+        let res = sqlx::query_as!(
+            Label,
+            r#"
+        SELECT id, label
+        FROM labels l
+        JOIN rules_labels rl
+            ON l.id = rl.label_id
+        WHERE rl.rule_id = $1
+        ORDER BY
+            l.label ASC
+            "#,
+            rule_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(res.into())
+    }
+
     pub fn render_as_table_for_tx(&self, ftxid: crate::tx::TransactionID) -> maud::Markup {
         maud::html! {
            table
@@ -244,6 +265,41 @@ impl LabelsQuery {
 
                             input type="hidden" name="label_id" value={(label.id)} {}
                             (options)
+                            {
+                             (label.label)
+                            }
+                       }
+                 }}
+               }
+               }
+
+           }
+        }
+    }
+
+    pub fn render_add_labels_for_rule(&self, rule_id: crate::rules::RuleID) -> maud::Markup {
+        let mut hx_target = String::new();
+        let rule_id_string = rule_id.as_simple().to_string();
+        let post = format!("/f/rules/{rule_id_string}/labels");
+        maud::html! {
+           table class="table-auto"{
+               thead {
+                 tr {
+                     th { "Label"}
+                 }
+               }
+               tbody {
+               @for label in &self.item {
+               tr{
+                    td{
+
+                        form
+                        hx-target="#labels-list"
+                        hx-post={(post)}
+                        hx-trigger="click"
+                        {
+
+                            input type="hidden" name="label_id" value={(label.id)} {}
                             {
                              (label.label)
                             }
