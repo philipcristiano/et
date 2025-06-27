@@ -14,9 +14,9 @@ use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 
 pub type TransactionID = uuid::Uuid;
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct SFAccountTXQueryResultRow {
-    id: TransactionID,
+    pub id: TransactionID,
     posted: chrono::DateTime<chrono::Utc>,
     transacted_at: Option<chrono::DateTime<chrono::Utc>>,
     description: String,
@@ -136,7 +136,7 @@ impl maud::Render for SFAccountTXQueryResultRow {
 }
 
 pub struct SFAccountTXQuery {
-    item: Vec<SFAccountTXQueryResultRow>,
+    pub item: Vec<SFAccountTXQueryResultRow>,
 }
 
 impl From<Vec<SFAccountTXQueryResultRow>> for SFAccountTXQuery {
@@ -196,9 +196,19 @@ impl SFAccountTXQuery {
         tfo: &TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<Self> {
-        let q: anyhow::Result<Vec<_>> = tfo.labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let q: anyhow::Result<Vec<_>> = tfo
+            .labeled
+            .clone()
+            .into_iter()
+            .map(string_label_to_plquery)
+            .collect();
         let q = q?;
-        let not_label_q: anyhow::Result<Vec<_>, _> =  tfo.not_labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let not_label_q: anyhow::Result<Vec<_>, _> = tfo
+            .not_labeled
+            .clone()
+            .into_iter()
+            .map(string_label_to_plquery)
+            .collect();
         let not_label_q = not_label_q?;
         let description_q = if let Some(df) = tfo.description_contains.clone() {
             Some(format!("%{df}%"))
@@ -256,9 +266,19 @@ impl SFAccountTXQuery {
         if let Some(aid) = tfo.account_id {
             return crate::accounts::SFAccountBalance::by_date(aid, tfo, pool).await;
         }
-        let q: anyhow::Result<Vec<_>> = tfo.labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let q: anyhow::Result<Vec<_>> = tfo
+            .labeled
+            .clone()
+            .into_iter()
+            .map(string_label_to_plquery)
+            .collect();
         let q = q?;
-        let not_label_q: anyhow::Result<Vec<_>, _> =  tfo.not_labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let not_label_q: anyhow::Result<Vec<_>, _> = tfo
+            .not_labeled
+            .clone()
+            .into_iter()
+            .map(string_label_to_plquery)
+            .collect();
         let not_label_q = not_label_q?;
 
         let description_q = if let Some(df) = tfo.description_contains.clone() {
@@ -328,9 +348,19 @@ impl SFAccountTXQuery {
         tfo: &TransactionsFilterOptions,
         pool: &PgPool,
     ) -> anyhow::Result<SFAccountTXAmountQueryResultRow> {
-        let q: anyhow::Result<Vec<_>> = tfo.labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let q: anyhow::Result<Vec<_>> = tfo
+            .labeled
+            .clone()
+            .into_iter()
+            .map(string_label_to_plquery)
+            .collect();
         let q = q?;
-        let not_label_q: anyhow::Result<Vec<_>, _> =  tfo.not_labeled.clone().into_iter().map(string_label_to_plquery).collect();
+        let not_label_q: anyhow::Result<Vec<_>, _> = tfo
+            .not_labeled
+            .clone()
+            .into_iter()
+            .map(string_label_to_plquery)
+            .collect();
         let not_label_q = not_label_q?;
 
         let description_q = if let Some(df) = tfo.description_contains.clone() {
@@ -402,7 +432,6 @@ impl maud::Render for SFAccountTXQuery {
     }
 }
 
-
 fn string_label_to_plquery(label: crate::Label) -> anyhow::Result<PgLQuery> {
     Ok(PgLQuery::from(string_label_to_plquerylevels(label)?))
 }
@@ -465,7 +494,20 @@ impl AccountTransactionLabel {
 
         Ok(())
     }
+
+    pub async fn ensure_tx_has_label(
+        tx_id: crate::tx::TransactionID,
+        label_id: &crate::labels::LabelID,
+        pool: &PgPool,
+    ) -> anyhow::Result<()> {
+        let atl = Self {
+            transaction_id: tx_id,
+            label_id: label_id.clone(),
+        };
+        atl.ensure_in_db(pool).await
+    }
 }
+
 #[derive(Clone, Debug)]
 pub struct SFAccountTransaction {
     account_id: crate::accounts::AccountID,

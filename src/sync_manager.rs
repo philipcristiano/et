@@ -13,6 +13,10 @@ pub async fn sync_all(app_state: AppState) -> () {
         if let Err(e) = res {
             tracing::event!(Level::ERROR, error = e.to_string(), "Could not sync");
         }
+        if app_state.features.apply_rules {
+            tracing::event!(Level::INFO, "Starting rule application");
+            let res = crate::rules::try_apply_rules(&app_state).await;
+        }
         sleep(Duration::from_secs(60 * 60)).await;
     }
 }

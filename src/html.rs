@@ -78,6 +78,13 @@ pub fn sidebar(
                   hx-trigger="click"
           { "Transactions Page"}
           p
+                  hx-get="/f/rules"
+                  hx-push-url={"/rules"}
+                  hx-target="#main"
+                  hx-swap="innerHTML"
+                  hx-trigger="click"
+          { "Rules Page"}
+          p
                   hx-get="/f/labels"
                   hx-push-url={"/labels"}
                   hx-target="#main"

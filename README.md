@@ -13,7 +13,6 @@ Docker
 Postgres
 OIDC
 
-
 ### Configuration
 
 et.toml
@@ -39,6 +38,13 @@ A `features` block can be used to enable/disable features
 ```
 [features]
 charts = true
+```
+
+`apply_rules` - alpha feature. Automatically apply rules after syncing connections
+
+```
+[features]
+apply_rules = true
 ```
 
 ### Migrations

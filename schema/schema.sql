@@ -89,3 +89,20 @@ CREATE TABLE transaction_labels (
     CONSTRAINT transaction_labels_fk_label_id FOREIGN KEY (label_id) REFERENCES labels (id) ON DELETE CASCADE
 );
 
+CREATE TABLE rules (
+    id uuid NOT NULL,
+    name text NOT NULL,
+    transaction_filter_qs text NOT NULL,
+
+    CONSTRAINT rules_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE rules_labels (
+    rule_id uuid NOT NULL,
+    label_id uuid NOT NULL,
+
+    CONSTRAINT rules_labels_pkey PRIMARY KEY (rule_id, label_id),
+    CONSTRAINT rules_labels_rule_id FOREIGN KEY (rule_id) REFERENCES rules (id) ON DELETE CASCADE,
+    CONSTRAINT rules_labels_label_id FOREIGN KEY (label_id) REFERENCES labels (id) ON DELETE CASCADE
+);
+
