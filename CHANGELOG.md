@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.8.0](https://github.com/philipcristiano/et/compare/v2.7.8...v2.8.0) (2025-06-27)
+
+
+### Features
+
+* Create rules to automatically apply labels ([83e3291](https://github.com/philipcristiano/et/commit/83e3291e36768f4001792792ad94c28571d9056c))
+
+
+### Bug Fixes
+
+* **deps:** update rust crate charts-rs to v0.3.23 ([#523](https://github.com/philipcristiano/et/issues/523)) ([94ae9a8](https://github.com/philipcristiano/et/commit/94ae9a884463be97201af17f1a58471b2ccaa4c9))
+* **deps:** update rust crate clap to v4.5.39 ([#513](https://github.com/philipcristiano/et/issues/513)) ([77da61b](https://github.com/philipcristiano/et/commit/77da61b8844e52518f29b5ffa4c05999492d4a73))
+* **deps:** update rust crate clap to v4.5.40 ([#524](https://github.com/philipcristiano/et/issues/524)) ([3e18485](https://github.com/philipcristiano/et/commit/3e1848587c147727d778613044958d91a0a7b0ec))
+* **deps:** update rust crate reqwest to v0.12.16 ([#514](https://github.com/philipcristiano/et/issues/514)) ([436de3b](https://github.com/philipcristiano/et/commit/436de3be11b960935669f247031afbd1c0db1d86))
+* **deps:** update rust crate reqwest to v0.12.17 ([#515](https://github.com/philipcristiano/et/issues/515)) ([e7d72fa](https://github.com/philipcristiano/et/commit/e7d72fae5a908c25815510955ca923a87cb97086))
+* **deps:** update rust crate reqwest to v0.12.18 ([#516](https://github.com/philipcristiano/et/issues/516)) ([e1d269d](https://github.com/philipcristiano/et/commit/e1d269dec52898e9a5eb398f6bd83f0e326ab794))
+* **deps:** update rust crate reqwest to v0.12.19 ([#519](https://github.com/philipcristiano/et/issues/519)) ([14b246d](https://github.com/philipcristiano/et/commit/14b246d35776c412cf19acb1322c1d3aff3a2ff7))
+* **deps:** update rust crate reqwest to v0.12.20 ([#525](https://github.com/philipcristiano/et/issues/525)) ([feeb12e](https://github.com/philipcristiano/et/commit/feeb12e7182fa0465ef9f642104e743c66fce199))
+* **deps:** update rust crate rust_decimal to v1.37.2 ([#526](https://github.com/philipcristiano/et/issues/526)) ([4ea0d3c](https://github.com/philipcristiano/et/commit/4ea0d3cbecfd404992547dde9ea57f77f898699c))
+* **deps:** update rust crate tokio to v1.45.1 ([#511](https://github.com/philipcristiano/et/issues/511)) ([b4fc1c7](https://github.com/philipcristiano/et/commit/b4fc1c7cc2be1f24deb38a79619458a6a0fd2c93))
+* **deps:** update rust crate toml to v0.8.23 ([#521](https://github.com/philipcristiano/et/issues/521)) ([c5cee9a](https://github.com/philipcristiano/et/commit/c5cee9ac543c6e5750133dcc79531005a727711b))
+* **deps:** update rust crate tower-http to v0.6.5 ([#518](https://github.com/philipcristiano/et/issues/518)) ([a1a5ec1](https://github.com/philipcristiano/et/commit/a1a5ec1466eb2b3d5b0393bc625aba2960948398))
+* **deps:** update rust crate tower-http to v0.6.6 ([#520](https://github.com/philipcristiano/et/issues/520)) ([a8015ee](https://github.com/philipcristiano/et/commit/a8015ee30c64d9625da4ba0342b326ccfb3b14cd))
+* **deps:** update rust crate uuid to v1.17.0 ([#509](https://github.com/philipcristiano/et/issues/509)) ([0f73e7f](https://github.com/philipcristiano/et/commit/0f73e7f97b42908d0f1e1c10954f239abbcb30f2))
+
 ## [2.7.8](https://github.com/philipcristiano/et/compare/v2.7.7...v2.7.8) (2025-05-22)
 
 
