@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.1](https://github.com/philipcristiano/et/compare/v2.8.0...v2.8.1) (2025-06-28)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate charts-rs to v0.3.24 ([#530](https://github.com/philipcristiano/et/issues/530)) ([8815719](https://github.com/philipcristiano/et/commit/8815719376bb430635ec7fbf8e16f6de5c6b45fc))
+* Include labels in rule creation ([3f78a0d](https://github.com/philipcristiano/et/commit/3f78a0d71f35fea805a40f5284a94547ce880790))
+
 ## [2.8.0](https://github.com/philipcristiano/et/compare/v2.7.8...v2.8.0) (2025-06-27)
 
 
