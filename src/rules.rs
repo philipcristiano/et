@@ -3,14 +3,13 @@ use sqlx::postgres::PgPool;
 use crate::svg_icon;
 use crate::tx;
 use crate::TransactionsFilterOptions;
-use axum_extra::extract::Query;
+use axum_extra::extract::{Form, Query};
 use futures::try_join;
 use std::ops::Deref;
 
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Redirect, Response},
-    Form,
 };
 
 use crate::{html, AppState, Connection};
@@ -190,7 +189,6 @@ pub async fn handle_rules(
 
     let (user_connections, balances, rules_result) =
         try_join!(user_connections_f, balances_f, rules_fut)?;
-    let f = TransactionsFilterOptions::default();
 
     Ok(html::maud_page(html! {
           div class="flex flex-col lg:flex-row"{
@@ -325,7 +323,6 @@ pub async fn handle_new_rule_fragment(
     let name = "New Rule".to_string();
     let rule = Rule::try_new(name, filter_options.to_owned())?;
     rule.ensure_in_db(&app_state.db).await?;
-    let rules_result = RulesQuery::all(&app_state.db).await?;
 
     let rule_id = rule.id_string();
 
