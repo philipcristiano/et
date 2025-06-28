@@ -570,18 +570,24 @@ impl TransactionsFilterOptions {
         let options: TransactionsFilterOptions = self.into();
         maud::html! {
 
-        @if let Some(txid) = options.transaction_id {
-            input type="hidden" name="transaction_id" value={(txid)} {}
-        }
-        @if let Some(account_id) = options.account_id {
-            input type="hidden" name="account_id" value={(account_id)} {}
-        }
-        @if let Some(fragment) = options.description_contains {
-            input type="hidden" name="description_contains" value={(fragment)} {}
-        }
-        @if let Some(start_datetime) = options.start_datetime {
-            input type="hidden" name="start_datetime" value={(start_datetime)} {}
-        }
+            @if let Some(txid) = options.transaction_id {
+                input type="hidden" name="transaction_id" value={(txid)} {}
+            }
+            @if let Some(account_id) = options.account_id {
+                input type="hidden" name="account_id" value={(account_id)} {}
+            }
+            @if let Some(fragment) = options.description_contains {
+                input type="hidden" name="description_contains" value={(fragment)} {}
+            }
+            @for as_labeled in options.labeled {
+                input type="hidden" name="labeled" value={(as_labeled)} {}
+            }
+            @for not_labeled in options.not_labeled {
+                input type="hidden" name="not_labeled" value={(not_labeled)} {}
+            }
+            @if let Some(start_datetime) = options.start_datetime {
+                input type="hidden" name="start_datetime" value={(start_datetime)} {}
+            }
         }
     }
 }
@@ -640,10 +646,7 @@ async fn root(
 ) -> Result<Response, AppError> {
     if let Ok(Some(_user)) = user {
         let filter_options = tx_filter.deref().clone();
-        tracing::debug!(
-            "Transaction Filter Options {:?}",
-            &filter_options.description_contains
-        );
+        tracing::debug!("Transaction Filter Options {:?}", &filter_options);
         let user_connections_f = Connection::connections(&app_state.db);
         let balances_f = accounts::SFAccountBalanceQueryResult::get_active_balances(&app_state.db);
         //let transactions_f =
