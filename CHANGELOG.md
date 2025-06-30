@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.2](https://github.com/philipcristiano/et/compare/v2.8.1...v2.8.2) (2025-06-30)
+
+
+### Bug Fixes
+
+* Allow deleting  rule ([782df0e](https://github.com/philipcristiano/et/commit/782df0e792e18039032d7c0657908f96a0c19a5f))
+* Remove duplicate listing of transactions ([c3a04ac](https://github.com/philipcristiano/et/commit/c3a04acb215ebb0b2398ea74c4376582ec3571c9))
+
 ## [2.8.1](https://github.com/philipcristiano/et/compare/v2.8.0...v2.8.1) (2025-06-28)
 
 
