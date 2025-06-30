@@ -691,7 +691,7 @@ async fn root(
                 }
                 div #save-as-rule {
                     (rules::new_from_filter_options_html_box(filter_options.clone())?)
-                    (&transactions)}
+                }
                 div #transaction-list {
                     (tx::label_search_box(&("root_tx".to_string()), filter_options.clone())?)
                     (&transactions)}
