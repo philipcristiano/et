@@ -391,7 +391,10 @@ async fn main() {
         .route("/rules", get(rules::handle_rules))
         .route("/f/rules", get(rules::handle_rules_fragment))
         .route("/f/rules/new", post(rules::handle_new_rule_fragment))
-        .route("/rules/{rule_id}", get(rules::handle_rule))
+        .route(
+            "/rules/{rule_id}",
+            get(rules::handle_rule).delete(rules::handle_rule_delete),
+        )
         .route(
             "/f/rules/{rule_id}/labels/search",
             get(rules::handle_labels_search_fragment),

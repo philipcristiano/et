@@ -3,13 +3,14 @@ use sqlx::postgres::PgPool;
 use crate::svg_icon;
 use crate::tx;
 use crate::TransactionsFilterOptions;
+use axum::http::HeaderMap;
 use axum_extra::extract::{Form, Query};
 use futures::try_join;
 use std::ops::Deref;
 
 use axum::{
     extract::{Path, State},
-    response::{IntoResponse, Redirect, Response},
+    response::{AppendHeaders, IntoResponse, Redirect, Response},
 };
 
 use crate::{html, AppState, Connection};
@@ -89,6 +90,21 @@ impl Rule {
 
         Ok(res)
     }
+
+    pub async fn delete_by_id(id: &RuleID, pool: &PgPool) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+                DELETE FROM rules
+                WHERE id = $1
+            "#,
+            id,
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
     fn id_string(&self) -> String {
         self.id.as_simple().to_string()
     }
@@ -262,17 +278,35 @@ pub async fn handle_rule(
                         placeholder="Begin typing to search labels"
                     {}
                     ul #{"search-results-rule" } {}
+
                 }
                 (render_label_list(&rule, rule_labels))
 
-      // (txf.render_to_hidden_input_fields())
-
-    }
+                form
+                    hx-delete={"/rules/" (rule_id)}
+                    hx-redirect="/rules"
+                    hx-confirm="Delete rule?"
+                {
+                    input type="submit" class="border" { "DELETE Rule"}
+                }
             }
-          }}
-
-    )
+        }}
+    })
     .into_response())
+}
+pub async fn handle_rule_delete(
+    State(app_state): State<AppState>,
+    _user: service_conventions::oidc::OIDCUser,
+    Path(params): Path<QSRuleID>,
+) -> Result<Response, crate::AppError> {
+    Rule::delete_by_id(&params.rule_id, &app_state.db).await?;
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-Redirect", "/rules".parse().unwrap());
+    Ok((
+        headers,
+        // Redirect::to("/rules"),  // check if not htmx and use this instead
+    )
+        .into_response())
 }
 
 fn render_label_list(rule: &Rule, rule_labels: crate::labels::LabelsQuery) -> maud::Markup {
