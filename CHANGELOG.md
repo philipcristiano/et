@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.8.3](https://github.com/philipcristiano/et/compare/v2.8.2...v2.8.3) (2025-07-21)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate clap to v4.5.41 ([#547](https://github.com/philipcristiano/et/issues/547)) ([bce30df](https://github.com/philipcristiano/et/commit/bce30df82a58a2fe12d5acd2b7891a1b1c0abeda))
+* **deps:** update rust crate declare_schema to 0.0.11 ([#542](https://github.com/philipcristiano/et/issues/542)) ([dbb6c40](https://github.com/philipcristiano/et/commit/dbb6c40fd5787eea28401efe5ef2db411fe8dfd3))
+* **deps:** update rust crate reqwest to v0.12.21 ([#540](https://github.com/philipcristiano/et/issues/540)) ([d1cc348](https://github.com/philipcristiano/et/commit/d1cc34870552dae5b605d714fd304dfc391a7f6c))
+* **deps:** update rust crate reqwest to v0.12.22 ([#541](https://github.com/philipcristiano/et/issues/541)) ([e442118](https://github.com/philipcristiano/et/commit/e442118315fd38028850c3d42301323856fa0c4d))
+* **deps:** update rust crate serde_json to v1.0.141 ([#551](https://github.com/philipcristiano/et/issues/551)) ([f10a3d9](https://github.com/philipcristiano/et/commit/f10a3d9d761d743be75d310ca454807fe0df891c))
+* **deps:** update rust crate service_conventions to 0.0.30 ([#539](https://github.com/philipcristiano/et/issues/539)) ([1df7f4c](https://github.com/philipcristiano/et/commit/1df7f4c1f5d4a0f1b0c71d98ca31ccd7b37cb3d7))
+* **deps:** update rust crate tokio to v1.46.0 ([#543](https://github.com/philipcristiano/et/issues/543)) ([7009fe9](https://github.com/philipcristiano/et/commit/7009fe94643eaed2a9638d4f6954ab8d67fd101e))
+* **deps:** update rust crate tokio to v1.46.1 ([#544](https://github.com/philipcristiano/et/issues/544)) ([e0da941](https://github.com/philipcristiano/et/commit/e0da9419546d631265b9018ef48eecb77b3bdd8a))
+* **deps:** update rust crate toml to 0.9.0 ([#546](https://github.com/philipcristiano/et/issues/546)) ([990833c](https://github.com/philipcristiano/et/commit/990833c97b483141fa885c1cc6cc41221a7add16))
+* **deps:** update rust crate toml to v0.9.1 ([#548](https://github.com/philipcristiano/et/issues/548)) ([8a9d3cb](https://github.com/philipcristiano/et/commit/8a9d3cb992eb2420af2c9fc61b67abef234488a5))
+* **deps:** update rust crate toml to v0.9.2 ([#549](https://github.com/philipcristiano/et/issues/549)) ([9658ba2](https://github.com/philipcristiano/et/commit/9658ba2003f46d970c9b7c06728df32b8bcb3946))
+* **deps:** update rust crate tonic to 0.13.0 ([#472](https://github.com/philipcristiano/et/issues/472)) ([fa95085](https://github.com/philipcristiano/et/commit/fa950859cbbe4e48704ca200c6d7956e74836c83))
+
 ## [2.8.2](https://github.com/philipcristiano/et/compare/v2.8.1...v2.8.2) (2025-06-30)
 
 
