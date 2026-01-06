@@ -50,5 +50,5 @@ chronoutil = "0.2.7"
 
 declare_schema = { version = "0.0.12" }
 charts-rs = "0.3.11"
-serde_html_form = "0.3.0"
+serde_html_form = "0.4.0"
 
