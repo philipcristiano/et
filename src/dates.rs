@@ -25,3 +25,11 @@ pub fn month_ranges(
         })
         .collect())
 }
+
+pub fn epoch_as_of_months_ago(n: i32) -> i64 {
+    let now = chrono::Utc::now();
+    let diff = RelativeDuration::months(n);
+    let ago = now - diff;
+    let ts = ago.timestamp();
+    ts
+}
