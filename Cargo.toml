@@ -1,7 +1,7 @@
 [package]
 name = "et"
 version = "2.8.3"
-edition = "2021"
+edition = "2024"
 description = "Expense Tracker"
 license = "Apache-2.0"
 publish = false
