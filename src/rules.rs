@@ -313,7 +313,7 @@ fn render_label_list(rule: &Rule, rule_labels: crate::labels::LabelsQuery) -> ma
     let rule_id = rule.id_string();
 
     maud::html! {
-                div #"labels-list" {
+                div #labels-list {
 
                     h4 { "Current labels" }
                     @for label in rule_labels.item {
