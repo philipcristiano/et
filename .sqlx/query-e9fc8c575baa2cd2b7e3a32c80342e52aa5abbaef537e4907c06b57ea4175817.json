@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                MERGE INTO simplefin_account_transactions AS sat\n                USING (\n                    VALUES (\n                        $1::uuid,            -- account_id\n                        $2,                  -- simplefin_id\n                        $3::timestamptz,     -- posted\n                        $4::money,          -- amount\n                        $5::timestamptz,     -- transacted_at\n                        $6::boolean,         -- pending\n                        $7                   -- description\n                    )\n                ) AS source (\n                    account_id,\n                    simplefin_id,\n                    posted,\n                    amount,\n                    transacted_at,\n                    pending,\n                    description\n                )\n                ON  sat.account_id = source.account_id\n                AND sat.simplefin_id = source.simplefin_id\n                WHEN MATCHED THEN\n                    UPDATE SET\n                        posted = source.posted,\n                        amount = source.amount,\n                        transacted_at = source.transacted_at,\n                        pending = source.pending,\n                        description = source.description\n                WHEN NOT MATCHED THEN\n                    INSERT (\n                        account_id,\n                        simplefin_id,\n                        posted,\n                        amount,\n                        transacted_at,\n                        pending,\n                        description\n                    )\n                    VALUES (\n                        source.account_id,\n                        source.simplefin_id,\n                        source.posted,\n                        source.amount,\n                        source.transacted_at,\n                        source.pending,\n                        source.description\n                    );\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Timestamptz",
+        "Money",
+        "Timestamptz",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e9fc8c575baa2cd2b7e3a32c80342e52aa5abbaef537e4907c06b57ea4175817"
+}
