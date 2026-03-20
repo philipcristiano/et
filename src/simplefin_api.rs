@@ -73,7 +73,7 @@ pub async fn token_to_access_url(b64token: String) -> Result<String, SimpleFinAP
 
 #[tracing::instrument(skip_all)]
 pub async fn accounts(access_url: &String) -> Result<AccountSet, SimpleFinAPIError> {
-    let start_date = crate::dates::epoch_as_of_months_ago(6);
+    let start_date = crate::dates::epoch_as_of_months_ago(2);
     let start_date_str = format!("{start_date}");
     let client = reqwest::Client::new();
     let url = format!("{access_url}/accounts");
