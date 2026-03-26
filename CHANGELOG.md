@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.8.4](https://github.com/philipcristiano/et/compare/v2.8.3...v2.8.4) (2026-03-23)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate serde_qs to v1 ([afc9ad7](https://github.com/philipcristiano/et/commit/afc9ad7d9eae0af1ed3e04222db8e5df66713957))
+* **deps:** update rust crate toml to v1 ([9a5d732](https://github.com/philipcristiano/et/commit/9a5d732252412c78545c2162f2eeb3697d31b425))
+* Reduce query lookback to match cutoff ([6163429](https://github.com/philipcristiano/et/commit/61634299ef998b93fe95508a47342f23ddde777e))
+
 ## [2.8.3](https://github.com/philipcristiano/et/compare/v2.8.2...v2.8.3) (2026-02-09)
 
 
