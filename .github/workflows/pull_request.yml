@@ -8,67 +8,16 @@ on:
 
 jobs:
 
-  check-for-cc:
-    runs-on: ubuntu-latest
-    steps:
-      - name: check-for-cc
-        id: check-for-cc
-        uses: agenthunt/conventional-commit-checker-action@v2.0.1
-
-  docker_build:
-    uses: "philipcristiano/workflows/.github/workflows/docker-build.yml@main"
-    with:
-      timeout: 25
-      check_command: "-h"
-
-  rust:
-    uses: "philipcristiano/workflows/.github/workflows/rust_with_postgres.yml@main"
-    with:
-      db_name: et
-      db_user: et
-      db_password: et
-      setup_script: |
-          curl -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.1/tailwindcss-linux-x64 -o tailwindcss
-          chmod +x tailwindcss
-          mv tailwindcss /usr/local/bin
-
   flake:
-    uses: "philipcristiano/workflows/.github/workflows/nix.yml@main"
-    with:
-      flakes-from-devshell: true
-      script: |
-        export SQLX_OFFLINE=true
-        cargo build
-
-  database:
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: et
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    runs-on: ubuntu-latest
-
+    runs-on: nixos-runner
     steps:
-      - uses: actions/checkout@v4.3.1
+      - uses: actions/checkout@v6
+      - name: Build
+        env:
+          SQLX_OFFLINE: true
+        run: nix --experimental-features 'nix-command flakes' build
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-
-      - uses: workflow/nix-shell-action@v3.4.0
-        with:
-          flakes-from-devshell: true
-          script: |
-            export SQLX_OFFLINE=true
-            cargo build --bin et-migrate
-            cargo run --bin et-migrate -- --config-file="config.github-actions.toml" migrate
+      - name: Build Docker
+        env:
+          SQLX_OFFLINE: true
+        run: nix --experimental-features 'nix-command flakes' build '#docker'

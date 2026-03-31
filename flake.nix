@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
@@ -9,9 +9,32 @@
       (system:
         let
           overlays = [ (import rust-overlay) ];
-          pkgsFor = nixpkgs.legacyPackages;
           pkgs = import nixpkgs {
             inherit system overlays;
+          };
+          package_version = pkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
+          rustToolchain = pkgs.rust-bin.stable.latest.default;
+          package_name = "et";
+
+          linuxPkgs = import nixpkgs {
+            system = "x86_64-linux";
+            overlays = overlays;
+          };
+          package = pkgs.rustPlatform.buildRustPackage {
+            pname = package_name;
+            version = package_version;
+            src = ./.;
+            cargoLock.lockFile = ./Cargo.lock;
+
+            nativeBuildInputs = [ rustToolchain pkgs.tailwindcss ];
+          };
+          # Build the package targeting linux for the Docker image
+          linuxPackage = linuxPkgs.rustPlatform.buildRustPackage {
+            pname = package_name;
+            version = package_version;
+            src = ./.;
+            cargoLock.lockFile = ./Cargo.lock;
+            nativeBuildInputs = [ linuxPkgs.rust-bin.stable.latest.default pkgs.tailwindcss ];
           };
         in
         with pkgs;
@@ -31,8 +54,15 @@
               export PGUSER=et
             '';
           };
-
-        packages.default = nixpkgs.legacyPackages.${system}.callPackage ./default.nix {};
+          packages.default = package;
+          packages.docker = linuxPkgs.dockerTools.buildLayeredImage {
+            name = package_name;
+            tag = package_version;
+            contents = [ linuxPackage ];
+            config = {
+              Cmd = [ "/bin/w2z" ];
+            };
+          };
         }
       );
 }

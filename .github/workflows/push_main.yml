@@ -7,75 +7,80 @@ on:
 
 jobs:
 
-  docker_push:
-    name: "Push docker image"
-    uses: "philipcristiano/workflows/.github/workflows/docker-build-push.yml@main"
-    needs: [flake, rust, database]
-    with:
-      repository: ${{ github.repository }}
-      timeout: 25
+  update_version:
+      runs-on: nixos-runner
+      steps:
 
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
 
-  database:
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: et
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    runs-on: ubuntu-latest
+        - name: Generate version with git-cliff
+          id: cliff
+          run: |
+            nix-env -iA nixpkgs.git-cliff
+            git-cliff --config cliff.toml --bumped-version --output CHANGELOG.md
+            VERSION=$(git-cliff --config cliff.toml --bumped-version 2>/dev/null)
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-    steps:
-      - uses: actions/checkout@v4.3.1
+        - name: Update VERSION file
+          run: echo "${{ steps.cliff.outputs.version }}" | sed 's/^v//' > VERSION
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        - name: Create PR branch and push
+          run: |
+            VERSION=${{ steps.cliff.outputs.version }}
+            BRANCH="release/${VERSION}"
 
-      - uses: workflow/nix-shell-action@v3.4.0
-        with:
-          flakes-from-devshell: true
-          script: |
-            export SQLX_OFFLINE=true
-            cargo build --bin et-migrate
-            cargo run --bin et-migrate -- --config-file="config.github-actions.toml" migrate
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git checkout -b $BRANCH
+            git add VERSION CHANGELOG.md
+            git commit -m "chore: release ${VERSION}"
+            git push origin -f $BRANCH
 
-  rust:
-    uses: "philipcristiano/workflows/.github/workflows/rust_with_postgres.yml@main"
-    with:
-      db_name: et
-      db_user: et
-      db_password: et
-      setup_script: |
-          curl -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.1/tailwindcss-linux-x64 -o tailwindcss
-          chmod +x tailwindcss
-          mv tailwindcss /usr/local/bin
+        - name: Open PR via Forgejo API
+          run: |
+            VERSION=${{ steps.cliff.outputs.version }}
+            BRANCH="release/${VERSION}"
+            REPO="${{ github.repository }}"
 
-  release-please:
-    needs: [flake, rust, database]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: google-github-actions/release-please-action@v4
-        with:
-          token: ${{ secrets.REPO_TOKEN }}
-          release-type: rust
+            curl -s -X POST "${{ vars.FORGE_API_URL }}/repos/${REPO}/pulls" \
+              -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"title\": \"chore: release ${VERSION}\",
+                \"head\": \"${BRANCH}\",
+                \"base\": \"main\",
+                \"body\": \"Automated release PR for ${VERSION}\"
+              }"
 
   flake:
-    uses: "philipcristiano/workflows/.github/workflows/nix.yml@main"
-    with:
-      flakes-from-devshell: true
-      script: |
-        export SQLX_OFFLINE=true
-        cargo build
+    runs-on: nixos-runner
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build
+        env:
+          SQLX_OFFLINE: true
+        run: nix --experimental-features 'nix-command flakes' build
+
+      - name: Build Docker
+        env:
+          SQLX_OFFLINE: true
+        run: nix --experimental-features 'nix-command flakes' build '#docker'
+
+      - name: Log in to Docker Hub
+        run: |
+          nix-env -iA nixpkgs.docker
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Tag and push Docker
+        run: |
+          nix-env -iA nixpkgs.gawk
+          IMAGE=$(docker load < result | awk '/Loaded image:/ {print $3}')
+          NAME=$(echo $IMAGE | cut -d: -f1)
+          VERSION=$(echo $IMAGE | cut -d: -f2)
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+
+          docker tag $IMAGE ${{ vars.DOCKER_ORG }}/$NAME:$VERSION-$SHORT_SHA
+          docker push ${{ vars.DOCKER_ORG }}/$NAME:$VERSION-$SHORT_SHA
