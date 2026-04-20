@@ -24,10 +24,40 @@ impl SFAccount {
         let res = sqlx::query_as!(
             Account,
             r#"
-    INSERT INTO simplefin_accounts ( connection_id, simplefin_id, name, currency )
-    VALUES ( $1, $2, $3, $4 )
-    ON CONFLICT (connection_id, simplefin_id) DO UPDATE set name = EXCLUDED.name
-    RETURNING id, connection_id, currency, name, active, custom_name
+    MERGE INTO simplefin_accounts AS sa
+    USING (
+        VALUES (
+            $1::uuid,
+            $2,
+            $3,
+            $4
+        )) AS source (
+            connection_id,
+            simplefin_id,
+            name,
+            currency
+        )
+    ON  sa.connection_id = source.connection_id AND
+        sa.simplefin_id = source.simplefin_id
+    WHEN MATCHED THEN
+        UPDATE SET
+            name = source.name
+    WHEN NOT MATCHED THEN
+        INSERT
+            (connection_id, simplefin_id, currency, name )
+        VALUES (
+            source.connection_id,
+            source.simplefin_id,
+            source.currency,
+            source.name
+            )
+    RETURNING
+        id,
+        sa.connection_id,
+        sa.currency,
+        sa.name,
+        sa.active,
+        sa.custom_name
             "#,
             self.connection_id.to_uuid(),
             self.simplefin_id,
